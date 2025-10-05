@@ -193,16 +193,6 @@ const OnboardingPage = () => {
         <div className="mb-8">
           {renderStepContent()}
         </div>
-
-        {/* Help Section */}
-        <div className="text-center">
-          <div className="text-sm text-gray-500">
-            {t('onboarding.help', 'Need help?')} 
-            <a href="/help" className="text-orange-600 hover:text-orange-700 ml-1">
-              {t('onboarding.contact', 'Contact Support')}
-            </a>
-          </div>
-        </div>
       </div>
     </div>
   )

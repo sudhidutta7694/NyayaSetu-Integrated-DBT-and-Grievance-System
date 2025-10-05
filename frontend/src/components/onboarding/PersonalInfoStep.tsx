@@ -9,10 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Calendar } from '@/components/ui/calendar'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { CalendarIcon, Upload, FileText, User, Phone, MapPin } from 'lucide-react'
-import { format } from 'date-fns'
+import { Upload, FileText, User, Phone, MapPin } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useLanguage } from '@/contexts/LanguageContext'
 import toast from 'react-hot-toast'
@@ -21,9 +18,10 @@ const personalInfoSchema = z.object({
   fullName: z.string().min(2, 'Full name must be at least 2 characters'),
   fatherName: z.string().min(2, 'Father\'s name must be at least 2 characters'),
   motherName: z.string().min(2, 'Mother\'s name must be at least 2 characters'),
-  dateOfBirth: z.date({
-    required_error: 'Date of birth is required',
-  }),
+  dateOfBirth: z.string().regex(
+    /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/,
+    'Date of birth must be in DD/MM/YYYY format'
+  ),
   age: z.number().min(1, 'Age must be at least 1').max(120, 'Age must be less than 120'),
   gender: z.enum(['MALE', 'FEMALE', 'OTHER', 'PREFER_NOT_TO_SAY'], {
     required_error: 'Please select a gender',
@@ -49,7 +47,7 @@ interface PersonalInfoStepProps {
 export default function PersonalInfoStep({ onComplete, onPrevious, initialData }: PersonalInfoStepProps) {
   const { t } = useLanguage()
   const [isLoading, setIsLoading] = useState(false)
-  const [date, setDate] = useState<Date | undefined>(initialData?.dateOfBirth)
+  const [dobString, setDobString] = useState(initialData?.dateOfBirth ? formatDate(initialData.dateOfBirth) : '')
 
   const {
     register,
@@ -76,24 +74,41 @@ export default function PersonalInfoStep({ onComplete, onPrevious, initialData }
 
   const watchedDate = watch('dateOfBirth')
 
+
+  function parseDateString(str: string): Date | null {
+    const [day, month, year] = str.split('/')
+    const date = new Date(Number(year), Number(month) - 1, Number(day))
+    return isNaN(date.getTime()) ? null : date
+  }
+
+  function formatDate(date: Date): string {
+    const d = date.getDate().toString().padStart(2, '0')
+    const m = (date.getMonth() + 1).toString().padStart(2, '0')
+    const y = date.getFullYear().toString()
+    return `${d}/${m}/${y}`
+  }
+
   const calculateAge = (birthDate: Date) => {
     const today = new Date()
     let age = today.getFullYear() - birthDate.getFullYear()
     const monthDiff = today.getMonth() - birthDate.getMonth()
-    
     if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
       age--
     }
-    
     return age
   }
 
-  const handleDateSelect = (selectedDate: Date | undefined) => {
-    setDate(selectedDate)
-    if (selectedDate) {
-      setValue('dateOfBirth', selectedDate)
-      const age = calculateAge(selectedDate)
+
+  const handleDobChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    setDobString(value)
+    setValue('dateOfBirth', value)
+    const parsed = parseDateString(value)
+    if (parsed) {
+      const age = calculateAge(parsed)
       setValue('age', age)
+    } else {
+      setValue('age', 0)
     }
   }
 
@@ -164,31 +179,16 @@ export default function PersonalInfoStep({ onComplete, onPrevious, initialData }
             </div>
 
             <div className="space-y-2">
-              <Label>{t('onboarding.dateOfBirth', 'Date of Birth')} *</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      'w-full justify-start text-left font-normal',
-                      !date && 'text-muted-foreground',
-                      errors.dateOfBirth && 'border-red-500'
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {date ? format(date, 'PPP') : <span>{t('onboarding.selectDate', 'Select date')}</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={date}
-                    onSelect={handleDateSelect}
-                    disabled={(date) => date > new Date() || date < new Date('1900-01-01')}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
+              <Label htmlFor="dateOfBirth">{t('onboarding.dateOfBirth', 'Date of Birth')} *</Label>
+              <Input
+                id="dateOfBirth"
+                placeholder="DD/MM/YYYY"
+                {...register('dateOfBirth')}
+                value={dobString}
+                onChange={handleDobChange}
+                className={errors.dateOfBirth ? 'border-red-500' : ''}
+                maxLength={10}
+              />
               {errors.dateOfBirth && (
                 <p className="text-sm text-red-500">{errors.dateOfBirth.message}</p>
               )}
@@ -312,13 +312,50 @@ export default function PersonalInfoStep({ onComplete, onPrevious, initialData }
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="state">{t('onboarding.state', 'State')} *</Label>
-                <Input
-                  id="state"
-                  {...register('state')}
-                  placeholder={t('onboarding.statePlaceholder', 'Enter state')}
-                  className={errors.state ? 'border-red-500' : ''}
-                />
+                <Label htmlFor="state">{t('onboarding.state', 'State/UT')} *</Label>
+                <Select onValueChange={(value) => setValue('state', value)}>
+                  <SelectTrigger className={errors.state ? 'border-red-500' : ''}>
+                    <SelectValue placeholder={t('onboarding.statePlaceholder', 'Select state/UT')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Andhra Pradesh">Andhra Pradesh</SelectItem>
+                    <SelectItem value="Arunachal Pradesh">Arunachal Pradesh</SelectItem>
+                    <SelectItem value="Assam">Assam</SelectItem>
+                    <SelectItem value="Bihar">Bihar</SelectItem>
+                    <SelectItem value="Chhattisgarh">Chhattisgarh</SelectItem>
+                    <SelectItem value="Goa">Goa</SelectItem>
+                    <SelectItem value="Gujarat">Gujarat</SelectItem>
+                    <SelectItem value="Haryana">Haryana</SelectItem>
+                    <SelectItem value="Himachal Pradesh">Himachal Pradesh</SelectItem>
+                    <SelectItem value="Jharkhand">Jharkhand</SelectItem>
+                    <SelectItem value="Karnataka">Karnataka</SelectItem>
+                    <SelectItem value="Kerala">Kerala</SelectItem>
+                    <SelectItem value="Madhya Pradesh">Madhya Pradesh</SelectItem>
+                    <SelectItem value="Maharashtra">Maharashtra</SelectItem>
+                    <SelectItem value="Manipur">Manipur</SelectItem>
+                    <SelectItem value="Meghalaya">Meghalaya</SelectItem>
+                    <SelectItem value="Mizoram">Mizoram</SelectItem>
+                    <SelectItem value="Nagaland">Nagaland</SelectItem>
+                    <SelectItem value="Odisha">Odisha</SelectItem>
+                    <SelectItem value="Punjab">Punjab</SelectItem>
+                    <SelectItem value="Rajasthan">Rajasthan</SelectItem>
+                    <SelectItem value="Sikkim">Sikkim</SelectItem>
+                    <SelectItem value="Tamil Nadu">Tamil Nadu</SelectItem>
+                    <SelectItem value="Telangana">Telangana</SelectItem>
+                    <SelectItem value="Tripura">Tripura</SelectItem>
+                    <SelectItem value="Uttar Pradesh">Uttar Pradesh</SelectItem>
+                    <SelectItem value="Uttarakhand">Uttarakhand</SelectItem>
+                    <SelectItem value="West Bengal">West Bengal</SelectItem>
+                    <SelectItem value="Andaman and Nicobar Islands">Andaman and Nicobar Islands</SelectItem>
+                    <SelectItem value="Chandigarh">Chandigarh</SelectItem>
+                    <SelectItem value="Dadra and Nagar Haveli and Daman and Diu">Dadra and Nagar Haveli and Daman and Diu</SelectItem>
+                    <SelectItem value="Delhi">Delhi</SelectItem>
+                    <SelectItem value="Jammu and Kashmir">Jammu and Kashmir</SelectItem>
+                    <SelectItem value="Ladakh">Ladakh</SelectItem>
+                    <SelectItem value="Lakshadweep">Lakshadweep</SelectItem>
+                    <SelectItem value="Puducherry">Puducherry</SelectItem>
+                  </SelectContent>
+                </Select>
                 {errors.state && (
                   <p className="text-sm text-red-500">{errors.state.message}</p>
                 )}

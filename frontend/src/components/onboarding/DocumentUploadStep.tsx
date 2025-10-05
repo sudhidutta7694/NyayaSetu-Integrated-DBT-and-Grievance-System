@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -70,27 +70,35 @@ export default function DocumentUploadStep({ onComplete, onPrevious, initialData
     },
   })
 
+  // Sync documents state with form value
+  useEffect(() => {
+    setValue('documents', documents)
+  }, [documents, setValue])
+
   const documentTypes = [
     {
       id: 'CASTE_CERTIFICATE',
       name: t('documents.casteCertificate', 'Caste Certificate'),
-      description: t('documents.casteCertificateDesc', 'Upload your caste certificate'),
-      required: true,
-      icon: Shield,
-    },
-    {
-      id: 'BANK_PASSBOOK',
-      name: t('documents.bankPassbook', 'Bank Passbook'),
-      description: t('documents.bankPassbookDesc', 'Upload bank passbook or statement'),
-      required: true,
-      icon: FileText,
     },
     {
       id: 'AADHAAR_CARD',
       name: t('documents.aadhaarCard', 'Aadhaar Card'),
-      description: t('documents.aadhaarCardDesc', 'Upload Aadhaar card copy'),
-      required: false,
-      icon: FileText,
+    },
+    {
+      id: 'RATION_CARD',
+      name: t('documents.rationCard', 'Ration Card'),
+    },
+    {
+      id: 'BPL_CARD',
+      name: t('documents.bplCard', 'BPL Card'),
+    },
+    {
+      id: 'INCOME_CERTIFICATE',
+      name: t('documents.incomeCertificate', 'Income Certificate'),
+    },
+    {
+      id: 'BIRTH_CERTIFICATE',
+      name: t('documents.birthCertificate', 'Birth Certificate'),
     },
   ]
 
@@ -204,15 +212,7 @@ export default function DocumentUploadStep({ onComplete, onPrevious, initialData
   const onSubmit = async (data: DocumentUploadForm) => {
     setIsLoading(true)
     try {
-      // Check if all required documents are uploaded
-      const requiredTypes = documentTypes.filter(doc => doc.required).map(doc => doc.id)
-      const uploadedTypes = documents.map(doc => doc.type)
-      const missingRequired = requiredTypes.filter(type => !uploadedTypes.includes(type))
-
-      if (missingRequired.length > 0) {
-        toast.error(t('documents.missingRequired', 'Please upload all required documents'))
-        return
-      }
+      // No required document check needed
 
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000))
@@ -260,30 +260,21 @@ export default function DocumentUploadStep({ onComplete, onPrevious, initialData
           {/* Document Types */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {documentTypes.map((docType) => {
-              const Icon = docType.icon
               const isUploaded = documents.some(doc => doc.type === docType.id)
-              
               return (
-                <div key={docType.id} className="border rounded-lg p-4 space-y-3">
-                  <div className="flex items-center space-x-2">
-                    <Icon className="h-5 w-5 text-orange-600" />
-                    <h3 className="font-medium">{docType.name}</h3>
-                    {docType.required && (
-                      <Badge variant="destructive" className="text-xs">
-                        {t('documents.required', 'Required')}
-                      </Badge>
-                    )}
+                <div key={docType.id} className="border border-gray-200 rounded-xl p-6 bg-white shadow-sm flex flex-col gap-3 min-h-[180px] justify-between">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="font-semibold text-base text-gray-900">{docType.name}</h3>
+                    {/* Required badge removed as per request */}
                   </div>
-                  <p className="text-sm text-gray-600">{docType.description}</p>
-                  
-                  <div className="flex space-x-2">
+                  <div className="flex gap-2 mt-auto flex-wrap">
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
                       onClick={() => handleFileSelect(docType.id)}
                       disabled={isUploaded}
-                      className="flex-1"
+                      className="flex-1 min-w-[120px] font-medium border-gray-300"
                     >
                       <Upload className="h-4 w-4 mr-1" />
                       {t('documents.upload', 'Upload File')}
@@ -294,7 +285,7 @@ export default function DocumentUploadStep({ onComplete, onPrevious, initialData
                       size="sm"
                       onClick={() => handleDigilockerImport(docType.id)}
                       disabled={isUploaded || isLoading}
-                      className="flex-1"
+                      className="flex-1 min-w-[160px] font-medium border-gray-300"
                     >
                       <ExternalLink className="h-4 w-4 mr-1" />
                       {t('documents.digilocker', 'Import from DigiLocker')}

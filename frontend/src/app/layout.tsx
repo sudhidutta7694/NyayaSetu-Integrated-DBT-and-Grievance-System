@@ -8,6 +8,7 @@ import { LanguageProvider } from '@/contexts/LanguageContext'
 import { GovernmentHeader } from '@/components/layout/GovernmentHeader'
 import { GovernmentFooter } from '@/components/layout/GovernmentFooter'
 import { ScreenReader } from '@/components/accessibility/ScreenReader'
+import ChatbotGlobal from '@/components/chatbot/ChatbotGlobal'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -51,6 +52,7 @@ export default function RootLayout({
                 <GovernmentFooter />
               </div>
               <ScreenReader data-screen-reader />
+              <ChatbotGlobal />
               <Toaster
                 position="top-right"
                 toastOptions={{

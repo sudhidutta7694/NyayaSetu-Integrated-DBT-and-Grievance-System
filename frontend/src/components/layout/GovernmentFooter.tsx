@@ -11,10 +11,10 @@ export function GovernmentFooter() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* About Section */}
           <div>
-            <div className="flex items-center space-x-2 mb-4">
+            <a href="/" className="flex items-center space-x-2 mb-4 hover:opacity-80 transition-opacity" style={{textDecoration: 'none'}}>
               <Shield className="h-6 w-6 text-orange-500" />
               <h3 className="text-lg font-semibold">NyayaSetu</h3>
-            </div>
+            </a>
             <p className="text-gray-300 text-sm mb-4">
               A comprehensive platform for implementing Direct Benefit Transfer (DBT) 
               under the Centrally Sponsored Scheme for effective implementation of 
@@ -27,27 +27,17 @@ export function GovernmentFooter() {
             <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <a href="/" className="text-gray-300 hover:text-orange-400 transition-colors">
-                  Home
-                </a>
-              </li>
-              <li>
-                <a href="/about" className="text-gray-300 hover:text-orange-400 transition-colors">
+                <a href="/#about" className="text-gray-300 hover:text-orange-400 transition-colors">
                   About Us
                 </a>
               </li>
               <li>
-                <a href="/services" className="text-gray-300 hover:text-orange-400 transition-colors">
+                <a href="/#services" className="text-gray-300 hover:text-orange-400 transition-colors">
                   Services
                 </a>
               </li>
               <li>
-                <a href="/guidelines" className="text-gray-300 hover:text-orange-400 transition-colors">
-                  Guidelines
-                </a>
-              </li>
-              <li>
-                <a href="/faq" className="text-gray-300 hover:text-orange-400 transition-colors">
+                <a href="/#faq" className="text-gray-300 hover:text-orange-400 transition-colors">
                   FAQ
                 </a>
               </li>
@@ -141,16 +131,6 @@ export function GovernmentFooter() {
               <span className="ml-2">Version 1.0.0</span>
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Accessibility Notice */}
-      <div className="bg-orange-600 text-white py-3">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm">
-          <p>
-            🔍 This website is designed to be accessible to all users. 
-            If you encounter any accessibility issues, please contact us at accessibility@nyayasetu.gov.in
-          </p>
         </div>
       </div>
     </footer>
