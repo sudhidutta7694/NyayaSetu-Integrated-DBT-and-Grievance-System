@@ -13,46 +13,42 @@ export function GovernmentFooter() {
           <div>
             <div className="flex items-center space-x-2 mb-4">
               <Shield className="h-6 w-6 text-orange-500" />
-              <h3 className="text-lg font-semibold">न्यायसेतु</h3>
+              <h3 className="text-lg font-semibold">NyayaSetu</h3>
             </div>
             <p className="text-gray-300 text-sm mb-4">
               A comprehensive platform for implementing Direct Benefit Transfer (DBT) 
               under the Centrally Sponsored Scheme for effective implementation of 
               PCR Act and PoA Act.
             </p>
-            <p className="text-gray-300 text-sm">
-              PCR Act और PoA Act के प्रभावी कार्यान्वयन के लिए DBT प्रणाली का 
-              एक व्यापक मंच।
-            </p>
           </div>
 
           {/* Quick Links */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">त्वरित लिंक | Quick Links</h3>
+            <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
             <ul className="space-y-2 text-sm">
               <li>
                 <a href="/" className="text-gray-300 hover:text-orange-400 transition-colors">
-                  होम | Home
+                  Home
                 </a>
               </li>
               <li>
                 <a href="/about" className="text-gray-300 hover:text-orange-400 transition-colors">
-                  के बारे में | About Us
+                  About Us
                 </a>
               </li>
               <li>
                 <a href="/services" className="text-gray-300 hover:text-orange-400 transition-colors">
-                  सेवाएं | Services
+                  Services
                 </a>
               </li>
               <li>
                 <a href="/guidelines" className="text-gray-300 hover:text-orange-400 transition-colors">
-                  दिशानिर्देश | Guidelines
+                  Guidelines
                 </a>
               </li>
               <li>
                 <a href="/faq" className="text-gray-300 hover:text-orange-400 transition-colors">
-                  सामान्य प्रश्न | FAQ
+                  FAQ
                 </a>
               </li>
             </ul>
@@ -60,7 +56,7 @@ export function GovernmentFooter() {
 
           {/* Important Links */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">महत्वपूर्ण लिंक | Important Links</h3>
+            <h3 className="text-lg font-semibold mb-4">Important Links</h3>
             <ul className="space-y-2 text-sm">
               <li>
                 <a 
@@ -107,7 +103,7 @@ export function GovernmentFooter() {
 
           {/* Contact Info */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">संपर्क | Contact</h3>
+            <h3 className="text-lg font-semibold mb-4">Contact</h3>
             <div className="space-y-3 text-sm">
               <div className="flex items-start space-x-2">
                 <MapPin className="h-4 w-4 text-orange-500 mt-0.5" />
@@ -136,7 +132,7 @@ export function GovernmentFooter() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0">
             <div className="text-sm text-gray-400">
-              © 2024 न्यायसेतु (NyayaSetu). All rights reserved. | 
+              © 2024 NyayaSetu. All rights reserved. | 
               <a href="/privacy" className="hover:text-orange-400 ml-2">Privacy Policy</a> | 
               <a href="/terms" className="hover:text-orange-400 ml-2">Terms of Service</a>
             </div>
