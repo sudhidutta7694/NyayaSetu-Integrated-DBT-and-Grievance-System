@@ -8,9 +8,10 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel, EmailStr
 import structlog
+from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.core.database import get_database, Prisma
+from app.core.database import get_db
 from app.core.exceptions import AuthenticationException, ValidationException
 from app.core.security import (
     create_access_token,
@@ -25,6 +26,7 @@ from app.services.auth_service import AuthService
 from app.services.otp_service import OTPService
 from app.services.aadhaar_service import AadhaarService
 from app.services.aadhaar_auth_service import AadhaarAuthService
+from models.user import User as UserModel
 
 logger = structlog.get_logger()
 router = APIRouter()
@@ -70,7 +72,7 @@ class AadhaarOTPResponse(BaseModel):
 @router.post("/register", response_model=User)
 async def register(
     user_data: UserCreate,
-    db: Prisma = Depends(get_database)
+    db: Session = Depends(get_db)
 ):
     """Register a new user"""
     try:
@@ -89,7 +91,7 @@ async def register(
 @router.post("/login", response_model=LoginResponse)
 async def login(
     login_data: UserLogin,
-    db: Prisma = Depends(get_database)
+    db: Session = Depends(get_db)
 ):
     """Login user with phone number or email"""
     try:
@@ -140,7 +142,7 @@ async def login(
 @router.post("/verify-otp", response_model=TokenResponse)
 async def verify_otp_login(
     otp_data: OTPVerify,
-    db: Prisma = Depends(get_database)
+    db: Session = Depends(get_db)
 ):
     """Verify OTP and return access token"""
     try:
@@ -172,10 +174,10 @@ async def verify_otp_login(
         )
         
         # Update last login
-        await db.user.update(
-            where={"id": user.id},
-            data={"last_login": datetime.utcnow()}
-        )
+        user_record = db.query(UserModel).filter(UserModel.id == user.id).first()
+        if user_record:
+            user_record.last_login = datetime.utcnow()
+            db.commit()
         
         logger.info("User logged in successfully", user_id=user.id)
         
@@ -202,7 +204,7 @@ async def verify_otp_login(
 @router.post("/aadhaar-verify")
 async def verify_aadhaar(
     aadhaar_data: dict,
-    db: Prisma = Depends(get_database)
+    db: Session = Depends(get_db)
 ):
     """Verify Aadhaar number (simulated)"""
     try:
@@ -229,7 +231,7 @@ async def verify_aadhaar(
 @router.post("/refresh-token", response_model=TokenResponse)
 async def refresh_token(
     credentials: HTTPAuthorizationCredentials = Depends(security),
-    db: Prisma = Depends(get_database)
+    db: Session = Depends(get_db)
 ):
     """Refresh access token"""
     try:
@@ -241,7 +243,7 @@ async def refresh_token(
             raise AuthenticationException("Invalid token")
         
         # Get user
-        user = await db.user.find_unique(where={"id": user_id})
+        user = db.query(UserModel).filter(UserModel.id == user_id).first()
         if not user or not user.is_active:
             raise AuthenticationException("User not found or inactive")
         
@@ -283,7 +285,7 @@ async def logout(
 @router.get("/me", response_model=User)
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
-    db: Prisma = Depends(get_database)
+    db: Session = Depends(get_db)
 ):
     """Get current user information"""
     try:
@@ -293,7 +295,7 @@ async def get_current_user(
         if not user_id:
             raise AuthenticationException("Invalid token")
         
-        user = await db.user.find_unique(where={"id": user_id})
+        user = db.query(UserModel).filter(UserModel.id == user_id).first()
         if not user:
             raise AuthenticationException("User not found")
         
@@ -315,7 +317,7 @@ async def get_current_user(
 @router.post("/aadhaar-login", response_model=AadhaarLoginResponse)
 async def aadhaar_login(
     request: AadhaarLoginRequest,
-    db: Prisma = Depends(get_database)
+    db: Session = Depends(get_db)
 ):
     """Login using Aadhaar number - sends OTP to registered mobile"""
     try:
@@ -354,8 +356,8 @@ async def verify_aadhaar_otp(
 ):
     """Verify OTP for Aadhaar login"""
     try:
-        from app.core.database import get_prisma_client
-        db = await get_prisma_client()
+        from app.core.database import get_db
+        db = next(get_db())
         aadhaar_service = AadhaarAuthService(db)
         result = await aadhaar_service.verify_aadhaar_otp(
             request.aadhaar_number,

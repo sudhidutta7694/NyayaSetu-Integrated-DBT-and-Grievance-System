@@ -1,10 +1,7 @@
 # Docker Compose file for NyayaSetu DBT System
-
 services:
-  # PostgreSQL Database
   postgres:
     image: postgres:15-alpine
-    container_name: nyayasetu_postgres
     environment:
       POSTGRES_USER: nyayasetu
       POSTGRES_PASSWORD: password
@@ -13,39 +10,18 @@ services:
       - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - nyayasetu_network
-    restart: unless-stopped
 
-  # Redis for caching and sessions
-  redis:
-    image: redis:7-alpine
-    container_name: nyayasetu_redis
-    ports:
-      - "6380:6379"
-    volumes:
-      - redis_data:/data
-    networks:
-      - nyayasetu_network
-    restart: unless-stopped
-
-  # FastAPI Backend
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: nyayasetu_backend
+    build: ./backend
     environment:
       - DATABASE_URL=postgresql://nyayasetu:password@postgres:5432/nyayasetu_db
-      - REDIS_URL=redis://redis:6379
-      - ENVIRONMENT=development
+      - BACKEND_CORS_ORIGINS=["http://localhost:3000"]
       - POSTGRES_HOST=postgres
       - POSTGRES_PORT=5432
       - POSTGRES_USER=nyayasetu
-      - POSTGRES_PASSWORD=password
       - POSTGRES_DB=nyayasetu_db
-      - BACKEND_CORS_ORIGINS=http://localhost:3000,http://localhost:8000,https://nyaya-setu-integrated-dbt-and-griev.vercel.app
     ports:
       - "8000:8000"
     volumes:
@@ -53,11 +29,8 @@ services:
       - backend_uploads:/app/uploads
     depends_on:
       - postgres
-      - redis
     networks:
       - nyayasetu_network
-    restart: unless-stopped
-    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 
   # Next.js Frontend
   frontend:
@@ -75,26 +48,8 @@ services:
       - nyayasetu_network
     restart: unless-stopped
 
-  # Nginx Reverse Proxy
-  nginx:
-    image: nginx:alpine
-    container_name: nyayasetu_nginx
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
-      - ./nginx/ssl:/etc/nginx/ssl
-    depends_on:
-      - frontend
-      - backend
-    networks:
-      - nyayasetu_network
-    restart: unless-stopped
-
 volumes:
   postgres_data:
-  redis_data:
   backend_uploads:
 
 networks:

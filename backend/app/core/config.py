@@ -77,8 +77,6 @@ class Settings(BaseSettings):
     )
     UPLOAD_DIR: str = "uploads"
     
-    # Redis
-    REDIS_URL: str = config("REDIS_URL", default="redis://redis:6379")
     
     # Email
     SMTP_HOST: str = config("SMTP_HOST", default="smtp.gmail.com")
