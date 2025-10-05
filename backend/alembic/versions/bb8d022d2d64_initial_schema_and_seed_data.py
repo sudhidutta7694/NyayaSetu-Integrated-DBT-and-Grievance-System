@@ -162,7 +162,7 @@ def upgrade() -> None:
     op.execute("""
         INSERT INTO users (id, email, phone_number, full_name, aadhaar_number, role, is_active, is_verified, is_onboarded, onboarding_step, created_at, updated_at) VALUES
         ('550e8400-e29b-41d4-a716-446655440010', 'admin@nyayasetu.gov.in', '+919876543210', 'System Administrator', NULL, 'ADMIN', true, true, true, 4, NOW(), NOW()),
-        ('550e8400-e29b-41d4-a716-446655440011', 'john.doe@example.com', '+919876543211', 'John Doe', '362851176122', 'PUBLIC', true, true, true, 4, NOW(), NOW()),
+        ('550e8400-e29b-41d4-a716-446655440011', 'john.doe@example.com', '+919876543211', 'John Doe', '362851176122', 'PUBLIC', true, true, false, 0, NOW(), NOW()),
         ('550e8400-e29b-41d4-a716-446655440012', 'jane.smith@example.com', '+919876543212', 'Jane Smith', '498765432109', 'PUBLIC', true, true, true, 4, NOW(), NOW()),
         ('550e8400-e29b-41d4-a716-446655440013', 'district.officer@example.com', '+919876543213', 'District Officer', NULL, 'DISTRICT_AUTHORITY', true, true, true, 4, NOW(), NOW()),
         ('550e8400-e29b-41d4-a716-446655440014', 'welfare.officer@example.com', '+919876543214', 'Welfare Officer', NULL, 'SOCIAL_WELFARE', true, true, true, 4, NOW(), NOW()),

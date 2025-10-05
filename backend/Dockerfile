@@ -19,4 +19,4 @@ COPY . .
 EXPOSE 8000
 
 # Run the application using startup script
-CMD ["./start.sh"]
+CMD ["./sart.sh"]
