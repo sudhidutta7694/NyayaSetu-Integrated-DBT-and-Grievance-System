@@ -40,6 +40,12 @@ services:
       - DATABASE_URL=postgresql://nyayasetu:password@postgres:5432/nyayasetu_db
       - REDIS_URL=redis://redis:6379
       - ENVIRONMENT=development
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=nyayasetu
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=nyayasetu_db
+      - BACKEND_CORS_ORIGINS=http://localhost:3000,http://localhost:8000,https://nyaya-setu-integrated-dbt-and-griev.vercel.app
     ports:
       - "8000:8000"
     volumes:

@@ -61,15 +61,8 @@ $COMPOSE_CMD up -d postgres redis
 print_status "Waiting for databases to be ready..."
 sleep 10
 
-# Generate and run database migrations
-print_status "Generating Prisma client..."
-$COMPOSE_CMD run --rm backend prisma generate
-
-print_status "Creating initial migration if needed..."
-$COMPOSE_CMD run --rm backend prisma migrate dev --name init --create-only || true
-
-print_status "Deploying database migrations..."
-$COMPOSE_CMD run --rm backend prisma migrate deploy
+# Database migrations will be handled by the backend startup script
+print_status "Database migrations will be handled by backend startup script..."
 
 # Start backend in development mode (with volume mounting for hot reload)
 print_status "Starting backend in development mode..."

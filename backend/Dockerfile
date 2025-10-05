@@ -17,6 +17,7 @@ RUN apt-get update \
         wget \
         nodejs \
         npm \
+        postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Prisma CLI using npm
@@ -30,8 +31,14 @@ RUN pip install --no-cache-dir --upgrade pip \
 # Copy application code
 COPY . .
 
+# Generate Prisma client
+RUN prisma generate
+
 # Create uploads directory
 RUN mkdir -p uploads
+
+# Make startup script executable
+RUN chmod +x start.sh
 
 # Expose port
 EXPOSE 8000
@@ -40,5 +47,5 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
-# Run the application
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Run the application using startup script
+CMD ["./start.sh"]

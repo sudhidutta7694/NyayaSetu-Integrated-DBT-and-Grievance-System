@@ -164,17 +164,7 @@ wait_for_service "PostgreSQL" 5433
 # Wait for Redis to be ready
 wait_for_service "Redis" 6380
 
-    # Generate and run database migrations
-    print_status "Generating Prisma client..."
-    $COMPOSE_CMD run --rm backend prisma generate
-    
-    print_status "Creating initial migration if needed..."
-    $COMPOSE_CMD run --rm backend prisma migrate dev --name init --create-only || true
-    
-    print_status "Deploying database migrations..."
-    $COMPOSE_CMD run --rm backend prisma migrate deploy
-
-# Start backend service
+# Start backend service (migrations will be handled by the backend startup script)
 print_status "Starting backend service..."
 $COMPOSE_CMD up -d backend
 

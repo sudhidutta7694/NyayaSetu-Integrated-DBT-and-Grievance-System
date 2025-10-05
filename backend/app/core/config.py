@@ -34,7 +34,7 @@ class Settings(BaseSettings):
     # CORS
     BACKEND_CORS_ORIGINS: List[str] = config(
         "BACKEND_CORS_ORIGINS",
-        default="http://localhost:3000,http://localhost:8000",
+        default="http://localhost:3000,http://localhost:8000,https://nyaya-setu-integrated-dbt-and-griev.vercel.app",
         cast=lambda v: [s.strip() for s in v.split(",")]
     )
     
