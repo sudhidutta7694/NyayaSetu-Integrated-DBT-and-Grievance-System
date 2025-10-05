@@ -1,0 +1,52 @@
+{
+  "site": {
+    "title": "ন্যায়সেতু - সমন্বিত DBT এবং অভিযোগ ব্যবস্থা",
+    "description": "PCR Act এবং PoA Act এর কার্যকর বাস্তবায়নের জন্য Direct Benefit Transfer (DBT) এর অধীনে একটি ব্যাপক প্ল্যাটফর্ম।"
+  },
+  "header": {
+    "government": "ভারত সরকার",
+    "ministry": "সামাজিক ন্যায় ও ক্ষমতায়ন মন্ত্রক",
+    "skipToContent": "প্রধান বিষয়বস্তুতে যান",
+    "screenReaderAccess": "স্ক্রিন রিডার অ্যাক্সেস"
+  },
+  "navigation": {
+    "home": "হোম",
+    "about": "সম্পর্কে",
+    "services": "সেবা",
+    "contact": "যোগাযোগ",
+    "help": "সহায়তা"
+  },
+  "home": {
+    "title": "ন্যায়সেতু",
+    "subtitle": "DBT এবং অভিযোগ ব্যবস্থা",
+    "description": "PCR Act এবং PoA Act এর কার্যকর বাস্তবায়নের জন্য সমন্বিত Direct Benefit Transfer এবং অভিযোগ ব্যবস্থা। প্রযুক্তি-চালিত সমাধানের মাধ্যমে সকল নাগরিকের জন্য ন্যায়বিচার এবং মর্যাদা নিশ্চিত করা।",
+    "applyNow": "আবেদন করুন",
+    "learnMore": "আরও জানুন",
+    "quickAccess": "দ্রুত অ্যাক্সেস",
+    "keyFeatures": "মূল বৈশিষ্ট্য",
+    "achievements": "আমাদের অর্জন",
+    "latestUpdates": "সর্বশেষ আপডেট",
+    "contactInfo": "যোগাযোগের তথ্য"
+  },
+  "common": {
+    "helpline": "হেল্পলাইন",
+    "email": "ইমেইল",
+    "address": "ঠিকানা",
+    "support24x7": "24x7 সহায়তা",
+    "successfulApplications": "সফল আবেদন",
+    "amountDisbursed": "বিতরণকৃত পরিমাণ",
+    "statesCovered": "রাজ্য",
+    "successRate": "সাফল্যের হার"
+  },
+  "accessibility": {
+    "screenReader": "স্ক্রিন রিডার",
+    "textToSpeech": "টেক্সট টু স্পিচ",
+    "speakPage": "পেজ বলুন",
+    "stopSpeaking": "বলতে বন্ধ করুন",
+    "increaseFontSize": "ফন্ট সাইজ বাড়ান",
+    "decreaseFontSize": "ফন্ট সাইজ কমান",
+    "highContrast": "উচ্চ কনট্রাস্ট",
+    "normalContrast": "স্বাভাবিক কনট্রাস্ট"
+  }
+}
+

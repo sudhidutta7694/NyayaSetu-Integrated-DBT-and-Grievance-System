@@ -1,0 +1,359 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-py"
+  enable_experimental_decimal = true
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  PUBLIC
+  DISTRICT_AUTHORITY
+  SOCIAL_WELFARE
+  FINANCIAL_INSTITUTION
+  ADMIN
+}
+
+enum ApplicationStatus {
+  DRAFT
+  SUBMITTED
+  UNDER_REVIEW
+  DOCUMENT_VERIFICATION_PENDING
+  APPROVED
+  REJECTED
+  FUND_DISBURSED
+  COMPLETED
+}
+
+enum DocumentStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+  EXPIRED
+}
+
+enum CaseStatus {
+  REGISTERED
+  UNDER_INVESTIGATION
+  IN_COURT
+  RESOLVED
+  CLOSED
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+  PREFER_NOT_TO_SAY
+}
+
+enum Category {
+  SC
+  ST
+  OBC
+  GENERAL
+  OTHER
+}
+
+model User {
+  id                String   @id @default(cuid())
+  email             String   @unique
+  phone_number      String   @unique
+  full_name         String
+  father_name       String?
+  mother_name       String?
+  aadhaar_number    String?  @unique
+  date_of_birth     DateTime?
+  age               Int?
+  gender            Gender?
+  category          Category?
+  address           String?
+  district          String?
+  state             String?
+  pincode           String?
+  role              UserRole @default(PUBLIC)
+  is_active         Boolean  @default(true)
+  is_verified       Boolean  @default(false)
+  is_onboarded      Boolean  @default(false)
+  onboarding_step   Int      @default(0)
+  profile_image     String?
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
+  last_login        DateTime?
+
+  // Relations
+  applications      Application[]
+  documents         Document[]
+  cases             Case[]
+  notifications     Notification[]
+  audit_logs        AuditLog[]
+  role_assignments  UserRoleAssignment[]
+  onboarding_steps  OnboardingStep[]
+  bank_accounts     BankAccount[]
+
+  @@map("users")
+}
+
+model Role {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  permissions String[] // JSON array of permissions
+  is_active   Boolean  @default(true)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  // Relations
+  user_assignments UserRoleAssignment[]
+
+  @@map("roles")
+}
+
+model UserRoleAssignment {
+  id        String   @id @default(cuid())
+  user_id   String
+  role_id   String
+  assigned_by String?
+  assigned_at DateTime @default(now())
+  expires_at  DateTime?
+  is_active   Boolean  @default(true)
+
+  // Relations
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [role_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, role_id])
+  @@map("user_role_assignments")
+}
+
+model Application {
+  id                    String            @id @default(cuid())
+  application_number    String            @unique
+  user_id               String
+  title                 String
+  description           String?
+  status                ApplicationStatus @default(DRAFT)
+  amount_requested      Decimal?          @db.Decimal(10, 2)
+  amount_approved       Decimal?          @db.Decimal(10, 2)
+  amount_disbursed      Decimal?          @db.Decimal(10, 2)
+  bank_account_number   String?
+  bank_ifsc_code        String?
+  bank_name             String?
+  bank_branch           String?
+  account_holder_name   String?
+  submitted_at          DateTime?
+  reviewed_at           DateTime?
+  approved_at           DateTime?
+  disbursed_at          DateTime?
+  rejection_reason      String?
+  created_at            DateTime          @default(now())
+  updated_at            DateTime          @updatedAt
+
+  // Relations
+  user                  User              @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  documents             Document[]
+  case                  Case?
+  disbursements         Disbursement[]
+  notifications         Notification[]
+
+  @@map("applications")
+}
+
+model Document {
+  id              String         @id @default(cuid())
+  application_id  String?
+  user_id         String
+  document_type   String
+  document_name   String
+  file_path       String
+  file_size       Int?
+  mime_type       String?
+  status          DocumentStatus @default(PENDING)
+  verified_by     String?
+  verified_at     DateTime?
+  rejection_reason String?
+  digilocker_id   String?
+  is_digilocker   Boolean        @default(false)
+  ocr_data        String?        // JSON data from OCR processing
+  created_at      DateTime       @default(now())
+  updated_at      DateTime       @updatedAt
+
+  // Relations
+  application     Application?   @relation(fields: [application_id], references: [id], onDelete: Cascade)
+  user            User           @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("documents")
+}
+
+model Case {
+  id                String     @id @default(cuid())
+  case_number       String     @unique
+  application_id    String?    @unique
+  user_id           String
+  title             String
+  description       String?
+  fir_number        String?
+  police_station    String?
+  district          String?
+  state             String?
+  status            CaseStatus @default(REGISTERED)
+  registered_at     DateTime   @default(now())
+  investigated_at   DateTime?
+  court_filed_at    DateTime?
+  resolved_at       DateTime?
+  closed_at         DateTime?
+  resolution_notes  String?
+  created_at        DateTime   @default(now())
+  updated_at        DateTime   @updatedAt
+
+  // Relations
+  application       Application? @relation(fields: [application_id], references: [id], onDelete: Cascade)
+  user              User         @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  case_updates      CaseUpdate[]
+  notifications     Notification[]
+
+  @@map("cases")
+}
+
+model CaseUpdate {
+  id          String   @id @default(cuid())
+  case_id     String
+  title       String
+  description String
+  status      String
+  updated_by  String
+  created_at  DateTime @default(now())
+
+  // Relations
+  case        Case     @relation(fields: [case_id], references: [id], onDelete: Cascade)
+
+  @@map("case_updates")
+}
+
+model Disbursement {
+  id              String   @id @default(cuid())
+  application_id  String
+  amount          Decimal  @db.Decimal(10, 2)
+  transaction_id  String?  @unique
+  bank_reference  String?
+  status          String   @default("PENDING")
+  disbursed_by    String?
+  disbursed_at    DateTime?
+  failure_reason  String?
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  // Relations
+  application     Application @relation(fields: [application_id], references: [id], onDelete: Cascade)
+
+  @@map("disbursements")
+}
+
+model Notification {
+  id          String   @id @default(cuid())
+  user_id     String
+  title       String
+  message     String
+  type        String   @default("INFO")
+  is_read     Boolean  @default(false)
+  data        String?  // JSON data for additional information
+  sent_at     DateTime @default(now())
+  read_at     DateTime?
+
+  // Relations
+  user        User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  application Application? @relation(fields: [application_id], references: [id], onDelete: Cascade)
+  case        Case?    @relation(fields: [case_id], references: [id], onDelete: Cascade)
+
+  application_id String?
+  case_id        String?
+
+  @@map("notifications")
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  user_id     String?
+  action      String
+  resource    String
+  resource_id String?
+  old_values  String?  // JSON
+  new_values  String?  // JSON
+  ip_address  String?
+  user_agent  String?
+  created_at  DateTime @default(now())
+
+  // Relations
+  user        User?    @relation(fields: [user_id], references: [id], onDelete: SetNull)
+
+  @@map("audit_logs")
+}
+
+model OTP {
+  id          String   @id @default(cuid())
+  phone_number String
+  email       String?
+  otp_code    String
+  purpose     String   // LOGIN, VERIFICATION, RESET_PASSWORD, AADHAAR_LOGIN
+  is_used     Boolean  @default(false)
+  expires_at  DateTime
+  metadata    String?  // JSON metadata for additional data
+  created_at  DateTime @default(now())
+
+  @@map("otps")
+}
+
+model ChatSession {
+  id          String   @id @default(cuid())
+  user_id     String?
+  session_id  String   @unique
+  messages    String[] // JSON array of messages
+  context     String?  // JSON context data
+  is_active   Boolean  @default(true)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  @@map("chat_sessions")
+}
+
+model OnboardingStep {
+  id          String   @id @default(cuid())
+  user_id     String
+  step_number Int
+  step_name   String
+  is_completed Boolean @default(false)
+  data        String?  // JSON data for step-specific information
+  completed_at DateTime?
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  // Relations
+  user        User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, step_number])
+  @@map("onboarding_steps")
+}
+
+model BankAccount {
+  id                String   @id @default(cuid())
+  user_id           String
+  account_number    String
+  ifsc_code         String
+  bank_name         String
+  branch_name       String
+  account_holder_name String
+  is_verified       Boolean  @default(false)
+  verified_at       DateTime?
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
+
+  // Relations
+  user              User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("bank_accounts")
+}

@@ -1,0 +1,400 @@
+"""
+Authentication endpoints
+"""
+
+from datetime import datetime, timedelta
+from typing import Optional
+from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from pydantic import BaseModel, EmailStr
+import structlog
+
+from app.core.config import settings
+from app.core.database import get_database, Prisma
+from app.core.exceptions import AuthenticationException, ValidationException
+from app.core.security import (
+    create_access_token,
+    verify_token,
+    hash_password,
+    verify_password,
+    generate_otp,
+    verify_otp
+)
+from app.models.user import User, UserCreate, UserLogin, OTPRequest, OTPVerify
+from app.services.auth_service import AuthService
+from app.services.otp_service import OTPService
+from app.services.aadhaar_service import AadhaarService
+from app.services.aadhaar_auth_service import AadhaarAuthService
+
+logger = structlog.get_logger()
+router = APIRouter()
+security = HTTPBearer()
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str
+    expires_in: int
+    user: User
+
+
+class LoginResponse(BaseModel):
+    message: str
+    requires_otp: bool = False
+
+
+class AadhaarLoginRequest(BaseModel):
+    aadhaar_number: str
+
+
+class AadhaarOTPVerify(BaseModel):
+    aadhaar_number: str
+    otp_code: str
+
+
+class AadhaarLoginResponse(BaseModel):
+    success: bool
+    message: str
+    phone_number: Optional[str] = None
+    expires_in_minutes: Optional[int] = None
+    aadhaar_info: Optional[dict] = None
+
+
+class AadhaarOTPResponse(BaseModel):
+    success: bool
+    message: str
+    user: Optional[dict] = None
+    requires_onboarding: bool = False
+
+
+@router.post("/register", response_model=User)
+async def register(
+    user_data: UserCreate,
+    db: Prisma = Depends(get_database)
+):
+    """Register a new user"""
+    try:
+        auth_service = AuthService(db)
+        user = await auth_service.register_user(user_data)
+        logger.info("User registered successfully", user_id=user.id)
+        return user
+    except Exception as e:
+        logger.error("Registration failed", error=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+
+
+@router.post("/login", response_model=LoginResponse)
+async def login(
+    login_data: UserLogin,
+    db: Prisma = Depends(get_database)
+):
+    """Login user with phone number or email"""
+    try:
+        auth_service = AuthService(db)
+        otp_service = OTPService(db)
+        
+        # Check if user exists
+        user = await auth_service.get_user_by_phone_or_email(
+            login_data.phone_number or login_data.email
+        )
+        
+        if not user:
+            raise AuthenticationException("User not found")
+        
+        if not user.is_active:
+            raise AuthenticationException("Account is deactivated")
+        
+        # Generate and send OTP
+        otp_code = generate_otp(settings.OTP_LENGTH)
+        await otp_service.create_otp(
+            phone_number=user.phone_number,
+            email=user.email,
+            otp_code=otp_code,
+            purpose="LOGIN"
+        )
+        
+        # In production, send OTP via SMS/Email
+        logger.info("OTP generated for login", user_id=user.id, otp=otp_code)
+        
+        return LoginResponse(
+            message="OTP sent successfully",
+            requires_otp=True
+        )
+        
+    except AuthenticationException as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=e.message
+        )
+    except Exception as e:
+        logger.error("Login failed", error=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Login failed"
+        )
+
+
+@router.post("/verify-otp", response_model=TokenResponse)
+async def verify_otp_login(
+    otp_data: OTPVerify,
+    db: Prisma = Depends(get_database)
+):
+    """Verify OTP and return access token"""
+    try:
+        auth_service = AuthService(db)
+        otp_service = OTPService(db)
+        
+        # Verify OTP
+        is_valid = await otp_service.verify_otp(
+            phone_number=otp_data.phone_number,
+            email=otp_data.email,
+            otp_code=otp_data.otp_code,
+            purpose="LOGIN"
+        )
+        
+        if not is_valid:
+            raise AuthenticationException("Invalid or expired OTP")
+        
+        # Get user
+        user = await auth_service.get_user_by_phone_or_email(
+            otp_data.phone_number or otp_data.email
+        )
+        
+        if not user:
+            raise AuthenticationException("User not found")
+        
+        # Create access token
+        access_token = create_access_token(
+            data={"sub": user.id, "role": user.role.value}
+        )
+        
+        # Update last login
+        await db.user.update(
+            where={"id": user.id},
+            data={"last_login": datetime.utcnow()}
+        )
+        
+        logger.info("User logged in successfully", user_id=user.id)
+        
+        return TokenResponse(
+            access_token=access_token,
+            token_type="bearer",
+            expires_in=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+            user=user
+        )
+        
+    except AuthenticationException as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=e.message
+        )
+    except Exception as e:
+        logger.error("OTP verification failed", error=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="OTP verification failed"
+        )
+
+
+@router.post("/aadhaar-verify")
+async def verify_aadhaar(
+    aadhaar_data: dict,
+    db: Prisma = Depends(get_database)
+):
+    """Verify Aadhaar number (simulated)"""
+    try:
+        aadhaar_service = AadhaarService()
+        result = await aadhaar_service.verify_aadhaar(
+            aadhaar_number=aadhaar_data.get("aadhaar_number"),
+            otp=aadhaar_data.get("otp")
+        )
+        
+        return {
+            "verified": result["verified"],
+            "message": result["message"],
+            "user_details": result.get("user_details")
+        }
+        
+    except Exception as e:
+        logger.error("Aadhaar verification failed", error=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Aadhaar verification failed"
+        )
+
+
+@router.post("/refresh-token", response_model=TokenResponse)
+async def refresh_token(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: Prisma = Depends(get_database)
+):
+    """Refresh access token"""
+    try:
+        # Verify current token
+        payload = verify_token(credentials.credentials)
+        user_id = payload.get("sub")
+        
+        if not user_id:
+            raise AuthenticationException("Invalid token")
+        
+        # Get user
+        user = await db.user.find_unique(where={"id": user_id})
+        if not user or not user.is_active:
+            raise AuthenticationException("User not found or inactive")
+        
+        # Create new token
+        access_token = create_access_token(
+            data={"sub": user.id, "role": user.role.value}
+        )
+        
+        return TokenResponse(
+            access_token=access_token,
+            token_type="bearer",
+            expires_in=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+            user=user
+        )
+        
+    except AuthenticationException as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=e.message
+        )
+    except Exception as e:
+        logger.error("Token refresh failed", error=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Token refresh failed"
+        )
+
+
+@router.post("/logout")
+async def logout(
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Logout user (client-side token removal)"""
+    # In a stateless JWT system, logout is handled client-side
+    # You could implement token blacklisting here if needed
+    return {"message": "Logged out successfully"}
+
+
+@router.get("/me", response_model=User)
+async def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: Prisma = Depends(get_database)
+):
+    """Get current user information"""
+    try:
+        payload = verify_token(credentials.credentials)
+        user_id = payload.get("sub")
+        
+        if not user_id:
+            raise AuthenticationException("Invalid token")
+        
+        user = await db.user.find_unique(where={"id": user_id})
+        if not user:
+            raise AuthenticationException("User not found")
+        
+        return user
+        
+    except AuthenticationException as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=e.message
+        )
+    except Exception as e:
+        logger.error("Get current user failed", error=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get user information"
+        )
+
+
+@router.post("/aadhaar-login", response_model=AadhaarLoginResponse)
+async def aadhaar_login(
+    request: AadhaarLoginRequest,
+    db: Prisma = Depends(get_database)
+):
+    """Login using Aadhaar number - sends OTP to registered mobile"""
+    try:
+        aadhaar_service = AadhaarAuthService(db)
+        result = await aadhaar_service.send_aadhaar_otp(request.aadhaar_number)
+        
+        return AadhaarLoginResponse(
+            success=result["success"],
+            message=result["message"],
+            phone_number=result.get("phone_number"),
+            expires_in_minutes=result.get("expires_in_minutes"),
+            aadhaar_info=result.get("aadhaar_info")
+        )
+        
+    except ValidationException as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except AuthenticationException as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=str(e)
+        )
+    except Exception as e:
+        logger.error("Aadhaar login failed", error=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Login failed"
+        )
+
+
+@router.post("/aadhaar-verify-otp", response_model=AadhaarOTPResponse)
+async def verify_aadhaar_otp(
+    request: AadhaarOTPVerify
+):
+    """Verify OTP for Aadhaar login"""
+    try:
+        from app.core.database import get_prisma_client
+        db = await get_prisma_client()
+        aadhaar_service = AadhaarAuthService(db)
+        result = await aadhaar_service.verify_aadhaar_otp(
+            request.aadhaar_number,
+            request.otp_code
+        )
+        
+        # Create JWT token for the user
+        user_data = result["user"]
+        access_token = create_access_token(
+            data={"sub": user_data["id"], "role": "PUBLIC"}
+        )
+        
+        return AadhaarOTPResponse(
+            success=result["success"],
+            message=result["message"],
+            user={
+                **user_data,
+                "access_token": access_token,
+                "token_type": "bearer"
+            },
+            requires_onboarding=result["requires_onboarding"]
+        )
+        
+    except ValidationException as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except AuthenticationException as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=str(e)
+        )
+    except Exception as e:
+        logger.error("Aadhaar OTP verification failed", error=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="OTP verification failed"
+        )
+
+
+
