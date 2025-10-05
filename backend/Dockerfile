@@ -19,4 +19,5 @@ COPY . .
 EXPOSE 8000
 
 # Run the application using startup script
-CMD ["./sart.sh"]
+RUN chmod +x start.sh
+CMD ["./start.sh"]

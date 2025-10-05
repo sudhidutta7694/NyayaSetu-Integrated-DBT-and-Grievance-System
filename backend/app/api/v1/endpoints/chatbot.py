@@ -27,7 +27,7 @@ FAQS = [
 	 "You will need identity proof, caste certificate, FIR copy (if applicable), and bank details. The portal will guide you on uploading these during onboarding."),
 
 	# Application status
-	(['status', 'track application', 'application status', 'check status', 'progress', 'update on application'],
+	(['status', 'track application', 'application status', 'check status', 'progress', 'update on application', 'track'],
 	 "You can check your application status in the dashboard after logging in. Status updates will also be sent via SMS/email."),
 
 	# Deadlines
