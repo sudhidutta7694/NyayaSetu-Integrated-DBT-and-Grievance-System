@@ -7,7 +7,8 @@ from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File,
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import structlog
 
-from app.core.database import get_database, Prisma
+from app.core.database import get_db
+from sqlalchemy.orm import Session
 from app.core.dependencies import require_public_user
 from app.core.exceptions import ValidationException, AuthenticationException
 from app.models.user import User
@@ -30,7 +31,7 @@ security = HTTPBearer()
 @router.get("/status", response_model=OnboardingStatus)
 async def get_onboarding_status(
     current_user: User = Depends(require_public_user()),
-    db: Prisma = Depends(get_database)
+    db: Session = Depends(get_db)
 ):
     """Get current onboarding status for the authenticated user"""
     try:
@@ -48,7 +49,7 @@ async def get_onboarding_status(
 @router.get("/progress", response_model=OnboardingProgress)
 async def get_onboarding_progress(
     current_user: User = Depends(require_public_user()),
-    db: Prisma = Depends(get_database)
+    db: Session = Depends(get_db)
 ):
     """Get detailed onboarding progress for the authenticated user"""
     try:
@@ -66,7 +67,7 @@ async def get_onboarding_progress(
 @router.post("/initialize")
 async def initialize_onboarding(
     current_user: User = Depends(require_public_user()),
-    db: Prisma = Depends(get_database)
+    db: Session = Depends(get_db)
 ):
     """Initialize onboarding process for a new user"""
     try:
@@ -92,7 +93,7 @@ async def initialize_onboarding(
 async def complete_personal_info_step(
     personal_info: PersonalInfoData,
     current_user: User = Depends(require_public_user()),
-    db: Prisma = Depends(get_database)
+    db: Session = Depends(get_db)
 ):
     """Complete personal information step"""
     try:
@@ -128,7 +129,7 @@ async def upload_documents(
     is_digilocker: bool = Form(False),
     digilocker_id: Optional[str] = Form(None),
     current_user: User = Depends(require_public_user()),
-    db: Prisma = Depends(get_database)
+    db: Session = Depends(get_db)
 ):
     """Upload documents for verification"""
     try:
@@ -174,7 +175,7 @@ async def upload_documents(
 @router.get("/step/2/digilocker")
 async def get_digilocker_documents(
     current_user: User = Depends(require_public_user()),
-    db: Prisma = Depends(get_database)
+    db: Session = Depends(get_db)
 ):
     """Get available documents from DigiLocker"""
     try:
@@ -192,7 +193,7 @@ async def get_digilocker_documents(
 @router.post("/step/2/complete")
 async def complete_document_upload_step(
     current_user: User = Depends(require_public_user()),
-    db: Prisma = Depends(get_database)
+    db: Session = Depends(get_db)
 ):
     """Mark document upload step as completed"""
     try:
@@ -243,7 +244,7 @@ async def complete_document_upload_step(
 async def complete_bank_details_step(
     bank_details: BankDetailsData,
     current_user: User = Depends(require_public_user()),
-    db: Prisma = Depends(get_database)
+    db: Session = Depends(get_db)
 ):
     """Complete bank details step"""
     try:
@@ -275,7 +276,7 @@ async def complete_bank_details_step(
 @router.post("/step/4/verification")
 async def complete_verification_step(
     current_user: User = Depends(require_public_user()),
-    db: Prisma = Depends(get_database)
+    db: Session = Depends(get_db)
 ):
     """Complete verification step"""
     try:
@@ -300,7 +301,7 @@ async def complete_verification_step(
 @router.get("/documents")
 async def get_user_documents(
     current_user: User = Depends(require_public_user()),
-    db: Prisma = Depends(get_database)
+    db: Session = Depends(get_db)
 ):
     """Get all documents for the authenticated user"""
     try:
@@ -318,7 +319,7 @@ async def get_user_documents(
 @router.get("/bank-accounts")
 async def get_user_bank_accounts(
     current_user: User = Depends(require_public_user()),
-    db: Prisma = Depends(get_database)
+    db: Session = Depends(get_db)
 ):
     """Get all bank accounts for the authenticated user"""
     try:
@@ -337,7 +338,7 @@ async def get_user_bank_accounts(
 async def delete_document(
     document_id: str,
     current_user: User = Depends(require_public_user()),
-    db: Prisma = Depends(get_database)
+    db: Session = Depends(get_db)
 ):
     """Delete a document"""
     try:

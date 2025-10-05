@@ -55,7 +55,7 @@ async def lifespan(app: FastAPI):
     """Application lifespan events"""
     # Startup
     logger.info("Starting NyayaSetu DBT System...")
-    await init_db()
+    init_db()
     logger.info("Database initialized successfully")
     
     yield

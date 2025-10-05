@@ -8,7 +8,7 @@ import uuid
 from datetime import datetime
 from typing import Optional, List, Dict, Any, BinaryIO
 import structlog
-from prisma import Prisma
+from sqlalchemy.orm import Session
 import aiofiles
 from fastapi import UploadFile
 
@@ -22,7 +22,7 @@ logger = structlog.get_logger()
 class DocumentService:
     """Service for managing document uploads and processing"""
 
-    def __init__(self, db: Prisma):
+    def __init__(self, db: Session):
         self.db = db
         self.upload_dir = "uploads"
         self.max_file_size = 10 * 1024 * 1024  # 10MB

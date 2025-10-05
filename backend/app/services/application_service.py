@@ -6,8 +6,8 @@ from datetime import datetime
 from typing import List, Optional, Dict, Any
 from decimal import Decimal
 import structlog
+from sqlalchemy.orm import Session
 
-from app.core.database import Prisma
 from app.core.exceptions import NotFoundException, ValidationException, ConflictException
 from app.core.security import generate_application_number
 from app.models.application import (
@@ -22,7 +22,7 @@ logger = structlog.get_logger()
 class ApplicationService:
     """Application service"""
     
-    def __init__(self, db: Prisma):
+    def __init__(self, db: Session):
         self.db = db
     
     async def create_application(

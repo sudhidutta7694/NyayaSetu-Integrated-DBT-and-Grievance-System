@@ -10,11 +10,11 @@ This system addresses the need for smart, tech-enabled modalities to effectively
 
 - **Frontend**: Next.js 14 with TypeScript, Tailwind CSS, and Shadcn UI
 - **Backend**: FastAPI with Python
-- **Database**: PostgreSQL with Prisma ORM
+- **Database**: PostgreSQL with SQLAlchemy ORM and Alembic migrations
 - **Authentication**: Role-based with Aadhaar/OTP for public users
 - **AI Integration**: Gemini API for chatbot functionality
 - **Notifications**: Push notifications for real-time updates
-- **Deployment**: Docker containerization
+- **Deployment**: Docker containerization with auto-setup
 
 ## 🚀 Features
 
@@ -48,7 +48,9 @@ This system addresses the need for smart, tech-enabled modalities to effectively
 ### Backend
 - FastAPI
 - Python 3.11+
-- Prisma ORM
+- SQLAlchemy ORM
+- Alembic migrations
+- PostgreSQL
 - PostgreSQL
 - JWT Authentication
 - Pydantic models
@@ -56,7 +58,6 @@ This system addresses the need for smart, tech-enabled modalities to effectively
 ### Infrastructure
 - Docker & Docker Compose
 - PostgreSQL
-- Redis (for caching)
 - Nginx (reverse proxy)
 
 ## 📋 Prerequisites
@@ -68,7 +69,68 @@ This system addresses the need for smart, tech-enabled modalities to effectively
 
 ## 🚀 Quick Start
 
-### Option 1: Automated Setup (Recommended)
+### ⚡ Super Simple Setup (Recommended)
+
+**For new developers - just 2 commands!**
+
+1. **Clone and enter the repository**
+   ```bash
+   git clone <repository-url>
+   cd NyayaSetu-Integrated-DBT-and-Grievance-System
+   ```
+
+2. **Start everything**
+   ```bash
+   docker-compose up -d
+   ```
+
+   **That's it!** The system will automatically:
+   - ✅ Create PostgreSQL database
+   - ✅ Run single Alembic migration (schema + seed data)
+   - ✅ Start FastAPI backend with authentication ready
+   - ✅ Start Next.js frontend
+   - ✅ Populate database with test users and sample data
+
+3. **Access the application**
+   - **Frontend**: http://localhost:3000
+   - **Backend API**: http://localhost:8000
+   - **API Documentation**: http://localhost:8000/docs
+
+### 🧑‍💻 Test Users (Ready to Use)
+- **Admin**: `admin@nyayasetu.gov.in` 
+- **Public User**: `john.doe@example.com`
+- **District Officer**: `district.officer@example.com`
+- **Welfare Officer**: `welfare.officer@example.com`
+
+## 🗄️ Database Setup
+
+### Automatic Migration System
+The project uses **SQLAlchemy + Alembic** with a **single migration file** approach:
+
+- **📁 Single Migration**: `backend/alembic/versions/bb8d022d2d64_initial_schema_and_seed_data.py`
+- **🔄 Auto-Run**: Migrations run automatically on container startup
+- **📊 Seed Data**: Test data populated automatically
+- **🔄 Fresh Setup**: Drop database anytime - it recreates perfectly
+
+### Database Structure
+```
+✅ roles (5 records)           - User roles with permissions
+✅ users (6 records)           - Test users across all roles  
+✅ applications (3 records)    - Sample applications in different states
+✅ documents (4 records)       - Document attachments for applications
+✅ otp (table)                 - SMS/Email verification codes
+✅ user_role_assignments       - Many-to-many role assignments
+```
+
+### Reset Database (if needed)
+```bash
+# This recreates everything from scratch
+docker-compose down -v
+docker-compose up -d
+# ✅ Fresh database with all seed data restored
+```
+
+### Option 1: Using Startup Scripts
 
 1. **Clone the repository**
    ```bash
@@ -81,19 +143,7 @@ This system addresses the need for smart, tech-enabled modalities to effectively
    ./start.sh
    ```
 
-   This script will:
-   - ✅ Check all prerequisites (Docker, Docker Compose)
-   - ✅ Build all Docker containers
-   - ✅ Start PostgreSQL and Redis databases
-   - ✅ Run database migrations automatically
-   - ✅ Start backend and frontend services
-   - ✅ Perform health checks
-   - ✅ Display service URLs and status
-
-3. **Access the application**
-   - **Frontend**: http://localhost:3000
-   - **Backend API**: http://localhost:8000
-   - **API Documentation**: http://localhost:8000/docs
+   This script provides additional health checks and status display.
 
 ### Option 2: Development Mode (For Developers)
 
@@ -130,7 +180,7 @@ This system addresses the need for smart, tech-enabled modalities to effectively
 3. **Start services manually**
    ```bash
    # Start databases
-   docker-compose up -d postgres redis
+   docker-compose up -d postgres
    
    # Run migrations
    docker-compose run --rm backend python -m alembic upgrade head
@@ -178,7 +228,6 @@ Once started, the following services will be available:
 | **Backend API** | http://localhost:8000 | FastAPI backend |
 | **API Docs** | http://localhost:8000/docs | Swagger documentation |
 | **PostgreSQL** | localhost:5433 | Database |
-| **Redis** | localhost:6380 | Cache and sessions |
 | **Nginx** | http://localhost:80 | Reverse proxy |
 
 ## 🔐 User Roles

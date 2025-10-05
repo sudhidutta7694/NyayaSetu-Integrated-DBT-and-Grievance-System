@@ -7,11 +7,12 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import structlog
 
-from app.core.database import get_database, Prisma
+from app.core.database import get_db
 from app.core.dependencies import require_role
 from app.core.exceptions import ValidationException, AuthenticationException
 from app.models.user import User, UserRole
 from app.services.document_service import DocumentService
+from sqlalchemy.orm import Session
 
 logger = structlog.get_logger()
 router = APIRouter()
@@ -23,7 +24,7 @@ async def get_pending_documents(
     limit: int = Query(50, ge=1, le=100),
     offset: int = Query(0, ge=0),
     current_user: User = Depends(require_role([UserRole.DISTRICT_AUTHORITY, UserRole.FINANCIAL_INSTITUTION, UserRole.ADMIN])),
-    db: Prisma = Depends(get_database)
+    db: Session = Depends(get_db)
 ):
     """Get documents pending verification based on user role"""
     try:
@@ -52,7 +53,7 @@ async def verify_document(
     status: str,
     comments: Optional[str] = None,
     current_user: User = Depends(require_role([UserRole.DISTRICT_AUTHORITY, UserRole.FINANCIAL_INSTITUTION, UserRole.ADMIN])),
-    db: Prisma = Depends(get_database)
+    db: Session = Depends(get_db)
 ):
     """Verify a document"""
     try:
@@ -92,7 +93,7 @@ async def get_users(
     limit: int = Query(50, ge=1, le=100),
     offset: int = Query(0, ge=0),
     current_user: User = Depends(require_role([UserRole.ADMIN, UserRole.DISTRICT_AUTHORITY, UserRole.SOCIAL_WELFARE])),
-    db: Prisma = Depends(get_database)
+    db: Session = Depends(get_db)
 ):
     """Get users with optional filters"""
     try:
@@ -151,7 +152,7 @@ async def get_users(
 async def get_user_details(
     user_id: str,
     current_user: User = Depends(require_role([UserRole.ADMIN, UserRole.DISTRICT_AUTHORITY, UserRole.SOCIAL_WELFARE])),
-    db: Prisma = Depends(get_database)
+    db: Session = Depends(get_db)
 ):
     """Get detailed information about a specific user"""
     try:
@@ -243,7 +244,7 @@ async def verify_user(
     user_id: str,
     is_verified: bool,
     current_user: User = Depends(require_role([UserRole.ADMIN, UserRole.DISTRICT_AUTHORITY])),
-    db: Prisma = Depends(get_database)
+    db: Session = Depends(get_db)
 ):
     """Verify or unverify a user"""
     try:
@@ -268,7 +269,7 @@ async def verify_user(
 @router.get("/dashboard/stats")
 async def get_dashboard_stats(
     current_user: User = Depends(require_role([UserRole.ADMIN, UserRole.DISTRICT_AUTHORITY, UserRole.SOCIAL_WELFARE])),
-    db: Prisma = Depends(get_database)
+    db: Session = Depends(get_db)
 ):
     """Get dashboard statistics"""
     try:

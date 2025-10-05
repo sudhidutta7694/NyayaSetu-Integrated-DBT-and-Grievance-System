@@ -6,7 +6,7 @@ import json
 from datetime import datetime
 from typing import Optional, List, Dict, Any
 import structlog
-from prisma import Prisma
+from sqlalchemy.orm import Session
 
 from app.core.exceptions import ValidationException, DatabaseException
 from app.models.onboarding import (
@@ -27,7 +27,7 @@ logger = structlog.get_logger()
 class OnboardingService:
     """Service for managing user onboarding process"""
 
-    def __init__(self, db: Prisma):
+    def __init__(self, db: Session):
         self.db = db
         self.total_steps = 4  # Total number of onboarding steps
 

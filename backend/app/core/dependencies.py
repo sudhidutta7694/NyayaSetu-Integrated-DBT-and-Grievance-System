@@ -5,11 +5,11 @@ FastAPI dependencies for authentication and authorization
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from typing import Optional
-from app.core.database import get_database
+from sqlalchemy.orm import Session
+from app.core.database import get_db
 from app.core.security import verify_token
 from app.core.exceptions import AuthenticationException, AuthorizationException
-from prisma import Prisma
-from prisma.models import User
+from models.user import User
 import structlog
 
 logger = structlog.get_logger()
@@ -17,9 +17,9 @@ logger = structlog.get_logger()
 # Security scheme
 security = HTTPBearer()
 
-async def get_current_user(
+def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
-    db: Prisma = Depends(get_database)
+    db: Session = Depends(get_db)
 ) -> User:
     """Get current authenticated user"""
     try:
@@ -29,14 +29,7 @@ async def get_current_user(
         if user_id is None:
             raise AuthenticationException("Invalid or expired token")
         
-        user = await db.user.find_unique(
-            where={"id": user_id},
-            include={
-                "applications": True,
-                "documents": True,
-                "cases": True
-            }
-        )
+        user = db.query(User).filter(User.id == user_id).first()
         
         if user is None:
             raise AuthenticationException("User not found")
@@ -50,7 +43,7 @@ async def get_current_user(
         logger.error("Authentication failed", error=str(e))
         raise AuthenticationException("Authentication failed")
 
-async def get_current_active_user(
+def get_current_active_user(
     current_user: User = Depends(get_current_user)
 ) -> User:
     """Get current active user"""
@@ -60,7 +53,7 @@ async def get_current_active_user(
 
 def require_role(required_roles: list):
     """Dependency factory for role-based authorization"""
-    async def role_checker(current_user: User = Depends(get_current_active_user)) -> User:
+    def role_checker(current_user: User = Depends(get_current_active_user)) -> User:
         if current_user.role.value not in [role.value if hasattr(role, 'value') else role for role in required_roles]:
             raise AuthorizationException(
                 f"Access denied. Required roles: {required_roles}"
@@ -88,16 +81,16 @@ def require_public_user():
     from app.models.user import UserRole
     return require_role([UserRole.PUBLIC])
 
-async def get_optional_current_user(
+def get_optional_current_user(
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
-    db: Prisma = Depends(get_database)
+    db: Session = Depends(get_db)
 ) -> Optional[User]:
     """Get current user if authenticated, otherwise return None"""
     if not credentials:
         return None
     
     try:
-        return await get_current_user(credentials, db)
+        return get_current_user(credentials, db)
     except:
         return None
 
