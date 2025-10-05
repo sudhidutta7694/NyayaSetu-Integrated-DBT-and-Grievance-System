@@ -25,6 +25,7 @@ export const ScreenReader: React.FC<ScreenReaderProps> = ({ className }) => {
   const [fontSize, setFontSize] = useState(16)
   const [highContrast, setHighContrast] = useState(false)
   const [isExpanded, setIsExpanded] = useState(false)
+  const wrapperRef = useRef<HTMLDivElement | null>(null)
   const speechSynthesis = useRef<SpeechSynthesis | null>(null)
   const currentUtterance = useRef<SpeechSynthesisUtterance | null>(null)
 
@@ -66,7 +67,7 @@ export const ScreenReader: React.FC<ScreenReaderProps> = ({ className }) => {
     
     // Set voice based on language
     const voices = speechSynthesis.current.getVoices()
-    const preferredVoice = voices.find(voice => {
+  const preferredVoice = voices.find((voice: SpeechSynthesisVoice) => {
       const langCode = currentLanguage === 'hi' ? 'hi-IN' : 
                       currentLanguage === 'bn' ? 'bn-IN' :
                       currentLanguage === 'mr' ? 'mr-IN' :
@@ -108,11 +109,11 @@ export const ScreenReader: React.FC<ScreenReaderProps> = ({ className }) => {
   }
 
   const increaseFontSize = () => {
-    setFontSize(prev => Math.min(prev + 2, 24))
+    setFontSize((prev: number) => Math.min(prev + 2, 24))
   }
 
   const decreaseFontSize = () => {
-    setFontSize(prev => Math.max(prev - 2, 12))
+    setFontSize((prev: number) => Math.max(prev - 2, 12))
   }
 
   const resetFontSize = () => {
@@ -120,7 +121,7 @@ export const ScreenReader: React.FC<ScreenReaderProps> = ({ className }) => {
   }
 
   const toggleHighContrast = () => {
-    setHighContrast(prev => !prev)
+    setHighContrast((prev: boolean) => !prev)
   }
 
   const skipToContent = () => {
@@ -131,27 +132,75 @@ export const ScreenReader: React.FC<ScreenReaderProps> = ({ className }) => {
     }
   }
 
+  // Close when clicking outside or pressing Escape
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (!isExpanded) return
+      if (!wrapperRef.current) return
+      if (!wrapperRef.current.contains(e.target as Node)) {
+        setIsExpanded(false)
+      }
+    }
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isExpanded) {
+        setIsExpanded(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleOutsideClick)
+    document.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [isExpanded])
+
+  // Listen for a custom event to open the screen reader from elsewhere (e.g., header)
+  useEffect(() => {
+    const handleOpen = (e: Event) => {
+      setIsExpanded(true)
+      // scroll into view when opened
+      setTimeout(() => {
+        if (wrapperRef.current) {
+          wrapperRef.current.scrollIntoView({ behavior: 'smooth' })
+        }
+      }, 0)
+    }
+
+    document.addEventListener('open-screen-reader', handleOpen as EventListener)
+
+    return () => {
+      document.removeEventListener('open-screen-reader', handleOpen as EventListener)
+    }
+  }, [])
+
   return (
-    <div className={`fixed top-4 right-4 z-50 ${className}`}>
-      <Card className="w-80 shadow-lg border-2 border-orange-200">
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Eye className="h-5 w-5 text-orange-600" />
-              {t('accessibility.screenReader', 'Screen Reader')}
-            </CardTitle>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsExpanded(!isExpanded)}
-              className="p-1"
-            >
-              {isExpanded ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-            </Button>
-          </div>
-        </CardHeader>
-        
-        <CardContent className="space-y-4">
+    <div ref={wrapperRef} data-screen-reader className={`fixed top-4 right-4 z-50 ${className}`}> 
+      {/* The component is present in the DOM (so header can reference it via [data-screen-reader])
+          The full dialog is rendered only when expanded. */}
+      {isExpanded && (
+        <Card className="w-80 shadow-lg border-2 border-orange-200">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Eye className="h-5 w-5 text-orange-600" />
+                {t('accessibility.screenReader', 'Screen Reader')}
+              </CardTitle>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="p-1"
+                aria-label={t('accessibility.closeScreenReader', 'Close screen reader dialog')}
+              >
+                {isExpanded ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </Button>
+            </div>
+          </CardHeader>
+
+          <CardContent className="space-y-4">
           {/* Skip to Content */}
           <Button
             onClick={skipToContent}
@@ -248,6 +297,7 @@ export const ScreenReader: React.FC<ScreenReaderProps> = ({ className }) => {
           </div>
         </CardContent>
       </Card>
+      )}
     </div>
   )
 }

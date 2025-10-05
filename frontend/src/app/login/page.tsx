@@ -174,12 +174,12 @@ export default function LoginPage() {
               <Shield className="h-8 w-8 text-white" />
             </div>
             <h2 className="mt-6 text-3xl font-bold text-gray-900">
-              {step === 'aadhaar' ? 'आधार से लॉगिन करें' : 'OTP सत्यापन'}
+              {step === 'aadhaar' ? 'Login with Aadhaar' : 'OTP Verification'}
             </h2>
             <p className="mt-2 text-sm text-gray-600">
               {step === 'aadhaar' 
-                ? 'अपना 12 अंकों का आधार नंबर दर्ज करें' 
-                : 'अपने रजिस्टर्ड मोबाइल नंबर पर भेजे गए OTP को दर्ज करें'
+                ? 'Enter your 12-digit Aadhaar number' 
+                : 'Enter the OTP sent to your registered mobile number'
               }
             </p>
           </div>
@@ -187,12 +187,12 @@ export default function LoginPage() {
           <Card className="shadow-lg border-2 border-orange-200">
             <CardHeader className="bg-gradient-to-r from-orange-50 to-green-50">
               <CardTitle className="text-center text-xl font-semibold text-gray-800">
-                {step === 'aadhaar' ? 'आधार प्रमाणीकरण' : 'OTP सत्यापन'}
+                {step === 'aadhaar' ? 'Aadhaar Authentication' : 'OTP Verification'}
               </CardTitle>
               <CardDescription className="text-center text-gray-600">
                 {step === 'aadhaar' 
-                  ? 'सुरक्षित लॉगिन के लिए आधार नंबर का उपयोग करें'
-                  : 'अपना OTP दर्ज करें'
+                  ? 'Use your Aadhaar number for secure login'
+                  : 'Enter your OTP'
                 }
               </CardDescription>
             </CardHeader>
@@ -201,7 +201,7 @@ export default function LoginPage() {
                 <form onSubmit={handleAadhaarSubmit(onAadhaarSubmit)} className="space-y-6">
                   <div>
                     <Label htmlFor="aadhaar_number" className="text-sm font-medium text-gray-700">
-                      आधार नंबर (Aadhaar Number)
+                      Aadhaar Number
                     </Label>
                     <div className="relative mt-1">
                       <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
@@ -225,7 +225,7 @@ export default function LoginPage() {
                     disabled={isLoading}
                     className="w-full bg-orange-600 hover:bg-orange-700 text-white font-medium py-3"
                   >
-                    {isLoading ? 'प्रोसेसिंग...' : 'OTP भेजें'}
+                    {isLoading ? 'Processing...' : 'Send OTP'}
                   </Button>
                 </form>
               ) : (
@@ -236,10 +236,10 @@ export default function LoginPage() {
                         <User className="h-5 w-5 text-blue-600" />
                         <div>
                           <p className="text-sm font-medium text-blue-800">
-                            नाम: {aadhaarInfo.name}
+                            Name: {aadhaarInfo.name}
                           </p>
                           <p className="text-sm text-blue-600">
-                            पिता का नाम: {aadhaarInfo.father_name}
+                            Father's Name: {aadhaarInfo.father_name}
                           </p>
                         </div>
                       </div>
@@ -249,7 +249,7 @@ export default function LoginPage() {
                   <form onSubmit={handleOTPSubmit(onOTPSubmit)} className="space-y-6">
                     <div>
                       <Label htmlFor="otp_code" className="text-sm font-medium text-gray-700">
-                        OTP कोड
+                        OTP Code
                       </Label>
                       <div className="relative mt-1">
                         <Phone className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
@@ -271,7 +271,7 @@ export default function LoginPage() {
                     {otpTimer > 0 && (
                       <div className="flex items-center justify-center space-x-2 text-sm text-gray-600">
                         <Clock className="h-4 w-4" />
-                        <span>OTP समाप्ति समय: {formatTime(otpTimer)}</span>
+                        <span>OTP expires in: {formatTime(otpTimer)}</span>
                       </div>
                     )}
 
@@ -281,7 +281,7 @@ export default function LoginPage() {
                         disabled={isLoading}
                         className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3"
                       >
-                        {isLoading ? 'सत्यापन...' : 'सत्यापित करें'}
+                        {isLoading ? 'Verifying...' : 'Verify'}
                       </Button>
 
                       <Button
@@ -291,7 +291,7 @@ export default function LoginPage() {
                         className="w-full border-orange-300 text-orange-700 hover:bg-orange-50"
                       >
                         <ArrowLeft className="h-4 w-4 mr-2" />
-                        वापस जाएं
+                        Go Back
                       </Button>
 
                       {otpTimer === 0 && (
@@ -302,7 +302,7 @@ export default function LoginPage() {
                           disabled={isLoading}
                           className="w-full border-blue-300 text-blue-700 hover:bg-blue-50"
                         >
-                          OTP पुनः भेजें
+                          Resend OTP
                         </Button>
                       )}
                     </div>
@@ -317,10 +317,9 @@ export default function LoginPage() {
             <div className="flex items-start space-x-3">
               <Shield className="h-5 w-5 text-yellow-600 mt-0.5" />
               <div>
-                <h3 className="text-sm font-medium text-yellow-800">सुरक्षा सूचना</h3>
+                <h3 className="text-sm font-medium text-yellow-800">Security Notice</h3>
                 <p className="text-sm text-yellow-700 mt-1">
-                  आपका OTP 5 मिनट के लिए वैध है। किसी के साथ अपना OTP साझा न करें। 
-                  न्यायसेतु कभी भी फोन या ईमेल के माध्यम से आपका OTP नहीं मांगेगा।
+                  Your OTP is valid for 5 minutes. Do not share your OTP with anyone. NyayaSetu will never ask for your OTP via phone or email.
                 </p>
               </div>
             </div>

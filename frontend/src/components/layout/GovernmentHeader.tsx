@@ -12,45 +12,7 @@ export function GovernmentHeader() {
   const { t } = useLanguage()
 
   return (
-    <header className="bg-white shadow-lg border-b-4 border-orange-500">
-      {/* Top Banner */}
-      <div className="bg-gradient-to-r from-orange-600 to-green-600 text-white py-2">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between text-sm">
-            <div className="flex items-center space-x-4">
-              <span>🇮🇳 {t('header.government', 'भारत सरकार | Government of India')}</span>
-              <span>|</span>
-              <span>{t('header.ministry', 'सामाजिक न्याय और अधिकारिता मंत्रालय | Ministry of Social Justice & Empowerment')}</span>
-            </div>
-            <div className="flex items-center space-x-4">
-              <button 
-                onClick={() => {
-                  const mainContent = document.querySelector('main')
-                  if (mainContent) {
-                    mainContent.focus()
-                    mainContent.scrollIntoView({ behavior: 'smooth' })
-                  }
-                }}
-                className="hover:underline focus:outline-none focus:underline"
-              >
-                {t('header.skipToContent', 'Skip to main content')}
-              </button>
-              <span>|</span>
-              <button 
-                onClick={() => {
-                  const screenReader = document.querySelector('[data-screen-reader]')
-                  if (screenReader) {
-                    screenReader.scrollIntoView({ behavior: 'smooth' })
-                  }
-                }}
-                className="hover:underline focus:outline-none focus:underline"
-              >
-                {t('header.screenReaderAccess', 'Screen Reader Access')}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+    <header className="bg-white shadow-lg border-b-4 border-orange-500 sticky top-0 z-40">
 
       {/* Main Header */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -62,7 +24,7 @@ export function GovernmentHeader() {
                 <Shield className="h-7 w-7 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">{t('home.title', 'न्यायसेतु')}</h1>
+                <h1 className="text-2xl font-bold text-gray-900">{t('home.title', 'NyayaSetu')}</h1>
                 <p className="text-sm text-gray-600">{t('home.subtitle', 'NyayaSetu - DBT & Grievance System')}</p>
               </div>
             </div>
@@ -71,26 +33,40 @@ export function GovernmentHeader() {
           {/* Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
             <a href="/" className="text-gray-700 hover:text-orange-600 font-medium">
-              {t('navigation.home', 'होम | Home')}
+              {t('navigation.home', 'Home')}
             </a>
             <a href="/about" className="text-gray-700 hover:text-orange-600 font-medium">
-              {t('navigation.about', 'के बारे में | About')}
+              {t('navigation.about', 'About')}
             </a>
             <a href="/services" className="text-gray-700 hover:text-orange-600 font-medium">
-              {t('navigation.services', 'सेवाएं | Services')}
+              {t('navigation.services', 'Services')}
             </a>
             <a href="/contact" className="text-gray-700 hover:text-orange-600 font-medium">
-              {t('navigation.contact', 'संपर्क | Contact')}
+              {t('navigation.contact', 'Contact')}
             </a>
             <a href="/help" className="text-gray-700 hover:text-orange-600 font-medium">
-              {t('navigation.help', 'सहायता | Help')}
+              {t('navigation.help', 'Help')}
             </a>
           </nav>
 
           {/* Language and Menu */}
           <div className="flex items-center space-x-4">
             <LanguageSelector />
-            
+
+            <button
+              onClick={() => {
+                const evt = new CustomEvent('open-screen-reader')
+                document.dispatchEvent(evt)
+                const screenReader = document.querySelector('[data-screen-reader]')
+                if (screenReader) {
+                  (screenReader as HTMLElement).scrollIntoView({ behavior: 'smooth' })
+                }
+              }}
+              className="hidden md:inline hover:underline focus:outline-none focus:underline text-gray-700"
+            >
+              {t('header.screenReaderAccess', 'Screen Reader')}
+            </button>
+
             {/* Mobile menu button */}
             <button
               className="md:hidden p-2 rounded-md text-gray-700 hover:text-orange-600"
@@ -106,19 +82,19 @@ export function GovernmentHeader() {
           <div className="md:hidden border-t border-gray-200 py-4">
             <nav className="flex flex-col space-y-4">
               <a href="/" className="text-gray-700 hover:text-orange-600 font-medium">
-                {t('navigation.home', 'होम | Home')}
+                {t('navigation.home', 'Home')}
               </a>
               <a href="/about" className="text-gray-700 hover:text-orange-600 font-medium">
-                {t('navigation.about', 'के बारे में | About')}
+                {t('navigation.about', 'About')}
               </a>
               <a href="/services" className="text-gray-700 hover:text-orange-600 font-medium">
-                {t('navigation.services', 'सेवाएं | Services')}
+                {t('navigation.services', 'Services')}
               </a>
               <a href="/contact" className="text-gray-700 hover:text-orange-600 font-medium">
-                {t('navigation.contact', 'संपर्क | Contact')}
+                {t('navigation.contact', 'Contact')}
               </a>
               <a href="/help" className="text-gray-700 hover:text-orange-600 font-medium">
-                {t('navigation.help', 'सहायता | Help')}
+                {t('navigation.help', 'Help')}
               </a>
             </nav>
           </div>
