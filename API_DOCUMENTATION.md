@@ -45,7 +45,7 @@ POST /auth/register
   "gender": "MALE",
   "category": "SC",
   "address": "123 Main Street",
-  "district": "Mumbai",
+  "district": "Bombay",
   "state": "Maharashtra",
   "pincode": "400001"
 }
