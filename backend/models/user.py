@@ -30,8 +30,9 @@ class User(Base):
 
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     email = Column(String, unique=True, nullable=False)
-    phone_number = Column(String, unique=True, nullable=False)
+    phone_number = Column(String, unique=True, nullable=True)
     full_name = Column(String, nullable=False)
+    password_hash = Column(String)
     father_name = Column(String)
     mother_name = Column(String)
     aadhaar_number = Column(String, unique=True)

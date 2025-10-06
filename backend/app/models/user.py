@@ -36,7 +36,7 @@ class Category(str, Enum):
 class UserBase(BaseModel):
     """Base user model"""
     email: EmailStr
-    phone_number: str
+    phone_number: Optional[str] = None
     full_name: str
     father_name: Optional[str] = None
     mother_name: Optional[str] = None
@@ -59,6 +59,8 @@ class UserBase(BaseModel):
 
     @validator('phone_number')
     def validate_phone(cls, v):
+        if v in (None, ""):
+            return v
         if not validate_phone_number(v):
             raise ValueError('Invalid phone number format')
         return v
@@ -132,7 +134,7 @@ class UserProfile(BaseModel):
     father_name: Optional[str] = None
     mother_name: Optional[str] = None
     email: str
-    phone_number: str
+    phone_number: Optional[str] = None
     aadhaar_number: Optional[str] = None
     date_of_birth: Optional[datetime] = None
     age: Optional[int] = None

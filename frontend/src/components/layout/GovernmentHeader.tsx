@@ -4,11 +4,13 @@ import React, { useState, useRef, useEffect } from 'react'
 import { Shield, Menu, X, ChevronDown, Eye } from 'lucide-react'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { LanguageSelector } from '@/components/accessibility/LanguageSelector'
+import { useAuth } from '@/components/providers/AuthProvider'
 export function GovernmentHeader() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [loginDropdownOpen, setLoginDropdownOpen] = useState(false)
   const loginDropdownRef = useRef<HTMLDivElement>(null)
   const { t } = useLanguage()
+  const { user, logout } = useAuth()
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -38,67 +40,77 @@ export function GovernmentHeader() {
             <span className="text-xl font-bold text-gray-900">{t('home.title', 'NyayaSetu')}</span>
           </a>
         </div>
-        {/* Language, Login, and Menu */}
+        {/* Language, Login/Logout, and Menu */}
         <div className="flex items-center gap-x-4">
-          {/* Login Dropdown - hidden on mobile */}
-          <div className="relative hidden md:block" ref={loginDropdownRef}>
+          {/* Show Logout if logged in, else Login dropdown */}
+          {user ? (
             <button
-              className="border border-orange-200 bg-white hover:border-orange-400 px-4 py-2 rounded-lg shadow transition-colors flex items-center"
-              onClick={() => setLoginDropdownOpen((open) => !open)}
-              aria-haspopup="true"
-              aria-expanded={loginDropdownOpen}
-              aria-label="Login options"
+              className="border border-orange-200 bg-white hover:border-orange-400 px-4 py-2 rounded-lg shadow transition-colors flex items-center font-semibold text-orange-700"
+              onClick={logout}
+              aria-label="Logout"
             >
-              {t('header.login', 'Login')}
-              <ChevronDown className="ml-2 h-4 w-4" />
+              {t('header.logout', 'Logout')}
             </button>
-            {loginDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-50 animate-fade-in" role="menu" aria-label="Login options">
-                <ul className="py-2">
-                  <li>
-                    <a
-                      href="/login"
-                      className="block px-6 py-3 text-gray-800 hover:bg-orange-50 hover:text-orange-700 transition-colors text-left w-full font-semibold"
-                      onClick={() => setLoginDropdownOpen(false)}
-                      role="menuitem"
-                    >
-                      {t('header.loginIndividual', 'Common Individual')}
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="/login/district-authority"
-                      className="block px-6 py-3 text-gray-800 hover:bg-orange-50 hover:text-orange-700 transition-colors text-left w-full font-semibold"
-                      onClick={() => setLoginDropdownOpen(false)}
-                      role="menuitem"
-                    >
-                      {t('header.loginDistrict', 'District Authorities')}
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="/login/social-welfare"
-                      className="block px-6 py-3 text-gray-800 hover:bg-orange-50 hover:text-orange-700 transition-colors text-left w-full font-semibold"
-                      onClick={() => setLoginDropdownOpen(false)}
-                      role="menuitem"
-                    >
-                      {t('header.loginSocialWelfare', 'Social Welfare')}
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="/login/financial-institution"
-                      className="block px-6 py-3 text-gray-800 hover:bg-orange-50 hover:text-orange-700 transition-colors text-left w-full font-semibold"
-                      onClick={() => setLoginDropdownOpen(false)}
-                      role="menuitem"
-                    >
-                      {t('header.loginFinancial', 'Financial Institutions')}
-                    </a>
-                  </li>
-                </ul>
-              </div>
-            )}
-          </div>
+          ) : (
+            <div className="relative hidden md:block" ref={loginDropdownRef}>
+              <button
+                className="border border-orange-200 bg-white hover:border-orange-400 px-4 py-2 rounded-lg shadow transition-colors flex items-center"
+                onClick={() => setLoginDropdownOpen((open) => !open)}
+                aria-haspopup="true"
+                aria-expanded={loginDropdownOpen}
+                aria-label="Login options"
+              >
+                {t('header.login', 'Login')}
+                <ChevronDown className="ml-2 h-4 w-4" />
+              </button>
+              {loginDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-50 animate-fade-in" role="menu" aria-label="Login options">
+                  <ul className="py-2">
+                    <li>
+                      <a
+                        href="/login"
+                        className="block px-6 py-3 text-gray-800 hover:bg-orange-50 hover:text-orange-700 transition-colors text-left w-full font-semibold"
+                        onClick={() => setLoginDropdownOpen(false)}
+                        role="menuitem"
+                      >
+                        {t('header.loginIndividual', 'Common Individual')}
+                      </a>
+                    </li>
+                    <li>
+                      <a
+                        href="/district/login"
+                        className="block px-6 py-3 text-gray-800 hover:bg-orange-50 hover:text-orange-700 transition-colors text-left w-full font-semibold"
+                        onClick={() => setLoginDropdownOpen(false)}
+                        role="menuitem"
+                      >
+                        {t('header.loginDistrict', 'District Authorities')}
+                      </a>
+                    </li>
+                    <li>
+                      <a
+                        href="/login/social-welfare"
+                        className="block px-6 py-3 text-gray-800 hover:bg-orange-50 hover:text-orange-700 transition-colors text-left w-full font-semibold"
+                        onClick={() => setLoginDropdownOpen(false)}
+                        role="menuitem"
+                      >
+                        {t('header.loginSocialWelfare', 'Social Welfare')}
+                      </a>
+                    </li>
+                    <li>
+                      <a
+                        href="/login/financial-institution"
+                        className="block px-6 py-3 text-gray-800 hover:bg-orange-50 hover:text-orange-700 transition-colors text-left w-full font-semibold"
+                        onClick={() => setLoginDropdownOpen(false)}
+                        role="menuitem"
+                      >
+                        {t('header.loginFinancial', 'Financial Institutions')}
+                      </a>
+                    </li>
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
           {/* LanguageSelector - hidden on mobile */}
           <div className="hidden md:block">
             <LanguageSelector />
@@ -177,7 +189,7 @@ export function GovernmentHeader() {
                         </li>
                         <li>
                           <a
-                            href="/login/district-authority"
+                            href="/district/login"
                             className="block px-6 py-3 text-gray-800 hover:bg-orange-50 hover:text-orange-700 transition-colors text-left w-full font-semibold"
                             onClick={() => setLoginDropdownOpen(false)}
                             role="menuitem"

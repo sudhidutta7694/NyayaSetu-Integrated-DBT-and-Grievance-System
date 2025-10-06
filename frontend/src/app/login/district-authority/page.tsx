@@ -1,0 +1,1 @@
+export { default } from "@/app/district/login/page";

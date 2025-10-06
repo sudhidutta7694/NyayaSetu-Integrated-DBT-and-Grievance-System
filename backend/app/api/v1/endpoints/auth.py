@@ -1,13 +1,11 @@
-"""
-Authentication endpoints
-"""
 
+import structlog
+from fastapi import APIRouter, Body
+from pydantic import BaseModel, EmailStr
 from datetime import datetime, timedelta
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from pydantic import BaseModel, EmailStr
-import structlog
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
@@ -21,15 +19,88 @@ from app.core.security import (
     generate_otp,
     verify_otp
 )
-from app.models.user import User, UserCreate, UserLogin, OTPRequest, OTPVerify
+from app.models.user import User, UserCreate, UserLogin, OTPRequest, OTPVerify, UserRole
+
+logger = structlog.get_logger()
+router = APIRouter()
+
+# District Authority Login Request
+class DistrictAuthorityLoginRequest(BaseModel):
+    email: EmailStr
+    password: str
+
+# District Authority Login Endpoint
+@router.post("/district-authority/login")
+def district_authority_login(
+    data: DistrictAuthorityLoginRequest = Body(...),
+    db: Session = Depends(get_db)
+):
+    from app.core.security import verify_password, create_access_token
+    from models.user import User as UserModel, UserRole
+    user = db.query(UserModel).filter(UserModel.email == data.email, UserModel.role == UserRole.DISTRICT_AUTHORITY).first()
+    if not user or not hasattr(user, 'password_hash') or not verify_password(data.password, user.password_hash):
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+    if not user.is_active:
+        raise HTTPException(status_code=403, detail="Account is deactivated")
+    access_token = create_access_token({"sub": user.id, "role": user.role.value})
+    return {"access_token": access_token, "token_type": "bearer"}
+
+"""
+Authentication endpoints
+"""
+
+class DistrictAuthorityRegisterRequest(BaseModel):
+    email: EmailStr
+    password: str
+    full_name: str
+    district: str
+
+@router.post("/district-authority/register", response_model=User)
+async def register_district_authority(
+    data: DistrictAuthorityRegisterRequest,
+    db: Session = Depends(get_db)
+):
+    """Register a new district authority user"""
+    try:
+        auth_service = AuthService(db)
+        # Check if user already exists
+        existing_user = db.query(UserModel).filter(UserModel.email == data.email).first()
+        if existing_user:
+            raise HTTPException(status_code=400, detail="Email already registered")
+        # Create user with DISTRICT_AUTHORITY role
+        user = UserModel(
+            email=data.email,
+            full_name=data.full_name,
+            phone_number=None,
+            district=data.district,
+            role=UserRole.DISTRICT_AUTHORITY,
+            is_active=True,
+            is_verified=True,
+            is_onboarded=True,
+            onboarding_step=0,
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow(),
+        )
+        # Set password (hashing should be handled in model or here if needed)
+        if hasattr(user, 'set_password'):
+            user.set_password(data.password)
+        elif hasattr(user, 'password_hash'):
+            from app.core.security import hash_password
+            user.password_hash = hash_password(data.password)
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+        logger.info("District authority registered", user_id=user.id)
+        return user
+    except Exception as e:
+        logger.error("District authority registration failed", error=str(e))
+        raise HTTPException(status_code=400, detail="Registration failed: " + str(e))
 from app.services.auth_service import AuthService
 from app.services.otp_service import OTPService
 from app.services.aadhaar_service import AadhaarService
 from app.services.aadhaar_auth_service import AadhaarAuthService
 from models.user import User as UserModel
 
-logger = structlog.get_logger()
-router = APIRouter()
 security = HTTPBearer()
 
 

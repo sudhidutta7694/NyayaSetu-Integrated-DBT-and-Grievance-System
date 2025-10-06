@@ -1,3 +1,7 @@
+"use client";
+import { useEffect } from "react";
+import { useAuth } from '@/components/providers/AuthProvider';
+
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -21,6 +25,13 @@ import {
 import FAQSection from '@/components/landing/FAQSection'
 
 export default function HomePage() {
+  const { user, logout } = useAuth();
+  useEffect(() => {
+    if (user) {
+      logout();
+    }
+    // eslint-disable-next-line
+  }, [user]);
   return (
     <div className="min-h-screen bg-white">
       {/* Main Content Area */}
