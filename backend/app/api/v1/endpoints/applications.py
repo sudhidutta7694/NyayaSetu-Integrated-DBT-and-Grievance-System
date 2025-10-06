@@ -6,7 +6,8 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 import structlog
 
-from app.core.database import get_database, Prisma
+from app.core.database import get_db
+from sqlalchemy.orm import Session
 from app.core.auth import (
     get_current_user_dependency, get_current_active_user_dependency,
     require_application_access, require_application_edit_access,
@@ -29,7 +30,7 @@ router = APIRouter()
 async def create_application(
     application_data: ApplicationCreate,
     current_user: User = Depends(get_current_active_user_dependency()),
-    db: Prisma = Depends(get_database)
+    db: Session = Depends(get_db)
 ):
     """Create a new application"""
     try:
@@ -54,7 +55,7 @@ async def get_applications(
     status: Optional[ApplicationStatus] = None,
     application_type: Optional[ApplicationType] = None,
     current_user: User = Depends(get_current_active_user_dependency()),
-    db: Prisma = Depends(get_database)
+    db: Session = Depends(get_db)
 ):
     """Get applications with optional filters"""
     try:
@@ -88,7 +89,7 @@ async def get_my_applications(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
     current_user: User = Depends(get_current_active_user_dependency()),
-    db: Prisma = Depends(get_database)
+    db: Session = Depends(get_db)
 ):
     """Get current user's applications"""
     try:
@@ -108,7 +109,7 @@ async def get_my_applications(
 @router.get("/stats", response_model=ApplicationStats)
 async def get_application_stats(
     current_user: User = Depends(get_current_active_user_dependency()),
-    db: Prisma = Depends(get_database)
+    db: Session = Depends(get_db)
 ):
     """Get application statistics"""
     try:
@@ -133,7 +134,7 @@ async def get_application_stats(
 async def get_application(
     application_id: str,
     current_user: User = Depends(get_current_user_dependency()),
-    db: Prisma = Depends(get_database)
+    db: Session = Depends(get_db)
 ):
     """Get application by ID"""
     try:
@@ -169,7 +170,7 @@ async def update_application(
     application_id: str,
     update_data: ApplicationUpdate,
     current_user: User = Depends(get_current_user_dependency()),
-    db: Prisma = Depends(get_database)
+    db: Session = Depends(get_db)
 ):
     """Update application"""
     try:
@@ -217,7 +218,7 @@ async def submit_application(
     application_id: str,
     submission_data: ApplicationSubmission,
     current_user: User = Depends(get_current_user_dependency()),
-    db: Prisma = Depends(get_database)
+    db: Session = Depends(get_db)
 ):
     """Submit application for review"""
     try:
@@ -263,7 +264,7 @@ async def review_application(
     application_id: str,
     review_data: ApplicationReview,
     current_user: User = Depends(require_approval_permission),
-    db: Prisma = Depends(get_database)
+    db: Session = Depends(get_db)
 ):
     """Review application"""
     try:
@@ -295,7 +296,7 @@ async def disburse_funds(
     application_id: str,
     disbursement_data: ApplicationDisbursement,
     current_user: User = Depends(require_disbursement_permission),
-    db: Prisma = Depends(get_database)
+    db: Session = Depends(get_db)
 ):
     """Disburse funds for approved application"""
     try:
@@ -326,7 +327,7 @@ async def disburse_funds(
 async def delete_application(
     application_id: str,
     current_user: User = Depends(get_current_user_dependency()),
-    db: Prisma = Depends(get_database)
+    db: Session = Depends(get_db)
 ):
     """Delete application (only if in draft status)"""
     try:

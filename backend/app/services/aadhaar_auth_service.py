@@ -2,16 +2,20 @@
 Aadhaar-based authentication service
 """
 
+import json
+from datetime import datetime, timedelta, timezone, date
 from typing import Optional, Dict, Any
 import structlog
-from datetime import datetime, timedelta, timezone
+from sqlalchemy.orm import Session
+from sqlalchemy import or_
 
-from app.core.database import Prisma
 from app.core.config import settings
 from app.core.exceptions import AuthenticationException, ValidationException
 from app.core.security import validate_aadhaar_number, generate_otp
 from app.services.twilio_verify_service import TwilioVerifyService
 from app.models.user import User
+from models.user import User as UserModel
+from models.otp import OTP
 
 logger = structlog.get_logger()
 
@@ -19,7 +23,7 @@ logger = structlog.get_logger()
 class AadhaarAuthService:
     """Aadhaar-based authentication service"""
     
-    def __init__(self, db: Prisma):
+    def __init__(self, db: Session):
         self.db = db
         self.twilio_verify = TwilioVerifyService()
         
@@ -101,28 +105,30 @@ class AadhaarAuthService:
             
             phone_number = aadhaar_info["phone_number"]
             
-            # Generate OTP
-            otp_code = generate_otp(settings.OTP_LENGTH)
+            # Generate OTP (use fixed OTP in development mode)
+            if settings.ENVIRONMENT == "development":
+                otp_code = "123456"  # Fixed OTP for development
+            else:
+                otp_code = generate_otp(settings.OTP_LENGTH)
             
             # Calculate expiry time
             expires_at = datetime.now(timezone.utc) + timedelta(minutes=settings.OTP_EXPIRE_MINUTES)
             
             # Store OTP in database
-            import json
-            await self.db.otp.create(
-                data={
-                    "phone_number": phone_number,
-                    "email": None,
-                    "otp_code": otp_code,
-                    "purpose": "AADHAAR_LOGIN",
-                    "expires_at": expires_at,
-                    "is_used": False,
-                    "metadata": json.dumps({
-                        "aadhaar_number": aadhaar_number,
-                        "name": aadhaar_info["name"]
-                    })
-                }
+            otp_record = OTP(
+                phone_number=phone_number,
+                email=None,
+                otp_code=otp_code,
+                purpose="AADHAAR_LOGIN",
+                expires_at=expires_at,
+                is_used=False,
+                extra_data=json.dumps({
+                    "aadhaar_number": aadhaar_number,
+                    "name": aadhaar_info["name"]
+                })
             )
+            self.db.add(otp_record)
+            self.db.commit()
             
             # Send OTP via Twilio Verify
             logger.info(
@@ -215,19 +221,16 @@ class AadhaarAuthService:
                 raise ValidationException("OTP verification failed")
             
             # Check if user exists, if not create one
-            user = await self.db.user.find_first(
-                where={
-                    "OR": [
-                        {"aadhaar_number": aadhaar_number},
-                        {"phone_number": phone_number}
-                    ]
-                }
-            )
+            user = self.db.query(UserModel).filter(
+                or_(
+                    UserModel.aadhaar_number == aadhaar_number,
+                    UserModel.phone_number == phone_number
+                )
+            ).first()
             
             if not user:
                 # Create new user from Aadhaar data
                 logger.info("Creating new user from Aadhaar data", aadhaar_number=aadhaar_number)
-                from datetime import date
                 user_data = {
                     "email": f"{aadhaar_number}@nyayasetu.gov.in",  # Temporary email
                     "phone_number": phone_number,
@@ -242,7 +245,10 @@ class AadhaarAuthService:
                         "last_login": datetime.now(timezone.utc)
                 }
                 logger.info("User data prepared", user_data=user_data)
-                user = await self.db.user.create(data=user_data)
+                user = UserModel(**user_data)
+                self.db.add(user)
+                self.db.commit()
+                self.db.refresh(user)
                 
                 logger.info(
                     "New user created from Aadhaar",
@@ -252,10 +258,8 @@ class AadhaarAuthService:
                 )
             else:
                 # Update last login
-                await self.db.user.update(
-                    where={"id": user.id},
-                    data={"last_login": datetime.now(timezone.utc)}
-                )
+                user.last_login = datetime.now(timezone.utc)
+                self.db.commit()
                 
                 logger.info(
                     "Existing user logged in via Aadhaar",
@@ -277,7 +281,7 @@ class AadhaarAuthService:
                     "name": user.full_name,
                     "aadhaar_number": user.aadhaar_number,
                     "phone_number": user.phone_number,
-                    "is_new_user": user.created_at > datetime.now(timezone.utc) - timedelta(minutes=1)
+                    "is_new_user": self._is_new_user(user)
                 },
                 "requires_onboarding": not user.is_onboarded or user.onboarding_step < 4
             }
@@ -291,3 +295,16 @@ class AadhaarAuthService:
                 error=str(e)
             )
             raise AuthenticationException("OTP verification failed")
+    
+    def _is_new_user(self, user) -> bool:
+        """Check if user was created recently, handling timezone comparison safely"""
+        try:
+            current_time = datetime.now(timezone.utc)
+            if user.created_at.tzinfo is None:
+                # If created_at is timezone-naive, make current_time naive too
+                current_time = datetime.now()
+            
+            return user.created_at > current_time - timedelta(minutes=1)
+        except Exception:
+            # If any error in comparison, assume not new user
+            return False

@@ -9,7 +9,8 @@ from jose import JWTError, jwt
 import structlog
 
 from app.core.config import settings
-from app.core.database import get_database, Prisma
+from app.core.database import get_db
+from sqlalchemy.orm import Session
 from app.core.exceptions import AuthenticationException, AuthorizationException
 from app.models.user import User, UserRole
 
@@ -20,10 +21,10 @@ security = HTTPBearer()
 class AuthManager:
     """Authentication manager"""
     
-    def __init__(self, db: Prisma):
+    def __init__(self, db: Session):
         self.db = db
     
-    async def get_current_user(
+    def get_current_user(
         self, 
         credentials: HTTPAuthorizationCredentials = Depends(security)
     ) -> User:
@@ -39,7 +40,7 @@ class AuthManager:
             if not user_id:
                 raise AuthenticationException("Invalid token")
             
-            user = await self.db.user.find_unique(where={"id": user_id})
+            user = self.db.query(User).filter(User.id == user_id).first()
             if not user:
                 raise AuthenticationException("User not found")
             
@@ -55,7 +56,7 @@ class AuthManager:
             logger.error("Authentication error", error=str(e))
             raise AuthenticationException("Authentication failed")
     
-    async def get_current_active_user(
+    def get_current_active_user(
         self,
         current_user: User = Depends(get_current_user)
     ) -> User:
@@ -64,7 +65,7 @@ class AuthManager:
             raise AuthenticationException("User account is deactivated")
         return current_user
     
-    async def get_current_verified_user(
+    def get_current_verified_user(
         self,
         current_user: User = Depends(get_current_active_user)
     ) -> User:
@@ -76,7 +77,7 @@ class AuthManager:
 
 def require_roles(allowed_roles: List[UserRole]):
     """Decorator to require specific roles"""
-    def role_checker(current_user: User = Depends(AuthManager(get_database()).get_current_active_user)):
+    def role_checker(current_user: User = Depends(AuthManager(get_db).get_current_active_user)):
         if current_user.role not in allowed_roles:
             raise AuthorizationException(
                 f"Access denied. Required roles: {[role.value for role in allowed_roles]}"
@@ -85,54 +86,54 @@ def require_roles(allowed_roles: List[UserRole]):
     return role_checker
 
 
-def require_admin(current_user: User = Depends(AuthManager(get_database()).get_current_active_user)):
+def require_admin(current_user: User = Depends(AuthManager(get_db).get_current_active_user)):
     """Require admin role"""
     if current_user.role != UserRole.ADMIN:
         raise AuthorizationException("Admin access required")
     return current_user
 
 
-def require_district_authority(current_user: User = Depends(AuthManager(get_database()).get_current_active_user)):
+def require_district_authority(current_user: User = Depends(AuthManager(get_db).get_current_active_user)):
     """Require district authority role"""
     if current_user.role not in [UserRole.DISTRICT_AUTHORITY, UserRole.ADMIN]:
         raise AuthorizationException("District authority access required")
     return current_user
 
 
-def require_social_welfare(current_user: User = Depends(AuthManager(get_database()).get_current_active_user)):
+def require_social_welfare(current_user: User = Depends(AuthManager(get_db).get_current_active_user)):
     """Require social welfare role"""
     if current_user.role not in [UserRole.SOCIAL_WELFARE, UserRole.ADMIN]:
         raise AuthorizationException("Social welfare access required")
     return current_user
 
 
-def require_financial_institution(current_user: User = Depends(AuthManager(get_database()).get_current_active_user)):
+def require_financial_institution(current_user: User = Depends(AuthManager(get_db).get_current_active_user)):
     """Require financial institution role"""
     if current_user.role not in [UserRole.FINANCIAL_INSTITUTION, UserRole.ADMIN]:
         raise AuthorizationException("Financial institution access required")
     return current_user
 
 
-def require_public_or_above(current_user: User = Depends(AuthManager(get_database()).get_current_active_user)):
+def require_public_or_above(current_user: User = Depends(AuthManager(get_db).get_current_active_user)):
     """Require public role or above"""
     return current_user
 
 
 def get_current_user_dependency():
     """Get current user dependency"""
-    auth_manager = AuthManager(get_database())
+    auth_manager = AuthManager(get_db)
     return auth_manager.get_current_user
 
 
 def get_current_active_user_dependency():
     """Get current active user dependency"""
-    auth_manager = AuthManager(get_database())
+    auth_manager = AuthManager(get_db)
     return auth_manager.get_current_active_user
 
 
 def get_current_verified_user_dependency():
     """Get current verified user dependency"""
-    auth_manager = AuthManager(get_database())
+    auth_manager = AuthManager(get_db)
     return auth_manager.get_current_verified_user
 
 

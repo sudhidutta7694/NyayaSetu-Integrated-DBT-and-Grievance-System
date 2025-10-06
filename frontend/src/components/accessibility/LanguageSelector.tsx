@@ -24,8 +24,7 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = ({ className })
   }
 
   return (
-    <div className={`flex items-center space-x-2 ${className}`}>
-      <Globe className="h-4 w-4 text-gray-600" />
+    <div className={`border border-orange-200 rounded-lg bg-white hover:border-orange-400`}>
       <Select value={currentLanguage} onValueChange={handleLanguageChange}>
         <SelectTrigger className="w-32 border-none bg-transparent text-gray-700 focus:outline-none">
           <SelectValue>

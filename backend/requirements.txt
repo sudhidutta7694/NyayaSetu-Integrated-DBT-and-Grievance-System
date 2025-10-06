@@ -1,89 +1,39 @@
-# FastAPI and ASGI server
 fastapi==0.104.1
 uvicorn[standard]==0.24.0
-python-multipart==0.0.6
-
-# Database
-prisma==0.12.0
+sqlalchemy==2.0.23
+alembic==1.12.1
+slowapi==0.1.9
 psycopg2-binary==2.9.9
-
-# Authentication and Security
+pydantic==2.5.0
+pydantic-settings==2.1.0
+python-dotenv==1.0.0
+python-dateutil==2.8.2
+cryptography>=41.0.0
+opencv-python==4.8.1.78
+pytesseract==0.3.10
+structlog==23.2.0
+sentry-sdk[fastapi]==1.38.0
+PyPDF2==3.0.1
+openpyxl==3.1.2
+qrcode==7.4.2
+twilio==8.10.0
+websockets==12.0
+python-multipart==0.0.6
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 python-decouple==3.8
-
-# HTTP requests
 httpx==0.25.2
 requests==2.31.0
-
-# Validation and serialization
-pydantic==2.5.0
-pydantic-settings==2.1.0
-
-# File handling
 python-magic==0.4.27
 Pillow==10.1.0
 aiofiles==23.2.1
-
-# Redis
-redis==5.0.1
-aioredis==2.0.1
-
-# Email
 fastapi-mail==1.4.1
-
-# AI Integration
 google-generativeai==0.3.2
-
-# Push notifications
 pyfcm==1.5.1
-
-# Background tasks
 celery==5.3.4
-
-# Monitoring and logging
-structlog==23.2.0
-sentry-sdk[fastapi]==1.38.0
-
-# Development tools
 pytest==7.4.3
 pytest-asyncio==0.21.1
 black==23.11.0
 isort==5.12.0
 flake8==6.1.0
-
-# CORS
 fastapi-cors==0.0.6
-
-# Rate limiting
-slowapi==0.1.9
-
-# Environment variables
-python-dotenv==1.0.0
-
-# Date and time
-python-dateutil==2.8.2
-
-# Cryptography
-cryptography>=41.0.0
-
-# Image processing
-opencv-python==4.8.1.78
-
-# OCR (for document processing)
-pytesseract==0.3.10
-
-# PDF processing
-PyPDF2==3.0.1
-
-# Excel processing
-openpyxl==3.1.2
-
-# QR Code generation
-qrcode==7.4.2
-
-# SMS integration
-twilio==8.10.0
-
-# WebSocket support
-websockets==12.0
