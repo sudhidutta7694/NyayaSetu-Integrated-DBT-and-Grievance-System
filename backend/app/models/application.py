@@ -8,7 +8,7 @@ from decimal import Decimal
 from pydantic import BaseModel, validator
 from enum import Enum
 
-from app.core.security import generate_application_number
+from app.core.security import generate_application_number  # (leave as is, since security is in app/core)
 
 
 class ApplicationStatus(str, Enum):
@@ -16,7 +16,8 @@ class ApplicationStatus(str, Enum):
     SUBMITTED = "SUBMITTED"
     UNDER_REVIEW = "UNDER_REVIEW"
     DOCUMENT_VERIFICATION_PENDING = "DOCUMENT_VERIFICATION_PENDING"
-    APPROVED = "APPROVED"
+    APPROVED = "APPROVED"  # Approved by district authority
+    SOCIAL_WELFARE_APPROVED = "SOCIAL_WELFARE_APPROVED"  # Approved by social welfare
     REJECTED = "REJECTED"
     FUND_DISBURSED = "FUND_DISBURSED"
     COMPLETED = "COMPLETED"

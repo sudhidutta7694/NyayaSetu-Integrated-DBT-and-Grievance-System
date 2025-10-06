@@ -74,7 +74,7 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     """User creation model"""
-    pass
+    role: Optional[UserRole] = None
 
 
 class UserUpdate(BaseModel):

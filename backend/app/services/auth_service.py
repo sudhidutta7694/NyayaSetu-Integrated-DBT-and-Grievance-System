@@ -38,7 +38,8 @@ class AuthService:
                     raise ConflictException("Email already registered")
                 if existing_user.phone_number == user_data.phone_number:
                     raise ConflictException("Phone number already registered")
-            
+            # Use provided role if present, else default to PUBLIC
+            user_role = user_data.role if user_data.role else UserRole.PUBLIC
             # Create user
             user = User(
                 email=user_data.email,
@@ -53,7 +54,7 @@ class AuthService:
                 state=user_data.state,
                 pincode=user_data.pincode,
                 profile_image=user_data.profile_image,
-                role=UserRole.PUBLIC,
+                role=user_role,
                 is_active=True,
                 is_verified=False
             )

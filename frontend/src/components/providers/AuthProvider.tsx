@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { User } from '@/types/user'
 import { authApi } from '@/lib/api/auth'
+import { socialWelfareAuthApi } from '@/lib/api/socialWelfareAuth'
 
 interface AuthContextType {
   user: User | null
@@ -28,11 +29,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const token = localStorage.getItem('access_token')
       if (token) {
-        const userData = await authApi.getCurrentUser()
-        setUser(userData)
+        // Try default user endpoint first
+        try {
+          const userData = await authApi.getCurrentUser()
+          setUser(userData)
+        } catch (e) {
+          // If fails, try social welfare endpoint
+          try {
+            const userData = await socialWelfareAuthApi.getCurrentUser()
+            setUser(userData)
+          } catch (err) {
+            localStorage.removeItem('access_token')
+            setUser(null)
+          }
+        }
       }
     } catch (error) {
       localStorage.removeItem('access_token')
+      setUser(null)
     } finally {
       setLoading(false)
     }

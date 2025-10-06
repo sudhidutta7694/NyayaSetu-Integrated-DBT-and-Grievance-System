@@ -88,7 +88,7 @@ export function GovernmentHeader() {
                     </li>
                     <li>
                       <a
-                        href="/login/social-welfare"
+                        href="/social-welfare/login"
                         className="block px-6 py-3 text-gray-800 hover:bg-orange-50 hover:text-orange-700 transition-colors text-left w-full font-semibold"
                         onClick={() => setLoginDropdownOpen(false)}
                         role="menuitem"
@@ -199,7 +199,7 @@ export function GovernmentHeader() {
                         </li>
                         <li>
                           <a
-                            href="/login/social-welfare"
+                            href="/social-welfare/login"
                             className="block px-6 py-3 text-gray-800 hover:bg-orange-50 hover:text-orange-700 transition-colors text-left w-full font-semibold"
                             onClick={() => setLoginDropdownOpen(false)}
                             role="menuitem"

@@ -1,4 +1,3 @@
-
 import structlog
 from fastapi import APIRouter, Body
 from pydantic import BaseModel, EmailStr
@@ -23,6 +22,75 @@ from app.models.user import User, UserCreate, UserLogin, OTPRequest, OTPVerify, 
 
 logger = structlog.get_logger()
 router = APIRouter()
+
+
+# Social Welfare Login Request
+class SocialWelfareLoginRequest(BaseModel):
+    email: EmailStr
+    password: str
+
+# Social Welfare Login Endpoint
+@router.post("/social-welfare/login")
+def social_welfare_login(
+    data: SocialWelfareLoginRequest = Body(...),
+    db: Session = Depends(get_db)
+):
+    from app.core.security import verify_password, create_access_token
+    from models.user import User as UserModel, UserRole
+    user = db.query(UserModel).filter(UserModel.email == data.email, UserModel.role == UserRole.SOCIAL_WELFARE).first()
+    if not user or not hasattr(user, 'password_hash') or not verify_password(data.password, user.password_hash):
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+    if not user.is_active:
+        raise HTTPException(status_code=403, detail="Account is deactivated")
+    access_token = create_access_token({"sub": user.id, "role": user.role.value})
+    return {"access_token": access_token, "token_type": "bearer"}
+
+# Social Welfare Register Request
+class SocialWelfareRegisterRequest(BaseModel):
+    email: EmailStr
+    password: str
+    full_name: str
+
+@router.post("/social-welfare/register", response_model=User)
+async def register_social_welfare(
+    data: SocialWelfareRegisterRequest,
+    db: Session = Depends(get_db)
+):
+    """Register a new social welfare user"""
+    try:
+        auth_service = AuthService(db)
+        # Check if user already exists
+        existing_user = db.query(UserModel).filter(UserModel.email == data.email).first()
+        if existing_user:
+            raise HTTPException(status_code=400, detail="Email already registered")
+        # Create user with SOCIAL_WELFARE role
+        user = UserModel(
+            email=data.email,
+            full_name=data.full_name,
+            phone_number=None,
+            district=None,
+            role=UserRole.SOCIAL_WELFARE,
+            is_active=True,
+            is_verified=True,
+            is_onboarded=True,
+            onboarding_step=0,
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow(),
+        )
+        # Set password (hashing should be handled in model or here if needed)
+        if hasattr(user, 'set_password'):
+            user.set_password(data.password)
+        elif hasattr(user, 'password_hash'):
+            from app.core.security import hash_password
+            user.password_hash = hash_password(data.password)
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+        logger.info("Social welfare user registered", user_id=user.id)
+        return user
+    except Exception as e:
+        logger.error("Social welfare registration failed", error=str(e))
+        raise HTTPException(status_code=400, detail="Registration failed: " + str(e))
 
 # District Authority Login Request
 class DistrictAuthorityLoginRequest(BaseModel):
@@ -140,12 +208,13 @@ class AadhaarOTPResponse(BaseModel):
     requires_onboarding: bool = False
 
 
+
 @router.post("/register", response_model=User)
 async def register(
-    user_data: UserCreate,
+    user_data: UserCreate = Body(...),
     db: Session = Depends(get_db)
 ):
-    """Register a new user"""
+    """Register a new user. If 'role' is provided in user_data, it will be used (e.g., for social welfare signups)."""
     try:
         auth_service = AuthService(db)
         user = await auth_service.register_user(user_data)
@@ -353,25 +422,25 @@ async def logout(
     return {"message": "Logged out successfully"}
 
 
+
+# Use the correct SQLAlchemy User model for /me endpoint
+from models.user import User as SAUserModel
+
 @router.get("/me", response_model=User)
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
     db: Session = Depends(get_db)
 ):
-    """Get current user information"""
+    """Get current user information (works for all roles)"""
     try:
         payload = verify_token(credentials.credentials)
         user_id = payload.get("sub")
-        
         if not user_id:
             raise AuthenticationException("Invalid token")
-        
-        user = db.query(UserModel).filter(UserModel.id == user_id).first()
+        user = db.query(SAUserModel).filter(SAUserModel.id == user_id).first()
         if not user:
             raise AuthenticationException("User not found")
-        
         return user
-        
     except AuthenticationException as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
