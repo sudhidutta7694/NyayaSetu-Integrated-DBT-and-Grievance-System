@@ -1,9 +1,13 @@
 'use client'
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Shield, User, Mail, Lock, MapPin } from "lucide-react";
 import { districtAuthApi } from "@/lib/api/districtAuth";
+import toast from 'react-hot-toast';
 
 export default function DistrictRegisterPage() {
   const router = useRouter();
@@ -14,7 +18,6 @@ export default function DistrictRegisterPage() {
     district: "",
   });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -23,32 +26,127 @@ export default function DistrictRegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError("");
     try {
       await districtAuthApi.register(form);
-      router.push("/district/login");
+      toast.success('Registration successful! Redirecting to login...');
+      setTimeout(() => {
+        router.push("/district/login");
+      }, 1500);
     } catch (err: any) {
-      setError(err?.response?.data?.detail || "Registration failed");
+      toast.error(err?.response?.data?.detail || "Registration failed");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="w-full max-w-md p-8 bg-white rounded shadow">
-        <h2 className="text-2xl font-bold mb-6 text-center">District Authority Register</h2>
-        <form className="space-y-4" onSubmit={handleSubmit}>
-          <Input name="full_name" type="text" placeholder="Full Name" required value={form.full_name} onChange={handleChange} />
-          <Input name="email" type="email" placeholder="Email" required value={form.email} onChange={handleChange} />
-          <Input name="password" type="password" placeholder="Password" required value={form.password} onChange={handleChange} />
-          <Input name="district" type="text" placeholder="District" required value={form.district} onChange={handleChange} />
-          <Button className="w-full" type="submit" disabled={loading}>{loading ? "Registering..." : "Register"}</Button>
-        </form>
-        {error && <div className="text-red-600 mt-2 text-center">{error}</div>}
-        <div className="mt-4 text-center">
-          <span>Already have an account? </span>
-          <a href="/district/login" className="text-blue-600 hover:underline">Login</a>
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-green-50">
+      <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-md w-full space-y-8">
+          <Card className="shadow-lg border-2 border-orange-200">
+            <CardHeader className="bg-gradient-to-r from-orange-50 to-green-50">
+              <CardTitle className="text-center text-xl font-semibold text-gray-800">
+                Account Registration
+              </CardTitle>
+              <CardDescription className="text-center text-gray-600">
+                Create your district authority account
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-6">
+              <form onSubmit={handleSubmit} className="space-y-3">
+                <div>
+                  <Label htmlFor="full_name" className="text-sm font-medium text-gray-700">
+                    Full Name
+                  </Label>
+                  <div className="relative mt-1">
+                    <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Input
+                      id="full_name"
+                      name="full_name"
+                      type="text"
+                      placeholder="Enter your full name"
+                      required
+                      value={form.full_name}
+                      onChange={handleChange}
+                      className="pl-10 border-2 border-gray-300 focus:border-orange-500"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="email" className="text-sm font-medium text-gray-700">
+                    Email Address
+                  </Label>
+                  <div className="relative mt-1">
+                    <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Input
+                      id="email"
+                      name="email"
+                      type="email"
+                      placeholder="Enter your email address"
+                      required
+                      value={form.email}
+                      onChange={handleChange}
+                      className="pl-10 border-2 border-gray-300 focus:border-orange-500"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="password" className="text-sm font-medium text-gray-700">
+                    Password
+                  </Label>
+                  <div className="relative mt-1">
+                    <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Input
+                      id="password"
+                      name="password"
+                      type="password"
+                      placeholder="Create a secure password"
+                      required
+                      value={form.password}
+                      onChange={handleChange}
+                      className="pl-10 border-2 border-gray-300 focus:border-orange-500"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="district" className="text-sm font-medium text-gray-700">
+                    District
+                  </Label>
+                  <div className="relative mt-1">
+                    <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Input
+                      id="district"
+                      name="district"
+                      type="text"
+                      placeholder="Enter your district"
+                      required
+                      value={form.district}
+                      onChange={handleChange}
+                      className="pl-10 border-2 border-gray-300 focus:border-orange-500"
+                    />
+                  </div>
+                </div>
+
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-orange-600 hover:bg-orange-700 text-white font-medium py-3"
+                >
+                  {loading ? 'Creating Account...' : 'Create Account'}
+                </Button>
+              </form>
+
+              <div className="mt-6 pt-4 border-t border-gray-200 text-center">
+                <span className="text-sm text-gray-600">Already have an account? </span>
+                <a href="/district/login" className="text-sm text-orange-600 font-medium hover:underline hover:text-orange-700">
+                  Sign In
+                </a>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
