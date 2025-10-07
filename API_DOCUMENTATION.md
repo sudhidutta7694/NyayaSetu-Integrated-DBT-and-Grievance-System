@@ -282,6 +282,238 @@ GET /cases
 PUT /cases/{case_id}
 ```
 
+## District Authority Endpoints
+
+### Get Pending Applications
+```http
+GET /district-authority/applications/pending
+```
+
+**Query Parameters:**
+- `limit` (optional): Number of results (default: 50, max: 100)
+- `offset` (optional): Offset for pagination (default: 0)
+
+**Response:**
+```json
+{
+  "applications": [
+    {
+      "id": "app_id",
+      "application_number": "APP-2024-001",
+      "user_id": "user_id",
+      "title": "PCR Act Compensation",
+      "description": "Application for compensation under PCR Act",
+      "application_type": "COMPENSATION",
+      "status": "UNDER_REVIEW",
+      "amount_requested": 50000.00,
+      "fir_number": "FIR/2024/001",
+      "cctns_verified": false,
+      "submitted_at": "2024-01-10T10:00:00Z",
+      "created_at": "2024-01-10T09:00:00Z"
+    }
+  ],
+  "total": 1,
+  "limit": 50,
+  "offset": 0
+}
+```
+
+### Get Application Details
+```http
+GET /district-authority/applications/{application_id}
+```
+
+**Response:**
+```json
+{
+  "application": {
+    "id": "app_id",
+    "application_number": "APP-2024-001",
+    "title": "PCR Act Compensation",
+    "description": "Compensation for caste-based discrimination",
+    "application_type": "COMPENSATION",
+    "status": "UNDER_REVIEW",
+    "amount_requested": 50000.00,
+    "fir_number": "FIR/2024/001",
+    "cctns_verified": false,
+    "district_comments": null,
+    "district_reviewed_by": null,
+    "district_reviewed_at": null,
+    "bank_account_number": "1234567890",
+    "bank_ifsc_code": "SBIN0001234",
+    "bank_name": "State Bank of India",
+    "submitted_at": "2024-01-10T10:00:00Z"
+  },
+  "applicant": {
+    "id": "user_id",
+    "full_name": "John Doe",
+    "email": "john@example.com",
+    "phone_number": "+919876543210",
+    "aadhaar_number": "123456789012",
+    "address": "123 Main Street",
+    "district": "Mumbai",
+    "state": "Maharashtra"
+  },
+  "documents": [
+    {
+      "id": "doc_id",
+      "document_type": "CASTE_CERTIFICATE",
+      "document_name": "Caste Certificate.pdf",
+      "status": "PENDING",
+      "verification_notes": null,
+      "is_digilocker": false,
+      "created_at": "2024-01-10T09:30:00Z"
+    }
+  ]
+}
+```
+
+### CCTNS FIR Verification
+```http
+POST /district-authority/applications/{application_id}/cctns-verify
+```
+
+**Request Body:**
+```json
+{
+  "fir_number": "FIR/2024/001"
+}
+```
+
+**Response:**
+```json
+{
+  "message": "CCTNS verification completed",
+  "verification_result": {
+    "verified": true,
+    "message": "FIR verified successfully through CCTNS",
+    "verification_date": "2024-01-10T15:30:00Z"
+  },
+  "application_status": "UNDER_REVIEW",
+  "cctns_verified": true
+}
+```
+
+### Document Verification
+```http
+POST /district-authority/documents/{document_id}/verify
+```
+
+**Request Body:**
+```json
+{
+  "status": "VERIFIED",
+  "comments": "Document verified and approved"
+}
+```
+
+**Possible status values:**
+- `VERIFIED`: Document is approved
+- `REJECTED`: Document is rejected
+- `PENDING`: Document sent back with comments
+
+**Response:**
+```json
+{
+  "message": "Document approved successfully",
+  "document": {
+    "id": "doc_id",
+    "status": "VERIFIED",
+    "verification_notes": "Document verified and approved",
+    "verified_by": "district_officer_id",
+    "verified_at": "2024-01-10T16:00:00Z"
+  }
+}
+```
+
+### Application Review
+```http
+POST /district-authority/applications/{application_id}/review
+```
+
+**Request Body:**
+```json
+{
+  "action": "approve",
+  "comments": "All documents verified and CCTNS confirmed. Forwarding to Social Welfare."
+}
+```
+
+**Possible action values:**
+- `approve`: Approve application and forward to Social Welfare
+- `reject`: Reject the application
+- `pending`: Send back to user for additional information
+
+**Response:**
+```json
+{
+  "message": "Application approved and forwarded to Social Welfare department",
+  "application": {
+    "id": "app_id",
+    "status": "APPROVED",
+    "district_comments": "All documents verified and CCTNS confirmed.",
+    "district_reviewed_by": "district_officer_id",
+    "district_reviewed_at": "2024-01-10T16:30:00Z",
+    "approved_at": "2024-01-10T16:30:00Z"
+  }
+}
+```
+
+### Dashboard Statistics
+```http
+GET /district-authority/dashboard/stats
+```
+
+**Response:**
+```json
+{
+  "pending_applications": 25,
+  "approved_applications": 150,
+  "rejected_applications": 8,
+  "pending_documents": 45,
+  "verified_documents": 320,
+  "total_applications": 183
+}
+```
+
+## Enhanced Case Management Endpoints
+
+### Get District Cases
+```http
+GET /cases/district/cases
+```
+
+**Query Parameters:**
+- `status` (optional): Filter by application status
+- `limit` (optional): Number of results (default: 50)
+- `offset` (optional): Offset for pagination (default: 0)
+
+### Verify Document (Cases API)
+```http
+POST /cases/pending/{case_id}/documents/{document_id}/verify
+```
+
+**Request Body:**
+```json
+{
+  "status": "VERIFIED",
+  "comments": "Document looks authentic and complete"
+}
+```
+
+### Enhanced Case Action
+```http
+POST /cases/pending/{case_id}/action
+```
+
+**Request Body:**
+```json
+{
+  "action": "approve",
+  "comments": "All verifications completed successfully"
+}
+```
+
 ### Notifications
 
 #### Get Notifications

@@ -14,7 +14,8 @@ from app.api.v1.endpoints import (
     chatbot,
     admin,
     onboarding,
-    admin_verification
+    admin_verification,
+    district_authority
 )
 
 api_router = APIRouter()
@@ -30,3 +31,4 @@ api_router.include_router(chatbot.router, prefix="/chatbot", tags=["chatbot"])
 api_router.include_router(admin.router, prefix="/admin", tags=["admin"])
 api_router.include_router(onboarding.router, prefix="/onboarding", tags=["onboarding"])
 api_router.include_router(admin_verification.router, prefix="/admin/verification", tags=["admin-verification"])
+api_router.include_router(district_authority.router, prefix="/district-authority", tags=["district-authority"])

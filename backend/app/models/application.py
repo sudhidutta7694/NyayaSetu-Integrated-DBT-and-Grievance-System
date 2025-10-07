@@ -109,6 +109,12 @@ class Application(ApplicationBase):
     status: ApplicationStatus
     amount_approved: Optional[Decimal] = None
     amount_disbursed: Optional[Decimal] = None
+    fir_number: Optional[str] = None
+    district_comments: Optional[str] = None
+    cctns_verified: Optional[bool] = False
+    cctns_verification_date: Optional[datetime] = None
+    district_reviewed_by: Optional[str] = None
+    district_reviewed_at: Optional[datetime] = None
     submitted_at: Optional[datetime] = None
     reviewed_at: Optional[datetime] = None
     approved_at: Optional[datetime] = None
@@ -210,4 +216,42 @@ class ApplicationExport(BaseModel):
     filters: Optional[ApplicationFilter] = None
     include_documents: bool = False
     include_audit_log: bool = False
+
+
+# District Authority specific models
+class CCTNSVerificationRequest(BaseModel):
+    """CCTNS verification request model"""
+    fir_number: str
+
+    @validator('fir_number')
+    def validate_fir_number(cls, v):
+        if not v or not v.strip():
+            raise ValueError('FIR number is required')
+        if not v.upper().startswith('FIR'):
+            raise ValueError('FIR number must start with "FIR"')
+        return v.strip()
+
+
+class DistrictAuthorityReview(BaseModel):
+    """District authority review model"""
+    action: str  # approve, reject, pending
+    comments: Optional[str] = None
+
+    @validator('action')
+    def validate_action(cls, v):
+        if v not in ['approve', 'reject', 'pending']:
+            raise ValueError('Action must be "approve", "reject", or "pending"')
+        return v
+
+
+class DocumentVerificationRequest(BaseModel):
+    """Document verification request model"""
+    status: str  # VERIFIED, REJECTED, PENDING
+    comments: Optional[str] = None
+
+    @validator('status')
+    def validate_status(cls, v):
+        if v not in ['VERIFIED', 'REJECTED', 'PENDING']:
+            raise ValueError('Status must be "VERIFIED", "REJECTED", or "PENDING"')
+        return v
 

@@ -189,31 +189,122 @@
 
 /* High Contrast Mode */
 .high-contrast {
-  filter: contrast(150%) brightness(120%);
+  /* Remove global filter as it was too aggressive */
+  /* This class is used as a trigger for high contrast styles below */
 }
 
-.high-contrast * {
+/* High Contrast - Main Backgrounds */
+.high-contrast body,
+.high-contrast main,
+.high-contrast section {
   background-color: #000000 !important;
   color: #ffffff !important;
-  border-color: #ffffff !important;
 }
 
+/* High Contrast - Card and Content Backgrounds */
+.high-contrast .bg-white,
+.high-contrast .bg-gray-50,
+.high-contrast .bg-gray-100,
+.high-contrast [class*="bg-orange-"],
+.high-contrast [class*="bg-green-"],
+.high-contrast [class*="bg-blue-"],
+.high-contrast [class*="bg-purple-"],
+.high-contrast [class*="bg-red-"],
+.high-contrast [class*="bg-yellow-"] {
+  background-color: #1a1a1a !important;
+  color: #ffffff !important;
+}
+
+/* High Contrast - Text Colors */
+.high-contrast .text-gray-600,
+.high-contrast .text-gray-700,
+.high-contrast .text-gray-800,
+.high-contrast .text-gray-900,
+.high-contrast [class*="text-orange-"],
+.high-contrast [class*="text-green-"],
+.high-contrast [class*="text-blue-"],
+.high-contrast [class*="text-purple-"],
+.high-contrast [class*="text-red-"],
+.high-contrast [class*="text-yellow-"] {
+  color: #ffffff !important;
+}
+
+/* High Contrast - Primary Buttons */
+.high-contrast button,
 .high-contrast .bg-orange-600,
 .high-contrast .bg-green-600,
 .high-contrast .bg-blue-600 {
   background-color: #ffffff !important;
   color: #000000 !important;
+  border: 2px solid #ffffff !important;
 }
 
-.high-contrast .text-gray-600,
-.high-contrast .text-gray-700,
-.high-contrast .text-gray-900 {
+/* High Contrast - Secondary Buttons and Inputs */
+.high-contrast button[class*="outline"],
+.high-contrast input,
+.high-contrast textarea,
+.high-contrast select {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+  border: 2px solid #ffffff !important;
+}
+
+/* High Contrast - Borders */
+.high-contrast .border,
+.high-contrast .border-gray-200,
+.high-contrast .border-gray-300,
+.high-contrast [class*="border-orange-"],
+.high-contrast [class*="border-green-"],
+.high-contrast [class*="border-blue-"],
+.high-contrast [class*="border-purple-"],
+.high-contrast [class*="border-red-"],
+.high-contrast [class*="border-yellow-"] {
+  border-color: #ffffff !important;
+}
+
+/* High Contrast - Cards and Containers */
+.high-contrast .shadow,
+.high-contrast .shadow-lg,
+.high-contrast .shadow-md,
+.high-contrast .shadow-sm {
+  box-shadow: 0 4px 6px rgba(255, 255, 255, 0.1) !important;
+}
+
+/* High Contrast - Links */
+.high-contrast a {
+  color: #ffffff !important;
+  text-decoration: underline !important;
+}
+
+/* High Contrast - Focus States */
+.high-contrast *:focus {
+  outline: 3px solid #ffffff !important;
+  outline-offset: 2px !important;
+}
+
+/* High Contrast - Icons */
+.high-contrast svg {
   color: #ffffff !important;
 }
 
-.high-contrast .border-gray-200,
-.high-contrast .border-gray-300 {
-  border-color: #ffffff !important;
+/* High Contrast - Special Cases for Readability */
+.high-contrast .bg-gradient-to-r,
+.high-contrast .bg-gradient-to-b,
+.high-contrast [class*="gradient"] {
+  background: #000000 !important;
+}
+
+/* High Contrast - Form Elements */
+.high-contrast input::placeholder,
+.high-contrast textarea::placeholder {
+  color: #cccccc !important;
+}
+
+/* High Contrast - Hover States */
+.high-contrast button:hover,
+.high-contrast a:hover {
+  background-color: #333333 !important;
+  color: #ffffff !important;
 }
 
 /* Print styles */
