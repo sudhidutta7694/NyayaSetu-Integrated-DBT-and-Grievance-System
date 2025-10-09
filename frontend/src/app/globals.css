@@ -24,6 +24,26 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 221.2 83.2% 53.3%;
     --radius: 0.5rem;
+    /* Status semantic tokens */
+    --status-draft-bg: 0 0% 96%; /* gray-100 */
+    --status-draft-fg: 215 16% 25%;
+    --status-submitted-bg: 214 95% 93%; /* blue-100 */
+    --status-submitted-fg: 217 91% 60%;
+    --status-under-review-bg: 45 100% 94%; /* amber-100 */
+    --status-under-review-fg: 31 97% 45%;
+    --status-approved-bg: 142 71% 94%; /* green-100 */
+    --status-approved-fg: 142 72% 29%;
+    --status-rejected-bg: 0 93% 94%; /* red-100 */
+    --status-rejected-fg: 0 72% 41%;
+    --status-disbursed-bg: 180 56% 93%; /* teal-100 */
+    --status-disbursed-fg: 180 80% 25%;
+    --status-pending-bg: 49 100% 95%;
+    --status-pending-fg: 40 97% 33%;
+      /* Timeline tokens */
+      --timeline-complete-bg: var(--status-approved-fg);
+      --timeline-active-border: var(--status-under-review-fg);
+      --timeline-upcoming-border: 215 16% 82%;
+      --timeline-progress: var(--status-under-review-fg);
   }
 
   .dark {
@@ -48,6 +68,22 @@
     --ring: 224.3 76.3% 94.1%;
   }
 }
+
+/* Status badge utility classes */
+.status-badge {
+  @apply inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium border;
+}
+.status-draft { background: hsl(var(--status-draft-bg)); color: hsl(var(--status-draft-fg)); }
+.status-submitted { background: hsl(var(--status-submitted-bg)); color: hsl(var(--status-submitted-fg)); }
+.status-under-review { background: hsl(var(--status-under-review-bg)); color: hsl(var(--status-under-review-fg)); }
+.status-approved { background: hsl(var(--status-approved-bg)); color: hsl(var(--status-approved-fg)); }
+.status-rejected { background: hsl(var(--status-rejected-bg)); color: hsl(var(--status-rejected-fg)); }
+.status-disbursed { background: hsl(var(--status-disbursed-bg)); color: hsl(var(--status-disbursed-fg)); }
+.status-pending { background: hsl(var(--status-pending-bg)); color: hsl(var(--status-pending-fg)); }
+
+/* Timeline animations */
+@keyframes timelinePop { 0% { opacity:0; transform:scale(.85) translateY(6px);} 60% { opacity:1; transform:scale(1.04);} 100% { opacity:1; transform:scale(1);} }
+.timeline-node-anim { animation: timelinePop .6s ease forwards; opacity:0; }
 
 @layer base {
   * {

@@ -2,6 +2,15 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react'
 
+// Statically import available locale JSON to avoid dynamic import issues in Next.js
+// Only import languages that actually have files present. Others will gracefully fallback to English.
+import en from '@/locales/en.json'
+import hi from '@/locales/hi.json'
+import bn from '@/locales/bn.json'
+import mr from '@/locales/mr.json'
+import ta from '@/locales/ta.json'
+import te from '@/locales/te.json'
+
 // Supported languages
 export const SUPPORTED_LANGUAGES = {
   en: { name: 'English', nativeName: 'English', code: 'en' },
@@ -10,6 +19,7 @@ export const SUPPORTED_LANGUAGES = {
   mr: { name: 'Marathi', nativeName: 'मराठी', code: 'mr' },
   ta: { name: 'Tamil', nativeName: 'தமிழ்', code: 'ta' },
   te: { name: 'Telugu', nativeName: 'తెలుగు', code: 'te' },
+  // Future languages below (no JSON yet) — will fallback to English until files are added:
   gu: { name: 'Gujarati', nativeName: 'ગુજરાતી', code: 'gu' },
   kn: { name: 'Kannada', nativeName: 'ಕನ್ನಡ', code: 'kn' },
   ml: { name: 'Malayalam', nativeName: 'മലയാളം', code: 'ml' },
@@ -17,6 +27,16 @@ export const SUPPORTED_LANGUAGES = {
   or: { name: 'Odia', nativeName: 'ଓଡ଼ିଆ', code: 'or' },
   as: { name: 'Assamese', nativeName: 'অসমীয়া', code: 'as' }
 } as const
+
+// Map of available translation objects
+const TRANSLATIONS: Record<string, any> = {
+  en,
+  hi,
+  bn,
+  mr,
+  ta,
+  te
+}
 
 export type LanguageCode = keyof typeof SUPPORTED_LANGUAGES
 
@@ -43,29 +63,12 @@ interface LanguageProviderProps {
 
 export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) => {
   const [currentLanguage, setCurrentLanguage] = useState<LanguageCode>('en')
-  const [translations, setTranslations] = useState<Record<string, any>>({})
+  const [translations, setTranslations] = useState<Record<string, any>>(TRANSLATIONS.en)
 
-  // Load translations when language changes
+  // Update translations synchronously when language changes
   useEffect(() => {
-    const loadTranslations = async () => {
-      try {
-        const translationModule = await import(`../locales/${currentLanguage}.json`)
-        setTranslations(translationModule.default)
-      } catch (error) {
-        console.warn(`Failed to load translations for ${currentLanguage}:`, error)
-        // Fallback to English
-        if (currentLanguage !== 'en') {
-          try {
-            const englishModule = await import(`../locales/en.json`)
-            setTranslations(englishModule.default)
-          } catch (fallbackError) {
-            console.error('Failed to load English fallback translations:', fallbackError)
-          }
-        }
-      }
-    }
-
-    loadTranslations()
+    const next = TRANSLATIONS[currentLanguage] || TRANSLATIONS.en
+    setTranslations(next)
   }, [currentLanguage])
 
   // Load saved language from localStorage
@@ -84,8 +87,11 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
     document.documentElement.lang = language
     
     // Update page title and meta description if needed
-    const title = translations['site.title'] || 'NyayaSetu - Integrated DBT and Grievance System'
-    document.title = title
+    // Title will update after translations state refreshes
+    setTimeout(() => {
+      const title = (TRANSLATIONS[language] || TRANSLATIONS.en)['site.title'] || 'NyayaSetu - Integrated DBT and Grievance System'
+      document.title = title
+    }, 0)
   }
 
   const t = (key: string, fallback?: string): string => {

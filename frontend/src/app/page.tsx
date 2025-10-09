@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { GovernmentHeader } from '@/components/layout/GovernmentHeader'
+import { GovernmentFooter } from '@/components/layout/GovernmentFooter'
 import { 
   Shield, 
   Users, 
@@ -22,9 +24,12 @@ import FAQSection from '@/components/landing/FAQSection'
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white flex flex-col">
+      {/* Skip Link for Accessibility */}
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 bg-orange-600 text-white px-4 py-2 rounded z-50">Skip to main content</a>
+      <GovernmentHeader />
       {/* Main Content Area */}
-      <main className="flex-1">
+      <main id="main-content" className="flex-1">
         {/* Hero Section */}
         <section className="relative bg-gradient-to-r from-orange-600 to-green-600 text-white py-24 overflow-hidden">
           {/* Soft blurred gradient background shape */}
@@ -340,6 +345,7 @@ export default function HomePage() {
           </div>
         </section>
       </main>
+      <GovernmentFooter />
     </div>
   )
 }
