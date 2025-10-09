@@ -11,7 +11,7 @@ import structlog
 from app.core.database import get_db
 from app.core.dependencies import require_role
 from app.core.exceptions import ValidationException, NotFoundException
-from app.models.user import User, UserRole
+from models.user import User, UserRole
 from app.services.district_authority_service import DistrictAuthorityService
 from sqlalchemy.orm import Session
 

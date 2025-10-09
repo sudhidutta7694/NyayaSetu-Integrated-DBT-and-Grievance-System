@@ -4,12 +4,12 @@ import { createContext, useContext, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { User } from '@/types/user'
 import { authApi } from '@/lib/api/auth'
+import { tokenStorage } from '@/lib/tokenStorage'
 import { socialWelfareAuthApi } from '@/lib/api/socialWelfareAuth'
 
 interface AuthContextType {
   user: User | null
   loading: boolean
-  login: (phoneNumber: string, otp: string) => Promise<void>
   logout: () => void
   refreshUser: () => Promise<void>
 }
@@ -26,8 +26,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const checkAuth = async () => {
+    // Only run on client side
+    if (typeof window === 'undefined') {
+      setLoading(false)
+      return
+    }
+    
     try {
-      const token = localStorage.getItem('access_token')
+      const token = tokenStorage.getToken()
+      console.log('Checking auth, token exists:', !!token)
+      console.log('Token value:', token ? token.substring(0, 30) + '...' : 'NO TOKEN')
+      
       if (token) {
         // Try default user endpoint first
         try {
@@ -44,27 +53,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
         }
       }
-    } catch (error) {
-      localStorage.removeItem('access_token')
-      setUser(null)
+    } catch (error: any) {
+      console.error('Auth check failed:', error)
+      console.error('Error details:', error.response?.data || error.message)
+      
+      // Only remove token if it's actually an auth error (401)
+      if (error.response?.status === 401) {
+        console.log('Token invalid, removing from storage')
+        tokenStorage.removeToken()
+      } else {
+        console.log('Auth check failed but keeping token (may be network error)')
+      }
     } finally {
       setLoading(false)
     }
   }
 
-  const login = async (phoneNumber: string, otp: string) => {
-    try {
-      const response = await authApi.verifyOtp(phoneNumber, otp)
-      localStorage.setItem('access_token', response.access_token)
-      setUser(response.user)
-      router.push('/dashboard')
-    } catch (error) {
-      throw error
-    }
-  }
-
   const logout = () => {
-    localStorage.removeItem('access_token')
+    tokenStorage.removeToken()
     setUser(null)
     router.push('/')
   }
@@ -79,7 +85,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, refreshUser }}>
+    <AuthContext.Provider value={{ user, loading, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   )

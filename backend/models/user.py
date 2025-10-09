@@ -57,3 +57,5 @@ class User(Base):
     role_assignments = relationship("UserRoleAssignment", back_populates="user")
     applications = relationship("Application", back_populates="user")
     documents = relationship("Document", back_populates="user")
+    onboarding_steps = relationship("OnboardingStep", back_populates="user")
+    bank_accounts = relationship("BankAccount", back_populates="user")

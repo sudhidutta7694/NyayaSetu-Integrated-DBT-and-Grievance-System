@@ -36,7 +36,7 @@ class Category(str, Enum):
 class UserBase(BaseModel):
     """Base user model"""
     email: EmailStr
-    phone_number: Optional[str] = None
+    phone_number: str
     full_name: str
     father_name: Optional[str] = None
     mother_name: Optional[str] = None
@@ -59,8 +59,6 @@ class UserBase(BaseModel):
 
     @validator('phone_number')
     def validate_phone(cls, v):
-        if v in (None, ""):
-            return v
         if not validate_phone_number(v):
             raise ValueError('Invalid phone number format')
         return v
@@ -70,11 +68,6 @@ class UserBase(BaseModel):
         if v and not validate_pincode(v):
             raise ValueError('Invalid pincode format')
         return v
-
-
-class UserCreate(UserBase):
-    """User creation model"""
-    role: Optional[UserRole] = None
 
 
 class UserUpdate(BaseModel):
@@ -96,18 +89,6 @@ class UserUpdate(BaseModel):
     def validate_pincode(cls, v):
         if v and not validate_pincode(v):
             raise ValueError('Invalid pincode format')
-        return v
-
-
-class UserLogin(BaseModel):
-    """User login model"""
-    phone_number: Optional[str] = None
-    email: Optional[EmailStr] = None
-
-    @validator('phone_number')
-    def validate_phone(cls, v):
-        if v and not validate_phone_number(v):
-            raise ValueError('Invalid phone number format')
         return v
 
 
@@ -134,7 +115,7 @@ class UserProfile(BaseModel):
     father_name: Optional[str] = None
     mother_name: Optional[str] = None
     email: str
-    phone_number: Optional[str] = None
+    phone_number: str
     aadhaar_number: Optional[str] = None
     date_of_birth: Optional[datetime] = None
     age: Optional[int] = None
@@ -155,32 +136,6 @@ class UserProfile(BaseModel):
 
     class Config:
         from_attributes = True
-
-
-class OTPRequest(BaseModel):
-    """OTP request model"""
-    phone_number: Optional[str] = None
-    email: Optional[EmailStr] = None
-    purpose: str = "LOGIN"  # LOGIN, VERIFICATION, RESET_PASSWORD
-
-    @validator('phone_number')
-    def validate_phone(cls, v):
-        if v and not validate_phone_number(v):
-            raise ValueError('Invalid phone number format')
-        return v
-
-
-class OTPVerify(BaseModel):
-    """OTP verification model"""
-    phone_number: Optional[str] = None
-    email: Optional[EmailStr] = None
-    otp_code: str
-
-    @validator('phone_number')
-    def validate_phone(cls, v):
-        if v and not validate_phone_number(v):
-            raise ValueError('Invalid phone number format')
-        return v
 
 
 class AadhaarVerification(BaseModel):

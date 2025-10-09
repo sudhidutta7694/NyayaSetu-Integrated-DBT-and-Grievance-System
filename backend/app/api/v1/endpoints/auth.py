@@ -13,12 +13,10 @@ from app.core.exceptions import AuthenticationException, ValidationException
 from app.core.security import (
     create_access_token,
     verify_token,
-    hash_password,
-    verify_password,
-    generate_otp,
-    verify_otp
+    generate_otp
 )
-from app.models.user import User, UserCreate, UserLogin, OTPRequest, OTPVerify, UserRole
+from models.user import User as UserModel, UserRole
+from app.schema.user import User
 
 logger = structlog.get_logger()
 router = APIRouter()
@@ -164,10 +162,9 @@ async def register_district_authority(
         logger.error("District authority registration failed", error=str(e))
         raise HTTPException(status_code=400, detail="Registration failed: " + str(e))
 from app.services.auth_service import AuthService
-from app.services.otp_service import OTPService
 from app.services.aadhaar_service import AadhaarService
 from app.services.aadhaar_auth_service import AadhaarAuthService
-from models.user import User as UserModel
+from models.user import User as UserModel  # SQLAlchemy ORM model
 
 security = HTTPBearer()
 
@@ -177,11 +174,6 @@ class TokenResponse(BaseModel):
     token_type: str
     expires_in: int
     user: User
-
-
-class LoginResponse(BaseModel):
-    message: str
-    requires_otp: bool = False
 
 
 class AadhaarLoginRequest(BaseModel):
@@ -206,139 +198,6 @@ class AadhaarOTPResponse(BaseModel):
     message: str
     user: Optional[dict] = None
     requires_onboarding: bool = False
-
-
-
-@router.post("/register", response_model=User)
-async def register(
-    user_data: UserCreate = Body(...),
-    db: Session = Depends(get_db)
-):
-    """Register a new user. If 'role' is provided in user_data, it will be used (e.g., for social welfare signups)."""
-    try:
-        auth_service = AuthService(db)
-        user = await auth_service.register_user(user_data)
-        logger.info("User registered successfully", user_id=user.id)
-        return user
-    except Exception as e:
-        logger.error("Registration failed", error=str(e))
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
-
-
-@router.post("/login", response_model=LoginResponse)
-async def login(
-    login_data: UserLogin,
-    db: Session = Depends(get_db)
-):
-    """Login user with phone number or email"""
-    try:
-        auth_service = AuthService(db)
-        otp_service = OTPService(db)
-        
-        # Check if user exists
-        user = await auth_service.get_user_by_phone_or_email(
-            login_data.phone_number or login_data.email
-        )
-        
-        if not user:
-            raise AuthenticationException("User not found")
-        
-        if not user.is_active:
-            raise AuthenticationException("Account is deactivated")
-        
-        # Generate and send OTP
-        otp_code = generate_otp(settings.OTP_LENGTH)
-        await otp_service.create_otp(
-            phone_number=user.phone_number,
-            email=user.email,
-            otp_code=otp_code,
-            purpose="LOGIN"
-        )
-        
-        # In production, send OTP via SMS/Email
-        logger.info("OTP generated for login", user_id=user.id, otp=otp_code)
-        
-        return LoginResponse(
-            message="OTP sent successfully",
-            requires_otp=True
-        )
-        
-    except AuthenticationException as e:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=e.message
-        )
-    except Exception as e:
-        logger.error("Login failed", error=str(e))
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Login failed"
-        )
-
-
-@router.post("/verify-otp", response_model=TokenResponse)
-async def verify_otp_login(
-    otp_data: OTPVerify,
-    db: Session = Depends(get_db)
-):
-    """Verify OTP and return access token"""
-    try:
-        auth_service = AuthService(db)
-        otp_service = OTPService(db)
-        
-        # Verify OTP
-        is_valid = await otp_service.verify_otp(
-            phone_number=otp_data.phone_number,
-            email=otp_data.email,
-            otp_code=otp_data.otp_code,
-            purpose="LOGIN"
-        )
-        
-        if not is_valid:
-            raise AuthenticationException("Invalid or expired OTP")
-        
-        # Get user
-        user = await auth_service.get_user_by_phone_or_email(
-            otp_data.phone_number or otp_data.email
-        )
-        
-        if not user:
-            raise AuthenticationException("User not found")
-        
-        # Create access token
-        access_token = create_access_token(
-            data={"sub": user.id, "role": user.role.value}
-        )
-        
-        # Update last login
-        user_record = db.query(UserModel).filter(UserModel.id == user.id).first()
-        if user_record:
-            user_record.last_login = datetime.utcnow()
-            db.commit()
-        
-        logger.info("User logged in successfully", user_id=user.id)
-        
-        return TokenResponse(
-            access_token=access_token,
-            token_type="bearer",
-            expires_in=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-            user=user
-        )
-        
-    except AuthenticationException as e:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=e.message
-        )
-    except Exception as e:
-        logger.error("OTP verification failed", error=str(e))
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="OTP verification failed"
-        )
 
 
 @router.post("/aadhaar-verify")

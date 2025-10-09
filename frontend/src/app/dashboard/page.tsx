@@ -4,9 +4,10 @@ import React, { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { DocumentCard } from '@/components/ui/document-card'
 // import { Progress } from '@/components/ui/progress' // Temporarily commented out due to build error
 import { 
-  User, 
+  User as UserIcon, 
   FileText, 
   CreditCard, 
   CheckCircle, 
@@ -14,45 +15,18 @@ import {
   AlertCircle,
   Plus,
   Eye,
-  Download,
-  Bell
+  Bell,
 } from 'lucide-react'
 import { useLanguage } from '@/contexts/LanguageContext'
 import Link from 'next/link'
-
-interface UserProfile {
-  id: string
-  fullName: string
-  email: string
-  phoneNumber: string
-  isVerified: boolean
-  isOnboarded: boolean
-  onboardingStep: number
-  role: string
-}
-
-interface Application {
-  id: string
-  applicationNumber: string
-  title: string
-  status: string
-  amountRequested: number
-  amountApproved?: number
-  createdAt: string
-  updatedAt: string
-}
-
-interface Document {
-  id: string
-  documentType: string
-  documentName: string
-  status: string
-  uploadedAt: string
-}
+import { useRouter } from 'next/navigation'
+import toast from 'react-hot-toast'
+import { User, Document, Application } from '@/types/user'
 
 const UserDashboard = () => {
   const { t } = useLanguage()
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
+  const router = useRouter()
+  const [userProfile, setUserProfile] = useState<User | null>(null)
   const [applications, setApplications] = useState<Application[]>([])
   const [documents, setDocuments] = useState<Document[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -63,63 +37,51 @@ const UserDashboard = () => {
 
   const fetchUserData = async () => {
     try {
-      // Mock data - replace with actual API calls
-      const mockProfile: UserProfile = {
-        id: '1',
-        fullName: 'John Doe',
-        email: 'john@example.com',
-        phoneNumber: '+91 9876543210',
-        isVerified: true,
-        isOnboarded: true,
-        onboardingStep: 4,
-        role: 'PUBLIC'
+      const token = localStorage.getItem('access_token')
+      if (!token) {
+        toast.error('Please login to continue')
+        router.push('/login')
+        return
       }
 
-      const mockApplications: Application[] = [
-        {
-          id: '1',
-          applicationNumber: 'APP-2024-001',
-          title: 'PCR Act Compensation Application',
-          status: 'UNDER_REVIEW',
-          amountRequested: 50000,
-          amountApproved: 45000,
-          createdAt: '2024-01-10T10:00:00Z',
-          updatedAt: '2024-01-15T14:30:00Z'
-        },
-        {
-          id: '2',
-          applicationNumber: 'APP-2024-002',
-          title: 'PoA Act Legal Aid Application',
-          status: 'APPROVED',
-          amountRequested: 25000,
-          amountApproved: 25000,
-          createdAt: '2024-01-05T09:00:00Z',
-          updatedAt: '2024-01-12T16:45:00Z'
+      // Fetch user profile
+      const profileRes = await fetch('http://localhost:8000/api/v1/users/me', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
-      ]
+      })
 
-      const mockDocuments: Document[] = [
-        {
-          id: '1',
-          documentType: 'CASTE_CERTIFICATE',
-          documentName: 'Caste Certificate.pdf',
-          status: 'VERIFIED',
-          uploadedAt: '2024-01-08T11:00:00Z'
-        },
-        {
-          id: '2',
-          documentType: 'BANK_PASSBOOK',
-          documentName: 'Bank Passbook.pdf',
-          status: 'VERIFIED',
-          uploadedAt: '2024-01-08T11:30:00Z'
+      if (!profileRes.ok) {
+        throw new Error('Failed to fetch user profile')
+      }
+
+      const profileData = await profileRes.json()
+      setUserProfile(profileData)
+
+      // Fetch user documents
+      const docsRes = await fetch('http://localhost:8000/api/v1/documents/list', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
-      ]
+      })
 
-      setUserProfile(mockProfile)
-      setApplications(mockApplications)
-      setDocuments(mockDocuments)
-    } catch (error) {
+      if (docsRes.ok) {
+        const docsData = await docsRes.json()
+        setDocuments(docsData.data || [])
+      }
+
+      // TODO: Fetch applications when application API is ready
+      setApplications([])
+
+    } catch (error: any) {
       console.error('Failed to fetch user data:', error)
+      toast.error('Failed to load dashboard data')
+      
+      if (error.message?.includes('401') || error.message?.includes('authentication')) {
+        router.push('/login')
+      }
     } finally {
       setIsLoading(false)
     }
@@ -188,7 +150,7 @@ const UserDashboard = () => {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">
-                {t('dashboard.welcome', 'Welcome back')}, {userProfile.fullName}!
+                {t('dashboard.welcome', 'Welcome back')}, {userProfile.full_name}!
               </h1>
               <p className="text-lg text-gray-600 mt-2">
                 {t('dashboard.subtitle', 'Manage your applications and track your benefits')}
@@ -216,17 +178,17 @@ const UserDashboard = () => {
               <CardTitle className="text-sm font-medium">
                 {t('dashboard.profile.verification', 'Account Verification')}
               </CardTitle>
-              <User className="h-4 w-4 text-muted-foreground" />
+              <UserIcon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="flex items-center space-x-2">
-                {userProfile.isVerified ? (
+                {userProfile.is_verified ? (
                   <CheckCircle className="h-5 w-5 text-green-600" />
                 ) : (
                   <AlertCircle className="h-5 w-5 text-red-600" />
                 )}
                 <span className="text-sm font-medium">
-                  {userProfile.isVerified 
+                  {userProfile.is_verified 
                     ? t('dashboard.profile.verified', 'Verified')
                     : t('dashboard.profile.notVerified', 'Not Verified')
                   }
@@ -246,12 +208,12 @@ const UserDashboard = () => {
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span>{t('dashboard.profile.progress', 'Progress')}</span>
-                  <span>{userProfile.onboardingStep}/4</span>
+                  <span>{userProfile.onboarding_step || 0}/3</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
                   <div 
                     className="bg-orange-600 h-2 rounded-full transition-all duration-300" 
-                    style={{ width: `${(userProfile.onboardingStep / 4) * 100}%` }}
+                    style={{ width: `${((userProfile.onboarding_step || 0) / 3) * 100}%` }}
                   ></div>
                 </div>
               </div>
@@ -268,7 +230,7 @@ const UserDashboard = () => {
             <CardContent>
               <div className="text-2xl font-bold">{documents.length}</div>
               <p className="text-xs text-muted-foreground">
-                {documents.filter(doc => doc.status === 'VERIFIED').length} {t('dashboard.profile.verified', 'verified')}
+                {documents.length} {t('dashboard.profile.uploaded', 'uploaded')}
               </p>
             </CardContent>
           </Card>
@@ -309,15 +271,15 @@ const UserDashboard = () => {
                       <div className="flex items-center space-x-4">
                         <FileText className="h-8 w-8 text-gray-400" />
                         <div>
-                          <p className="font-medium">{app.title}</p>
+                          <p className="font-medium">{app.scheme_type}</p>
                           <p className="text-sm text-gray-600">
-                            {t('dashboard.applications.applicationNumber', 'Application')}: {app.applicationNumber}
+                            {t('dashboard.applications.applicationNumber', 'Application')}: {app.application_number}
                           </p>
                           <p className="text-sm text-gray-600">
-                            {t('dashboard.applications.amount', 'Amount')}: ₹{app.amountRequested.toLocaleString()}
-                            {app.amountApproved && (
+                            {t('dashboard.applications.amount', 'Amount')}: ₹{app.amount_requested?.toLocaleString() || 'N/A'}
+                            {app.amount_approved && (
                               <span className="text-green-600 ml-2">
-                                (₹{app.amountApproved.toLocaleString()} {t('dashboard.applications.approved', 'approved')})
+                                (₹{app.amount_approved.toLocaleString()} {t('dashboard.applications.approved', 'approved')})
                               </span>
                             )}
                           </p>
@@ -371,33 +333,7 @@ const UserDashboard = () => {
                   </div>
                 ) : (
                   documents.map((doc) => (
-                    <div key={doc.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex items-center space-x-4">
-                        <FileText className="h-8 w-8 text-gray-400" />
-                        <div>
-                          <p className="font-medium">{doc.documentName}</p>
-                          <p className="text-sm text-gray-600">
-                            {t(`dashboard.documents.types.${doc.documentType.toLowerCase()}`, doc.documentType)}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {new Date(doc.uploadedAt).toLocaleDateString()}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Badge className={getStatusColor(doc.status)}>
-                          <div className="flex items-center space-x-1">
-                            {getStatusIcon(doc.status)}
-                            <span className="text-xs">
-                              {t(`dashboard.documents.status.${doc.status.toLowerCase()}`, doc.status)}
-                            </span>
-                          </div>
-                        </Badge>
-                        <Button variant="ghost" size="sm">
-                          <Download className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
+                    <DocumentCard key={doc.id} document={doc} showActions={true} />
                   ))
                 )}
               </div>
@@ -426,7 +362,7 @@ const UserDashboard = () => {
               </Link>
               <Link href="/profile">
                 <Button variant="outline" className="w-full h-20 flex flex-col space-y-2">
-                  <User className="h-6 w-6" />
+                  <UserIcon className="h-6 w-6" />
                   <span>{t('dashboard.quickActions.updateProfile', 'Update Profile')}</span>
                 </Button>
               </Link>

@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.core.exceptions import NotFoundException, ValidationException, ConflictException
 from app.core.security import generate_application_number
-from app.models.application import (
+from app.schema.application import (
     Application, ApplicationCreate, ApplicationUpdate, ApplicationStatus,
     ApplicationType, ApplicationReview, ApplicationDisbursement,
     ApplicationFilter, ApplicationStats

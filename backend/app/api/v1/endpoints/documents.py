@@ -2,75 +2,262 @@
 Document management endpoints
 """
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import Session
+from typing import Optional
+from pydantic import BaseModel
+from app.core.dependencies import get_current_user, get_db
+from app.services.s3_service import S3Service
+from models.user import User
+from models.document import Document, DocumentStatus, DocumentType
+from datetime import datetime
 
 router = APIRouter()
 
-# List pending documents for verification (district authority only)
-from sqlalchemy.orm import Session
-from typing import List, Optional
-from models.document import Document, DocumentStatus
-from models.user import UserRole
-from app.core.database import get_db
-from app.core.security import verify_token
-from fastapi import Depends, HTTPException
 
-@router.get("/pending", response_model=List[dict])
-def list_pending_documents(db: Session = Depends(get_db), token: dict = Depends(verify_token)):
-    if token.get("role") != UserRole.DISTRICT_AUTHORITY:
-        raise HTTPException(status_code=403, detail="Not authorized")
-    docs = db.query(Document).filter(Document.status == DocumentStatus.PENDING).all()
-    return [
-        {
-            "id": doc.id,
-            "user_id": doc.user_id,
-            "document_type": doc.document_type,
-            "document_name": doc.document_name,
-            "status": doc.status.value,
-            "created_at": doc.created_at,
-        } for doc in docs
-    ]
+class PresignedUrlRequest(BaseModel):
+    filename: str
+    content_type: str
+    document_type: str
 
-@router.get("/pending/{document_id}", response_model=dict)
-def get_pending_document(document_id: str, db: Session = Depends(get_db), token: dict = Depends(verify_token)):
-    if token.get("role") != UserRole.DISTRICT_AUTHORITY:
-        raise HTTPException(status_code=403, detail="Not authorized")
-    doc = db.query(Document).filter(Document.id == document_id).first()
-    if not doc:
-        raise HTTPException(status_code=404, detail="Document not found")
+
+class ConfirmUploadRequest(BaseModel):
+    s3_key: str
+    document_type: str
+    filename: str
+    file_size: int
+    content_type: str
+    digilocker_id: Optional[str] = None
+
+
+@router.post("/generate-upload-url")
+async def generate_presigned_upload_url(
+    request: PresignedUrlRequest,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Generate a presigned URL for uploading a file directly to S3
+    
+    Flow:
+    1. Frontend requests presigned URL with file details
+    2. Backend generates secure temporary URL
+    3. Frontend uploads file directly to S3 using this URL
+    4. Frontend confirms upload by calling /confirm-upload
+    """
+    try:
+        # Check if user has Aadhaar number
+        if not current_user.aadhaar_number:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Aadhaar number is required for document upload. Please complete your profile first."
+            )
+        
+        # Validate file type
+        allowed_types = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png']
+        if request.content_type not in allowed_types:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Only PDF, JPG, and PNG files are allowed"
+            )
+        
+        s3_service = S3Service()
+        result = s3_service.generate_presigned_upload_url(
+            filename=request.filename,
+            content_type=request.content_type,
+            aadhaar_number=current_user.aadhaar_number,  # Changed from user_id
+            document_type=request.document_type,
+            expires_in=300  # 5 minutes
+        )
+        
+        return {
+            "success": True,
+            "data": result
+        }
+        
+    except Exception as e:
+        print(f"Error generating presigned URL: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to generate upload URL: {str(e)}"
+        )
+
+
+@router.post("/confirm-upload")
+async def confirm_upload(
+    request: ConfirmUploadRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Confirm that a file was successfully uploaded to S3.
+    
+    NOTE: This endpoint does NOT save to database during onboarding.
+    Documents are only saved to DB when user completes the entire onboarding process.
+    This prevents issues with document replacement during onboarding.
+    
+    Returns S3 metadata that frontend will store temporarily until onboarding completes.
+    """
+    try:
+        # Validate file size (10MB)
+        if request.file_size > 10 * 1024 * 1024:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="File size must be less than 10MB"
+            )
+        
+        # Verify the file exists in S3
+        s3_service = S3Service()
+        if not s3_service.check_file_exists(request.s3_key):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="File was not found in S3. Upload may have failed."
+            )
+        
+        # Construct file URL (for preview/download)
+        bucket_name = s3_service.bucket_name
+        region = s3_service.s3_client.meta.region_name
+        file_url = f"https://{bucket_name}.s3.{region}.amazonaws.com/{request.s3_key}"
+        
+        # Return S3 metadata WITHOUT saving to database
+        # Frontend will store this and send it during onboarding completion
+        return {
+            "success": True,
+            "message": "File uploaded to S3 successfully",
+            "data": {
+                "s3_key": request.s3_key,
+                "file_url": file_url,
+                "document_type": request.document_type,
+                "file_name": request.filename,
+                "file_size": request.file_size,
+                "content_type": request.content_type,
+                "status": "PENDING"  # Temporary status until saved to DB
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error confirming upload: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to confirm upload: {str(e)}"
+        )
+
+
+@router.get("/{document_id}/download")
+async def get_document_download_url(
+    document_id: str,  # Changed to str since Document.id is String
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Get a presigned URL to download a document
+    """
+    document = db.query(Document).filter(
+        Document.id == document_id,
+        Document.user_id == str(current_user.id)
+    ).first()
+    
+    if not document:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Document not found"
+        )
+    
+    # file_path contains the S3 key
+    s3_service = S3Service()
+    presigned_url = s3_service.generate_presigned_download_url(document.file_path, expiration=3600)
+    
     return {
-        "id": doc.id,
-        "user_id": doc.user_id,
-        "document_type": doc.document_type,
-        "document_name": doc.document_name,
-        "status": doc.status.value,
-        "verification_notes": doc.verification_notes,
-        "created_at": doc.created_at,
-        "file_path": doc.file_path,
+        "success": True,
+        "data": {
+            "download_url": presigned_url,
+            "expires_in": 3600,
+            "file_name": document.document_name  # Correct field name
+        }
     }
 
-@router.post("/pending/{document_id}/verify")
-def verify_document(document_id: str, db: Session = Depends(get_db), token: dict = Depends(verify_token)):
-    if token.get("role") != UserRole.DISTRICT_AUTHORITY:
-        raise HTTPException(status_code=403, detail="Not authorized")
-    doc = db.query(Document).filter(Document.id == document_id).first()
-    if not doc:
-        raise HTTPException(status_code=404, detail="Document not found")
-    doc.status = DocumentStatus.VERIFIED
-    db.commit()
-    return {"message": "Document verified"}
 
-@router.post("/pending/{document_id}/comment")
-def comment_on_document(document_id: str, comment: str, status: Optional[str] = "PENDING", db: Session = Depends(get_db), token: dict = Depends(verify_token)):
-    if token.get("role") != UserRole.DISTRICT_AUTHORITY:
-        raise HTTPException(status_code=403, detail="Not authorized")
-    doc = db.query(Document).filter(Document.id == document_id).first()
-    if not doc:
-        raise HTTPException(status_code=404, detail="Document not found")
-    # Only allow valid status
-    if status not in [s.value for s in DocumentStatus]:
-        raise HTTPException(status_code=400, detail="Invalid status")
-    doc.status = DocumentStatus(status)
-    doc.verification_notes = comment
-    db.commit()
-    return {"message": f"Document status updated to {status}", "comment": comment}
+@router.delete("/{document_id}")
+async def delete_document(
+    document_id: str,  # Changed to str since Document.id is String
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Delete a document from S3 and database
+    """
+    document = db.query(Document).filter(
+        Document.id == document_id,
+        Document.user_id == str(current_user.id)
+    ).first()
+    
+    if not document:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Document not found"
+        )
+    
+    try:
+        # Delete from S3 (file_path contains the S3 key)
+        s3_service = S3Service()
+        s3_service.delete_document(document.file_path)
+        
+        # Delete from database
+        db.delete(document)
+        db.commit()
+        
+        return {
+            "success": True,
+            "message": "Document deleted successfully"
+        }
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to delete document: {str(e)}"
+        )
+
+
+@router.get("/list")
+async def list_user_documents(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    List all documents for the current user with presigned URLs
+    """
+    documents = db.query(Document).filter(
+        Document.user_id == str(current_user.id)
+    ).all()
+    
+    # Generate presigned URLs for all documents
+    document_list = []
+    for doc in documents:
+        doc_data = {
+            "id": doc.id,
+            "document_type": doc.document_type,
+            "file_name": doc.document_name,
+            "file_size": doc.file_size,
+            "file_path": doc.file_path,
+            "status": doc.status.value,
+            "is_digilocker": doc.is_digilocker,
+            "created_at": doc.created_at.isoformat() if doc.created_at else None,
+            "verified_at": doc.verified_at.isoformat() if doc.verified_at else None,
+            "file_url": None
+        }
+        
+        # Generate presigned URL if file exists in S3
+        if doc.file_path and not doc.is_digilocker:
+            try:
+                s3_service = S3Service()
+                doc_data["file_url"] = s3_service.generate_presigned_download_url(doc.file_path, expiration=3600)
+            except Exception as e:
+                print(f"Failed to generate presigned URL for {doc.id}: {e}")
+        
+        document_list.append(doc_data)
+    
+    return {
+        "success": True,
+        "data": document_list
+    }

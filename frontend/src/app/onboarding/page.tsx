@@ -10,19 +10,87 @@ import { useLanguage } from '@/contexts/LanguageContext'
 import PersonalInfoStep from '@/components/onboarding/PersonalInfoStep'
 import DocumentUploadStep from '@/components/onboarding/DocumentUploadStep'
 import BankDetailsStep from '@/components/onboarding/BankDetailsStep'
-import VerificationStep from '@/components/onboarding/VerificationStep'
+import { 
+  getCurrentUser,
+  convertPersonalInfoToFrontend,
+  completeOnboarding
+} from '@/lib/api/onboarding'
+import toast from 'react-hot-toast'
 
 const OnboardingPage = () => {
   const { t } = useLanguage()
   const router = useRouter()
   const [currentStep, setCurrentStep] = useState(1)
-  const [isLoading, setIsLoading] = useState(false)
-  const [onboardingData, setOnboardingData] = useState({
+  const [isLoading, setIsLoading] = useState(true)
+  const [completedSteps, setCompletedSteps] = useState<number[]>([])
+  const [onboardingData, setOnboardingData] = useState<{
+    personalInfo?: any
+    documents: any[]
+    uploadedDocumentsS3: any[]  // Store S3 uploaded documents
+    bankDetails?: any
+    bankDocuments?: any[]  // Store bank-related documents (PAN, Passbook)
+    verification?: any
+  }>({
     personalInfo: undefined,
     documents: [],
+    uploadedDocumentsS3: [],
     bankDetails: undefined,
+    bankDocuments: [],
     verification: undefined
   })
+
+  // Load onboarding status and existing data on mount
+  useEffect(() => {
+    loadOnboardingData()
+  }, [])
+
+  const loadOnboardingData = async () => {
+    try {
+      setIsLoading(true)
+      
+      // Get current user data
+      const userData = await getCurrentUser()
+      
+      // Check if user is already onboarded
+      if (userData.is_onboarded) {
+        toast.success('You have already completed onboarding!')
+        router.push('/dashboard')
+        return
+      }
+      
+      // Set current step from user's onboarding_step (default to 1)
+      setCurrentStep(userData.onboarding_step || 1)
+      
+      // Track which steps are completed based on onboarding_step
+      const completed: number[] = []
+      if (userData.onboarding_step && userData.onboarding_step > 1) {
+        for (let i = 1; i < userData.onboarding_step; i++) {
+          completed.push(i)
+        }
+      }
+      setCompletedSteps(completed)
+      
+      // Load personal info from user data if available
+      if (userData) {
+        const personalInfo = convertPersonalInfoToFrontend(userData)
+        setOnboardingData(prev => ({
+          ...prev,
+          personalInfo: personalInfo as any
+        }))
+      }
+      
+    } catch (error: any) {
+      console.error('Failed to load onboarding data:', error)
+      toast.error('Failed to load onboarding data. Please try again.')
+      
+      // If error is authentication related, redirect to login
+      if (error.message?.includes('authentication') || error.message?.includes('401')) {
+        router.push('/login')
+      }
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   const steps = [
     {
@@ -42,28 +110,152 @@ const OnboardingPage = () => {
       title: t('onboarding.step3.title', 'Bank Details'),
       description: t('onboarding.step3.description', 'Bank account information'),
       icon: CreditCard
-    },
-    {
-      id: 4,
-      title: t('onboarding.step4.title', 'Verification'),
-      description: t('onboarding.step4.description', 'Document verification'),
-      icon: Shield
     }
   ]
 
-  const progress = (currentStep / steps.length) * 100
+  // Calculate progress: 0%, 33%, 67%, 100%
+  const progress = Math.round((completedSteps.length / 3) * 100)
 
-  const handleStepComplete = (stepId: number, data: any) => {
-    setOnboardingData(prev => ({
-      ...prev,
-      [steps[stepId - 1].title.toLowerCase().replace(' ', '')]: data
-    }))
-    
-    if (stepId < steps.length) {
+  const handleStepComplete = async (stepId: number, data: any) => {
+    // If this is a "navigation back" event, just save state and don't advance
+    const isNavigatingBack = data._navigatingBack === true;
+    if (isNavigatingBack) {
+      // Preserve bankDocuments state when navigating back from bank details
+      if (stepId === 3) {
+        setOnboardingData(prev => ({
+          ...prev,
+          bankDetails: {
+            accountNumber: data.accountNumber,
+            ifscCode: data.ifscCode,
+            bankName: data.bankName,
+            branchName: data.branchName,
+            accountHolderName: data.accountHolderName,
+          },
+          bankDocuments: data.documents || [],
+        }));
+      }
+      if (stepId > 1) {
+        setCurrentStep(stepId - 1);
+      }
+      return;
+    }
+
+    // Update local state
+    if (stepId === 1) {
+      setOnboardingData(prev => ({
+        ...prev,
+        personalInfo: data
+      }))
+    } else if (stepId === 2) {
+      // For documents, prevent duplicates by filtering unique s3Keys
+      const s3Documents = data.uploadedDocumentsS3 || []
+      // Merge with existing documents, avoiding duplicates based on s3Key or documentType
+      const existingDocs = onboardingData.uploadedDocumentsS3 || []
+      const mergedDocs = [...existingDocs]
+      s3Documents.forEach((newDoc: any) => {
+        const isDuplicate = existingDocs.some((existingDoc: any) => 
+          existingDoc.s3Key === newDoc.s3Key || 
+          existingDoc.documentType === newDoc.documentType
+        )
+        if (!isDuplicate) {
+          mergedDocs.push(newDoc)
+        }
+      })
+      setOnboardingData(prev => ({
+        ...prev,
+        documents: data.documents || [],
+        uploadedDocumentsS3: mergedDocs
+      }))
+    } else if (stepId === 3) {
+      // For bank details, same pattern as step 2
+      const bankDocs = data.documents || []
+      const s3BankDocs = data.uploadedDocumentsS3 || []
+      const existingS3Docs = onboardingData.uploadedDocumentsS3 || []
+      // Merge bank documents with existing documents (avoid duplicates)
+      const mergedS3Docs = [...existingS3Docs]
+      s3BankDocs.forEach((newDoc: any) => {
+        const isDuplicate = existingS3Docs.some((existingDoc: any) => 
+          existingDoc.s3Key === newDoc.s3Key || 
+          existingDoc.documentType === newDoc.documentType
+        )
+        if (!isDuplicate) {
+          mergedS3Docs.push(newDoc)
+        }
+      })
+      setOnboardingData(prev => ({
+        ...prev,
+        bankDetails: {
+          accountNumber: data.accountNumber,
+          ifscCode: data.ifscCode,
+          bankName: data.bankName,
+          branchName: data.branchName,
+          accountHolderName: data.accountHolderName,
+        },
+        bankDocuments: bankDocs,
+        uploadedDocumentsS3: mergedS3Docs
+      }))
+      if (stepId === 3) {
+        try {
+          setIsLoading(true)
+          // Convert personal info to backend format
+          const [day, month, year] = onboardingData.personalInfo.dateOfBirth.split('/')
+          const paddedMonth = month.length === 1 ? '0' + month : month
+          const paddedDay = day.length === 1 ? '0' + day : day
+          const isoDate = `${year}-${paddedMonth}-${paddedDay}T00:00:00Z`
+          // CRITICAL: Use mergedS3Docs directly, not from state!
+          const uploadedDocs = mergedS3Docs.map((doc: any) => ({
+            s3_key: doc.s3Key,
+            document_type: doc.documentType,
+            filename: doc.fileName,
+            file_size: doc.fileSize || 0,
+            content_type: doc.contentType || 'application/pdf',
+            is_digilocker: false,
+            digilocker_id: null
+          }))
+          // Prepare bank details (may be empty if skipped)
+          const bankDetails = data.accountNumber ? {
+            account_number: data.accountNumber,
+            ifsc_code: data.ifscCode,
+            bank_name: data.bankName,
+            branch_name: data.branchName,
+            account_holder_name: data.accountHolderName,
+          } : undefined
+          // Call complete onboarding API
+          const response = await completeOnboarding({
+            personal_info: {
+              full_name: onboardingData.personalInfo.fullName,
+              father_name: onboardingData.personalInfo.fatherName,
+              mother_name: onboardingData.personalInfo.motherName,
+              date_of_birth: isoDate,
+              age: onboardingData.personalInfo.age,
+              gender: onboardingData.personalInfo.gender,
+              category: onboardingData.personalInfo.category,
+              mobile_number: onboardingData.personalInfo.mobileNumber,
+              address: onboardingData.personalInfo.address,
+              district: onboardingData.personalInfo.district,
+              state: onboardingData.personalInfo.state,
+              pincode: onboardingData.personalInfo.pincode,
+            } as any,
+            bank_details: bankDetails as any,
+            uploaded_documents: uploadedDocs
+          })
+          toast.success(response.message || 'Onboarding completed successfully!')
+          router.push('/dashboard')
+        } catch (error: any) {
+          console.error('Failed to complete onboarding:', error)
+          toast.error(error.message || 'Failed to complete onboarding. Please try again.')
+          setIsLoading(false)
+        }
+        return
+      }
+    }
+    // Mark current step as completed immediately for UI
+    if (!completedSteps.includes(stepId)) {
+      setCompletedSteps(prev => [...prev, stepId])
+    }
+    // Move to next step (only for steps 1-2, step 3 exits via return above)
+    if (stepId < 3) {
       setCurrentStep(stepId + 1)
-    } else {
-      // Onboarding complete
-      router.push('/dashboard')
     }
   }
 
@@ -89,24 +281,18 @@ const OnboardingPage = () => {
             onComplete={(data) => handleStepComplete(2, data)}
             onPrevious={() => setCurrentStep(1)}
             initialData={onboardingData.documents}
+            uploadedDocumentsS3={onboardingData.uploadedDocumentsS3}
+            category={onboardingData.personalInfo?.category}
           />
         )
       case 3:
         return (
           <BankDetailsStep
+            key={`bank-step-${currentStep}`}
             onComplete={(data) => handleStepComplete(3, data)}
             onPrevious={() => setCurrentStep(2)}
             initialData={onboardingData.bankDetails}
-          />
-        )
-      case 4:
-        return (
-          <VerificationStep
-            onComplete={() => handleStepComplete(4, {})}
-            onPrevious={() => setCurrentStep(3)}
-            personalInfo={onboardingData.personalInfo}
-            documents={onboardingData.documents}
-            bankDetails={onboardingData.bankDetails}
+            initialDocuments={onboardingData.bankDocuments}
           />
         )
       default:
@@ -117,15 +303,25 @@ const OnboardingPage = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            {t('onboarding.title', 'Complete Your Profile')}
-          </h1>
-          <p className="text-lg text-gray-600">
-            {t('onboarding.subtitle', 'Please complete all steps to access government services')}
-          </p>
-        </div>
+        {/* Loading State */}
+        {isLoading ? (
+          <div className="flex items-center justify-center min-h-screen">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 mx-auto"></div>
+              <p className="mt-4 text-gray-600">Loading onboarding data...</p>
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* Header */}
+            <div className="text-center mb-8">
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                {t('onboarding.title', 'Complete Your Profile')}
+              </h1>
+              <p className="text-lg text-gray-600">
+                {t('onboarding.subtitle', 'Please complete all steps to access government services')}
+              </p>
+            </div>
 
         {/* Progress Bar */}
         <div className="mb-8">
@@ -146,20 +342,20 @@ const OnboardingPage = () => {
         </div>
 
         {/* Steps Navigation */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           {steps.map((step, index) => {
             const Icon = step.icon
-            const isCompleted = currentStep > step.id
+            const isCompleted = completedSteps.includes(step.id)
             const isCurrent = currentStep === step.id
             
             return (
               <div
                 key={step.id}
                 className={`flex items-center space-x-3 p-4 rounded-lg border-2 transition-colors ${
-                  isCurrent
-                    ? 'border-orange-500 bg-orange-50'
-                    : isCompleted
+                  isCompleted
                     ? 'border-green-500 bg-green-50'
+                    : isCurrent
+                    ? 'border-orange-500 bg-orange-50'
                     : 'border-gray-200 bg-white'
                 }`}
               >
@@ -174,12 +370,12 @@ const OnboardingPage = () => {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className={`text-sm font-medium ${
-                    isCurrent ? 'text-orange-900' : isCompleted ? 'text-green-900' : 'text-gray-500'
+                    isCompleted ? 'text-green-900' : isCurrent ? 'text-orange-900' : 'text-gray-500'
                   }`}>
                     {step.title}
                   </p>
                   <p className={`text-xs ${
-                    isCurrent ? 'text-orange-700' : isCompleted ? 'text-green-700' : 'text-gray-400'
+                    isCompleted ? 'text-green-700' : isCurrent ? 'text-orange-700' : 'text-gray-400'
                   }`}>
                     {step.description}
                   </p>
@@ -193,6 +389,8 @@ const OnboardingPage = () => {
         <div className="mb-8">
           {renderStepContent()}
         </div>
+          </>
+        )}
       </div>
     </div>
   )

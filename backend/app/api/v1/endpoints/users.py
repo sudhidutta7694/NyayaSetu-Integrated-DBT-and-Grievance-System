@@ -10,41 +10,15 @@ import structlog
 from app.core.database import get_db
 from sqlalchemy.orm import Session
 from app.core.exceptions import AuthenticationException, NotFoundException
-from app.core.security import verify_token
-from app.models.user import User, UserUpdate, UserProfile
+from app.core.dependencies import get_current_user  # Use the one from dependencies
+from app.schema.user import User, UserUpdate, UserProfile
 from app.services.auth_service import AuthService
 
 logger = structlog.get_logger()
 router = APIRouter()
 security = HTTPBearer()
 
-
-async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
-    db: Session = Depends(get_db)
-) -> User:
-    """Get current authenticated user"""
-    try:
-        payload = verify_token(credentials.credentials)
-        user_id = payload.get("sub")
-        
-        if not user_id:
-            raise AuthenticationException("Invalid token")
-        
-        auth_service = AuthService(db)
-        user = await auth_service.get_user_by_id(user_id)
-        
-        if not user:
-            raise AuthenticationException("User not found")
-        
-        return user
-        
-    except AuthenticationException as e:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=e.message
-        )
-
+# Note: get_current_user is imported from app.core.dependencies
 
 @router.get("/me", response_model=UserProfile)
 async def get_my_profile(current_user: User = Depends(get_current_user)):
@@ -202,7 +176,7 @@ async def get_user(
             )
         
         auth_service = AuthService(db)
-        user = await auth_service.get_user_by_id(user_id)
+        user = auth_service.get_user_by_id(user_id)  # Remove await - not async
         
         if not user:
             raise HTTPException(

@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { ArrowLeft, Shield, Clock, User, Phone } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { tokenStorage } from '@/lib/tokenStorage'
 
 const aadhaarSchema = z.object({
   aadhaar_number: z.string()
@@ -82,16 +83,18 @@ export default function LoginPage() {
 
       const result = await response.json()
 
-      if (result.success) {
+      if (response.ok && result.success) {
         setAadhaarNumber(data.aadhaar_number)
         setAadhaarInfo(result.aadhaar_info)
         setStep('otp')
         startOTPTimer()
         toast.success('OTP sent to your registered mobile number')
       } else {
-        toast.error(result.message || 'Failed to send OTP')
+        // Handle error response from backend
+        const errorMessage = result.detail || result.message || 'Failed to send OTP'
+        toast.error(errorMessage)
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Aadhaar login error:', error)
       toast.error('An error occurred. Please try again.')
     } finally {
@@ -117,8 +120,14 @@ export default function LoginPage() {
 
       if (result.success) {
         // Store user data and token
+        // IMPORTANT: Store token using tokenStorage (stores in both localStorage and cookies)
+        console.log('Login result:', result)
+        console.log('Access token:', result.user?.access_token)
+        
         localStorage.setItem('user', JSON.stringify(result.user))
-        localStorage.setItem('token', result.user.access_token)
+        tokenStorage.setToken(result.user.access_token)
+        
+        console.log('Token stored:', tokenStorage.getToken())
         
         toast.success('Login successful!')
         

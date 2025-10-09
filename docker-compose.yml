@@ -12,23 +12,68 @@ services:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - nyayasetu_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nyayasetu -d nyayasetu_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   backend:
     build: ./backend
+    env_file:
+      - .env
     environment:
-      - DATABASE_URL=postgresql://nyayasetu:password@postgres:5432/nyayasetu_db
-      - BACKEND_CORS_ORIGINS=["http://localhost:3000"]
-      - POSTGRES_HOST=postgres
-      - POSTGRES_PORT=5432
-      - POSTGRES_USER=nyayasetu
-      - POSTGRES_DB=nyayasetu_db
+      - DATABASE_URL=${DATABASE_URL}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - JWT_ALGORITHM=${JWT_ALGORITHM}
+      - JWT_ACCESS_TOKEN_EXPIRE_MINUTES=${JWT_ACCESS_TOKEN_EXPIRE_MINUTES}
+      - API_V1_STR=${API_V1_STR}
+      - PROJECT_NAME=${PROJECT_NAME}
+      - BACKEND_CORS_ORIGINS=${BACKEND_CORS_ORIGINS}
+      - AADHAAR_API_URL=${AADHAAR_API_URL}
+      - AADHAAR_API_KEY=${AADHAAR_API_KEY}
+      - OTP_EXPIRE_MINUTES=${OTP_EXPIRE_MINUTES}
+      - OTP_LENGTH=${OTP_LENGTH}
+      - DIGILOCKER_API_URL=${DIGILOCKER_API_URL}
+      - DIGILOCKER_CLIENT_ID=${DIGILOCKER_CLIENT_ID}
+      - DIGILOCKER_CLIENT_SECRET=${DIGILOCKER_CLIENT_SECRET}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - GEMINI_MODEL=${GEMINI_MODEL}
+      - MAX_FILE_SIZE=${MAX_FILE_SIZE}
+      - ALLOWED_FILE_TYPES=${ALLOWED_FILE_TYPES}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_REGION=${AWS_REGION}
+      - S3_BUCKET_NAME=${S3_BUCKET_NAME}
+      - REDIS_URL=${REDIS_URL}
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT}
+      - SMTP_USERNAME=${SMTP_USERNAME}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
+      - SMTP_FROM_EMAIL=${SMTP_FROM_EMAIL}
+      - FCM_SERVER_KEY=${FCM_SERVER_KEY}
+      - FCM_PROJECT_ID=${FCM_PROJECT_ID}
+      - ENVIRONMENT=${ENVIRONMENT}
+      - DEBUG=${DEBUG}
+      - SECRET_KEY=${SECRET_KEY}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS}
+      - RATE_LIMIT_PER_MINUTE=${RATE_LIMIT_PER_MINUTE}
+      - RATE_LIMIT_BURST=${RATE_LIMIT_BURST}
+      - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID}
+      - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN}
+      - TWILIO_PHONE_NUMBER=${TWILIO_PHONE_NUMBER}
+      - TWILIO_VERIFY_SERVICE_SID=${TWILIO_VERIFY_SERVICE_SID}
     ports:
       - "8000:8000"
     volumes:
       - ./backend:/app
       - backend_uploads:/app/uploads
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     networks:
       - nyayasetu_network
 
@@ -38,8 +83,12 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     container_name: nyayasetu_frontend
+    env_file:
+      - .env
     environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:8000
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+      - NEXT_PUBLIC_APP_NAME=${NEXT_PUBLIC_APP_NAME}
+      - NEXT_PUBLIC_APP_VERSION=${NEXT_PUBLIC_APP_VERSION}
     ports:
       - "3000:3000"
     depends_on:

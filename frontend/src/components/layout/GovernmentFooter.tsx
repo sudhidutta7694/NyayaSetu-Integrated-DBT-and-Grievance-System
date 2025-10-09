@@ -1,9 +1,14 @@
 'use client'
 
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { Shield, Mail, Phone, MapPin, ExternalLink } from 'lucide-react'
 
 export function GovernmentFooter() {
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
   return (
     <footer className="bg-gray-900 text-white">
       {/* Main Footer Content */}
@@ -127,7 +132,7 @@ export function GovernmentFooter() {
               <a href="/terms" className="hover:text-orange-400 ml-2">Terms of Service</a>
             </div>
             <div className="text-sm text-gray-400">
-              Last Updated: {new Date().toLocaleDateString('en-IN')} | 
+              Last Updated: {mounted ? new Date().toLocaleDateString('en-IN') : 'October 2024'} | 
               <span className="ml-2">Version 1.0.0</span>
             </div>
           </div>
@@ -136,4 +141,5 @@ export function GovernmentFooter() {
     </footer>
   )
 }
+
 

@@ -44,6 +44,26 @@ interface PersonalInfoStepProps {
   initialData?: any
 }
 
+// Helper functions
+function parseDateString(str: string): Date | null {
+  const [day, month, year] = str.split('/')
+  const date = new Date(Number(year), Number(month) - 1, Number(day))
+  return isNaN(date.getTime()) ? null : date
+}
+
+function formatDate(date: Date | string): string {
+  // If it's already a string in DD/MM/YYYY format, return it
+  if (typeof date === 'string' && date.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+    return date
+  }
+  // If it's an ISO string, parse it
+  const dateObj = typeof date === 'string' ? new Date(date) : date
+  const d = dateObj.getDate().toString().padStart(2, '0')
+  const m = (dateObj.getMonth() + 1).toString().padStart(2, '0')
+  const y = dateObj.getFullYear().toString()
+  return `${d}/${m}/${y}`
+}
+
 export default function PersonalInfoStep({ onComplete, onPrevious, initialData }: PersonalInfoStepProps) {
   const { t } = useLanguage()
   const [isLoading, setIsLoading] = useState(false)
@@ -74,20 +94,6 @@ export default function PersonalInfoStep({ onComplete, onPrevious, initialData }
 
   const watchedDate = watch('dateOfBirth')
 
-
-  function parseDateString(str: string): Date | null {
-    const [day, month, year] = str.split('/')
-    const date = new Date(Number(year), Number(month) - 1, Number(day))
-    return isNaN(date.getTime()) ? null : date
-  }
-
-  function formatDate(date: Date): string {
-    const d = date.getDate().toString().padStart(2, '0')
-    const m = (date.getMonth() + 1).toString().padStart(2, '0')
-    const y = date.getFullYear().toString()
-    return `${d}/${m}/${y}`
-  }
-
   const calculateAge = (birthDate: Date) => {
     const today = new Date()
     let age = today.getFullYear() - birthDate.getFullYear()
@@ -115,13 +121,15 @@ export default function PersonalInfoStep({ onComplete, onPrevious, initialData }
   const onSubmit = async (data: PersonalInfoForm) => {
     setIsLoading(true)
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      // No API call - just save locally
+      // Data will be submitted all at once in final step
+      await new Promise(resolve => setTimeout(resolve, 500)) // Simulate processing
       
-      toast.success('Personal information saved successfully!')
+      toast.success('Personal information saved!')
       onComplete(data)
-    } catch (error) {
-      toast.error('Failed to save personal information')
+    } catch (error: any) {
+      console.error('Failed to save personal information:', error)
+      toast.error(error.message || 'Failed to save personal information')
     } finally {
       setIsLoading(false)
     }
@@ -145,7 +153,8 @@ export default function PersonalInfoStep({ onComplete, onPrevious, initialData }
                 id="fullName"
                 {...register('fullName')}
                 placeholder={t('onboarding.fullNamePlaceholder', 'Enter your full name')}
-                className={errors.fullName ? 'border-red-500' : ''}
+                className={errors.fullName ? 'border-red-500' : 'bg-gray-100'}
+                disabled
               />
               {errors.fullName && (
                 <p className="text-sm text-red-500">{errors.fullName.message}</p>
@@ -158,7 +167,8 @@ export default function PersonalInfoStep({ onComplete, onPrevious, initialData }
                 id="fatherName"
                 {...register('fatherName')}
                 placeholder={t('onboarding.fatherNamePlaceholder', 'Enter father\'s full name')}
-                className={errors.fatherName ? 'border-red-500' : ''}
+                className={errors.fatherName ? 'border-red-500' : 'bg-gray-100'}
+                disabled
               />
               {errors.fatherName && (
                 <p className="text-sm text-red-500">{errors.fatherName.message}</p>
@@ -186,8 +196,9 @@ export default function PersonalInfoStep({ onComplete, onPrevious, initialData }
                 {...register('dateOfBirth')}
                 value={dobString}
                 onChange={handleDobChange}
-                className={errors.dateOfBirth ? 'border-red-500' : ''}
+                className={errors.dateOfBirth ? 'border-red-500' : 'bg-gray-100'}
                 maxLength={10}
+                disabled
               />
               {errors.dateOfBirth && (
                 <p className="text-sm text-red-500">{errors.dateOfBirth.message}</p>
@@ -202,14 +213,19 @@ export default function PersonalInfoStep({ onComplete, onPrevious, initialData }
                 {...register('age', { valueAsNumber: true })}
                 placeholder="0"
                 readOnly
-                className="bg-gray-50"
+                className="bg-gray-100"
+                disabled
               />
             </div>
 
             <div className="space-y-2">
               <Label>{t('onboarding.gender', 'Gender')} *</Label>
-              <Select onValueChange={(value) => setValue('gender', value as any)}>
-                <SelectTrigger className={errors.gender ? 'border-red-500' : ''}>
+              <Select 
+                onValueChange={(value) => setValue('gender', value as any)}
+                defaultValue={initialData?.gender}
+                disabled
+              >
+                <SelectTrigger className={errors.gender ? 'border-red-500' : 'bg-gray-100'}>
                   <SelectValue placeholder={t('onboarding.selectGender', 'Select gender')} />
                 </SelectTrigger>
                 <SelectContent>
@@ -228,7 +244,10 @@ export default function PersonalInfoStep({ onComplete, onPrevious, initialData }
           {/* Category Selection */}
           <div className="space-y-2">
             <Label>{t('onboarding.category', 'Category')} *</Label>
-            <Select onValueChange={(value) => setValue('category', value as any)}>
+            <Select 
+              onValueChange={(value) => setValue('category', value as any)}
+              defaultValue={initialData?.category}
+            >
               <SelectTrigger className={errors.category ? 'border-red-500' : ''}>
                 <SelectValue placeholder={t('onboarding.selectCategory', 'Select category')} />
               </SelectTrigger>
@@ -255,7 +274,8 @@ export default function PersonalInfoStep({ onComplete, onPrevious, initialData }
                 id="mobileNumber"
                 {...register('mobileNumber')}
                 placeholder={t('onboarding.mobileNumberPlaceholder', 'Enter 10-digit mobile number')}
-                className={errors.mobileNumber ? 'border-red-500' : ''}
+                className={errors.mobileNumber ? 'border-red-500' : 'bg-gray-100'}
+                disabled
               />
               {errors.mobileNumber && (
                 <p className="text-sm text-red-500">{errors.mobileNumber.message}</p>
@@ -290,7 +310,8 @@ export default function PersonalInfoStep({ onComplete, onPrevious, initialData }
                 id="address"
                 {...register('address')}
                 placeholder={t('onboarding.addressPlaceholder', 'Enter your complete address')}
-                className={errors.address ? 'border-red-500' : ''}
+                className={errors.address ? 'border-red-500' : 'bg-gray-100'}
+                disabled
               />
               {errors.address && (
                 <p className="text-sm text-red-500">{errors.address.message}</p>
@@ -313,7 +334,10 @@ export default function PersonalInfoStep({ onComplete, onPrevious, initialData }
 
               <div className="space-y-2">
                 <Label htmlFor="state">{t('onboarding.state', 'State/UT')} *</Label>
-                <Select onValueChange={(value) => setValue('state', value)}>
+                <Select 
+                  onValueChange={(value) => setValue('state', value)}
+                  defaultValue={initialData?.state}
+                >
                   <SelectTrigger className={errors.state ? 'border-red-500' : ''}>
                     <SelectValue placeholder={t('onboarding.statePlaceholder', 'Select state/UT')} />
                   </SelectTrigger>
@@ -369,7 +393,7 @@ export default function PersonalInfoStep({ onComplete, onPrevious, initialData }
               type="button"
               variant="outline"
               onClick={onPrevious}
-              disabled={isLoading}
+              disabled={true}
             >
               {t('onboarding.previous', 'Previous')}
             </Button>

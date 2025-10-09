@@ -10,7 +10,7 @@ import structlog
 from app.core.database import get_db
 from app.core.dependencies import require_role
 from app.core.exceptions import ValidationException, AuthenticationException
-from app.models.user import User, UserRole
+from app.schema.user import User, UserRole
 from app.services.document_service import DocumentService
 from sqlalchemy.orm import Session
 

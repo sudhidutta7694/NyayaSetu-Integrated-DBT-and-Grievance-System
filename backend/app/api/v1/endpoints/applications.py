@@ -14,8 +14,8 @@ from app.core.auth import (
     require_approval_permission, require_disbursement_permission,
     PermissionChecker
 )
-from app.models.user import User
-from app.models.application import (
+from app.schema.user import User
+from app.schema.application import (
     Application, ApplicationCreate, ApplicationUpdate, ApplicationSubmission,
     ApplicationReview, ApplicationDisbursement, ApplicationFilter,
     ApplicationStats, ApplicationStatus, ApplicationType

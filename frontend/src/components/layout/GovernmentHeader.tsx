@@ -125,7 +125,7 @@ export function GovernmentHeader() {
                 (screenReader as HTMLElement).scrollIntoView({ behavior: 'smooth' })
               }
             }}
-            className="hidden md:inline hover:bg-orange-50 focus:outline-none text-gray-700 font-medium px-2 py-1 rounded transition-colors"
+            className="hidden md:inline hover:bg-orange-50 focus:outline-none text-gray-700 font-medium px-2 py-1 rounded transition-colors cursor-pointer"
             aria-label="Screen Reader Accessibility"
             role="button"
           >
@@ -133,7 +133,7 @@ export function GovernmentHeader() {
           </button>
           {/* Mobile menu button - only visible on mobile */}
           <button
-            className="md:hidden p-2 rounded-md text-gray-700 hover:text-orange-600"
+            className="md:hidden p-2 rounded-md text-gray-700 hover:text-orange-600 cursor-pointer"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             aria-label="Toggle menu"
           >
@@ -154,7 +154,7 @@ export function GovernmentHeader() {
                 </a>
                 <button
                   type="button"
-                  className="-m-2.5 rounded-md p-2.5 text-gray-700"
+                  className="-m-2.5 rounded-md p-2.5 text-gray-700 cursor-pointer"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   <span className="sr-only">Close menu</span>
@@ -165,7 +165,7 @@ export function GovernmentHeader() {
                 {/* Login Dropdown (mobile) */}
                 <div className="relative" ref={loginDropdownRef}>
                   <button
-                    className="border border-orange-200 bg-white hover:border-orange-400 px-4 py-2 rounded-lg shadow transition-colors flex items-center w-full justify-between"
+                    className="border border-orange-200 bg-white hover:border-orange-400 px-4 py-2 rounded-lg shadow transition-colors flex items-center w-full justify-between cursor-pointer"
                     onClick={() => setLoginDropdownOpen((open) => !open)}
                     aria-haspopup="true"
                     aria-expanded={loginDropdownOpen}
@@ -233,7 +233,7 @@ export function GovernmentHeader() {
                       (screenReader as HTMLElement).scrollIntoView({ behavior: 'smooth' })
                     }
                   }}
-                  className="flex items-center justify-center border border-orange-200 bg-white hover:border-orange-400 px-4 py-2 rounded-lg shadow w-full"
+                  className="flex items-center justify-center border border-orange-200 bg-white hover:border-orange-400 px-4 py-2 rounded-lg shadow w-full cursor-pointer"
                   aria-label="Screen Reader Accessibility"
                   role="button"
                 >
@@ -247,3 +247,4 @@ export function GovernmentHeader() {
     </header>
   )
 }
+

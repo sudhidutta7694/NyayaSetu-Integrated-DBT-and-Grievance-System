@@ -12,7 +12,7 @@ from app.core.config import settings
 from app.core.database import get_db
 from sqlalchemy.orm import Session
 from app.core.exceptions import AuthenticationException, AuthorizationException
-from app.models.user import User, UserRole
+from app.schema.user import User, UserRole
 
 logger = structlog.get_logger()
 security = HTTPBearer()

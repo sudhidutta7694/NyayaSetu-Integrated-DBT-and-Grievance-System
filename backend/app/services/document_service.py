@@ -14,7 +14,7 @@ from fastapi import UploadFile
 
 from app.core.config import settings
 from app.core.exceptions import ValidationException, DatabaseException
-from app.models.onboarding import DocumentType, DocumentUploadData
+from app.schema.onboarding import DocumentType, DocumentUploadData
 
 logger = structlog.get_logger()
 

@@ -3,23 +3,30 @@ Onboarding service for managing user onboarding process
 """
 
 import json
-from datetime import datetime
+from datetime import datetime, date
 from typing import Optional, List, Dict, Any
+from enum import Enum
 import structlog
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import ValidationException, DatabaseException
-from app.models.onboarding import (
+
+# Pydantic schemas for API validation (app/schema/)
+from app.schema.onboarding import (
     OnboardingStepCreate,
     OnboardingStepUpdate,
-    OnboardingStep,
+    OnboardingStep as OnboardingStepSchema,
     OnboardingProgress,
     OnboardingStatus,
     PersonalInfoData,
     DocumentUploadData,
-    BankDetailsData,
-    OnboardingStepType
+    BankDetailsData
 )
+
+# SQLAlchemy ORM models for database operations (models/)
+from models.user import User
+from models.onboarding import OnboardingStep as OnboardingStepModel, BankAccount as BankAccountModel
+from models.document import Document as DocumentModel
 
 logger = structlog.get_logger()
 
@@ -29,22 +36,20 @@ class OnboardingService:
 
     def __init__(self, db: Session):
         self.db = db
-        self.total_steps = 4  # Total number of onboarding steps
+        self.total_steps = 3  # Total number of onboarding steps
 
     async def get_onboarding_status(self, user_id: str) -> OnboardingStatus:
         """Get current onboarding status for a user"""
         try:
-            user = await self.db.user.find_unique(
-                where={"id": user_id},
-                include={"onboarding_steps": True}
-            )
+            # Use SQLAlchemy ORM model
+            user = self.db.query(User).filter(User.id == user_id).first()
 
             if not user:
                 raise ValidationException("User not found")
 
-            current_step = user.onboarding_step
-            is_completed = user.is_onboarded
-            progress_percentage = (current_step / self.total_steps) * 100
+            current_step = user.onboarding_step or 0
+            is_completed = user.is_onboarded or False
+            progress_percentage = (current_step / self.total_steps) * 100 if current_step > 0 else 0
 
             # Get next step name
             next_step_name = None
@@ -70,19 +75,22 @@ class OnboardingService:
     async def get_onboarding_progress(self, user_id: str) -> OnboardingProgress:
         """Get detailed onboarding progress for a user"""
         try:
-            user = await self.db.user.find_unique(
-                where={"id": user_id},
-                include={"onboarding_steps": True}
-            )
+            user = self.db.query(User).filter(User.id == user_id).first()
 
             if not user:
                 raise ValidationException("User not found")
 
+            # Get onboarding steps using SQLAlchemy ORM
             steps = []
-            for step_data in user.onboarding_steps:
-                steps.append(OnboardingStep(
-                    id=step_data.id,
-                    user_id=step_data.user_id,
+            onboarding_steps = self.db.query(OnboardingStepModel).filter(
+                OnboardingStepModel.user_id == user_id
+            ).all()
+            
+            # Convert ORM models to Pydantic schemas for API response
+            for step_data in onboarding_steps:
+                steps.append(OnboardingStepSchema(
+                    id=str(step_data.id),
+                    user_id=str(step_data.user_id),
                     step_number=step_data.step_number,
                     step_name=step_data.step_name,
                     is_completed=step_data.is_completed,
@@ -94,9 +102,9 @@ class OnboardingService:
 
             return OnboardingProgress(
                 user_id=user_id,
-                current_step=user.onboarding_step,
+                current_step=user.onboarding_step or 0,
                 total_steps=self.total_steps,
-                is_completed=user.is_onboarded,
+                is_completed=user.is_onboarded or False,
                 steps=steps
             )
 
@@ -107,59 +115,66 @@ class OnboardingService:
     async def initialize_onboarding(self, user_id: str) -> bool:
         """Initialize onboarding process for a new user"""
         try:
-            # Create initial onboarding steps
+            # Check if onboarding steps already exist
+            existing_steps = self.db.query(OnboardingStepModel).filter(
+                OnboardingStepModel.user_id == user_id
+            ).count()
+            
+            if existing_steps > 0:
+                logger.info("Onboarding already initialized for user", user_id=user_id)
+                return True
+            
+            # Create initial onboarding steps using ORM model
             steps = [
                 {"step_number": 1, "step_name": "Personal Information"},
                 {"step_number": 2, "step_name": "Document Upload"},
-                {"step_number": 3, "step_name": "Bank Details"},
-                {"step_number": 4, "step_name": "Verification"}
+                {"step_number": 3, "step_name": "Bank Details"}
             ]
 
             for step in steps:
-                await self.db.onboardingstep.create(
-                    data={
-                        "user_id": user_id,
-                        "step_number": step["step_number"],
-                        "step_name": step["step_name"],
-                        "is_completed": False
-                    }
+                onboarding_step = OnboardingStepModel(
+                    user_id=user_id,
+                    step_number=step["step_number"],
+                    step_name=step["step_name"],
+                    is_completed=False
                 )
+                self.db.add(onboarding_step)
 
             # Update user onboarding status
-            await self.db.user.update(
-                where={"id": user_id},
-                data={
-                    "onboarding_step": 1,
-                    "is_onboarded": False
-                }
-            )
+            user = self.db.query(User).filter(User.id == user_id).first()
+            if user:
+                user.onboarding_step = 1
+                user.is_onboarded = False
+                self.db.commit()
 
             logger.info("Onboarding initialized for user", user_id=user_id)
             return True
 
         except Exception as e:
+            self.db.rollback()
             logger.error("Failed to initialize onboarding", user_id=user_id, error=str(e))
             raise DatabaseException(f"Failed to initialize onboarding: {str(e)}")
 
     async def complete_personal_info_step(self, user_id: str, personal_info: PersonalInfoData) -> bool:
         """Complete personal information step"""
         try:
-            # Update user with personal information
-            await self.db.user.update(
-                where={"id": user_id},
-                data={
-                    "father_name": personal_info.father_name,
-                    "mother_name": personal_info.mother_name,
-                    "date_of_birth": personal_info.date_of_birth,
-                    "age": personal_info.age,
-                    "gender": personal_info.gender.value,
-                    "category": personal_info.category.value,
-                    "address": personal_info.address,
-                    "district": personal_info.district,
-                    "state": personal_info.state,
-                    "pincode": personal_info.pincode
-                }
-            )
+            # Update user with personal information using ORM model
+            user = self.db.query(User).filter(User.id == user_id).first()
+            if not user:
+                raise ValidationException("User not found")
+            
+            user.full_name = personal_info.full_name
+            user.father_name = personal_info.father_name
+            user.mother_name = personal_info.mother_name
+            user.date_of_birth = personal_info.date_of_birth
+            user.age = personal_info.age
+            user.gender = personal_info.gender.value
+            user.category = personal_info.category.value
+            user.phone_number = personal_info.mobile_number
+            user.address = personal_info.address
+            user.district = personal_info.district
+            user.state = personal_info.state
+            user.pincode = personal_info.pincode
 
             # Mark step as completed
             await self._complete_step(user_id, 1, personal_info.dict())
@@ -168,28 +183,28 @@ class OnboardingService:
             return True
 
         except Exception as e:
+            self.db.rollback()
             logger.error("Failed to complete personal info step", user_id=user_id, error=str(e))
             raise DatabaseException(f"Failed to complete personal info step: {str(e)}")
 
     async def complete_document_upload_step(self, user_id: str, documents: List[DocumentUploadData]) -> bool:
         """Complete document upload step"""
         try:
-            # Save document information
+            # Save document information using ORM model
             for doc in documents:
-                await self.db.document.create(
-                    data={
-                        "user_id": user_id,
-                        "document_type": doc.document_type.value,
-                        "document_name": doc.file_name,
-                        "file_path": f"/uploads/{user_id}/{doc.file_name}",
-                        "file_size": doc.file_size,
-                        "mime_type": doc.mime_type,
-                        "is_digilocker": doc.is_digilocker,
-                        "digilocker_id": doc.digilocker_id,
-                        "ocr_data": json.dumps(doc.ocr_data) if doc.ocr_data else None,
-                        "status": "PENDING"
-                    }
+                document = DocumentModel(
+                    user_id=user_id,
+                    document_type=doc.document_type.value,
+                    document_name=doc.file_name,
+                    file_path=f"/uploads/{user_id}/{doc.file_name}",
+                    file_size=doc.file_size,
+                    mime_type=doc.mime_type,
+                    is_digilocker=doc.is_digilocker,
+                    digilocker_id=doc.digilocker_id,
+                    ocr_data=None,
+                    status="PENDING"
                 )
+                self.db.add(document)
 
             # Mark step as completed
             await self._complete_step(user_id, 2, [doc.dict() for doc in documents])
@@ -198,24 +213,24 @@ class OnboardingService:
             return True
 
         except Exception as e:
+            self.db.rollback()
             logger.error("Failed to complete document upload step", user_id=user_id, error=str(e))
             raise DatabaseException(f"Failed to complete document upload step: {str(e)}")
 
     async def complete_bank_details_step(self, user_id: str, bank_details: BankDetailsData) -> bool:
         """Complete bank details step"""
         try:
-            # Save bank account information
-            await self.db.bankaccount.create(
-                data={
-                    "user_id": user_id,
-                    "account_number": bank_details.account_number,
-                    "ifsc_code": bank_details.ifsc_code,
-                    "bank_name": bank_details.bank_name,
-                    "branch_name": bank_details.branch_name,
-                    "account_holder_name": bank_details.account_holder_name,
-                    "is_verified": False
-                }
+            # Save bank account information using ORM model
+            bank_account = BankAccountModel(
+                user_id=user_id,
+                account_number=bank_details.account_number,
+                ifsc_code=bank_details.ifsc_code,
+                bank_name=bank_details.bank_name,
+                branch_name=bank_details.branch_name,
+                account_holder_name=bank_details.account_holder_name,
+                is_verified=False
             )
+            self.db.add(bank_account)
 
             # Mark step as completed
             await self._complete_step(user_id, 3, bank_details.dict())
@@ -224,6 +239,7 @@ class OnboardingService:
             return True
 
         except Exception as e:
+            self.db.rollback()
             logger.error("Failed to complete bank details step", user_id=user_id, error=str(e))
             raise DatabaseException(f"Failed to complete bank details step: {str(e)}")
 
@@ -233,58 +249,75 @@ class OnboardingService:
             # Mark step as completed
             await self._complete_step(user_id, 4, {"verified": True})
 
-            # Mark user as fully onboarded
-            await self.db.user.update(
-                where={"id": user_id},
-                data={
-                    "is_onboarded": True,
-                    "onboarding_step": self.total_steps
-                }
-            )
+            # Mark user as fully onboarded using ORM model
+            user = self.db.query(User).filter(User.id == user_id).first()
+            if user:
+                user.is_onboarded = True
+                user.onboarding_step = self.total_steps
+                self.db.commit()
 
             logger.info("Verification step completed", user_id=user_id)
             return True
 
         except Exception as e:
+            self.db.rollback()
             logger.error("Failed to complete verification step", user_id=user_id, error=str(e))
             raise DatabaseException(f"Failed to complete verification step: {str(e)}")
 
     async def _complete_step(self, user_id: str, step_number: int, data: Dict[str, Any]) -> None:
-        """Mark a step as completed"""
-        await self.db.onboardingstep.update(
-            where={
-                "user_id_step_number": {
-                    "user_id": user_id,
-                    "step_number": step_number
-                }
-            },
-            data={
-                "is_completed": True,
-                "data": json.dumps(data),
-                "completed_at": datetime.utcnow()
-            }
-        )
+        """Mark a step as completed using ORM models"""
+        # Find and update the onboarding step
+        step = self.db.query(OnboardingStepModel).filter(
+            OnboardingStepModel.user_id == user_id,
+            OnboardingStepModel.step_number == step_number
+        ).first()
+        
+        if step:
+            step.is_completed = True
+            # Convert data to JSON-serializable format
+            serializable_data = self._make_json_serializable(data)
+            step.data = json.dumps(serializable_data)
+            step.completed_at = datetime.utcnow()
 
         # Update user's current step
-        await self.db.user.update(
-            where={"id": user_id},
-            data={"onboarding_step": step_number}
-        )
+        user = self.db.query(User).filter(User.id == user_id).first()
+        if user:
+            user.onboarding_step = step_number
+            
+        self.db.commit()
+    
+    def _make_json_serializable(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        """Convert data to JSON-serializable format"""
+        serializable = {}
+        for key, value in data.items():
+            if isinstance(value, (datetime, date)):
+                serializable[key] = value.isoformat()
+            elif isinstance(value, Enum):
+                serializable[key] = value.value
+            elif isinstance(value, list):
+                serializable[key] = [
+                    self._make_json_serializable(item) if isinstance(item, dict) else item
+                    for item in value
+                ]
+            elif isinstance(value, dict):
+                serializable[key] = self._make_json_serializable(value)
+            else:
+                serializable[key] = value
+        return serializable
 
     async def _can_proceed_to_next_step(self, user_id: str, current_step: int) -> bool:
-        """Check if user can proceed to next step"""
+        """Check if user can proceed to next step using ORM model"""
         if current_step >= self.total_steps:
             return False
 
+        if current_step == 0:
+            return True
+
         # Check if current step is completed
-        step = await self.db.onboardingstep.find_unique(
-            where={
-                "user_id_step_number": {
-                    "user_id": user_id,
-                    "step_number": current_step
-                }
-            }
-        )
+        step = self.db.query(OnboardingStepModel).filter(
+            OnboardingStepModel.user_id == user_id,
+            OnboardingStepModel.step_number == current_step
+        ).first()
 
         return step and step.is_completed
 
@@ -293,22 +326,20 @@ class OnboardingService:
         step_names = {
             1: "Personal Information",
             2: "Document Upload",
-            3: "Bank Details",
-            4: "Verification"
+            3: "Bank Details"
         }
         return step_names.get(step_number, "Unknown Step")
 
     async def get_user_documents(self, user_id: str) -> List[Dict[str, Any]]:
-        """Get all documents for a user"""
+        """Get all documents for a user using ORM model"""
         try:
-            documents = await self.db.document.find_many(
-                where={"user_id": user_id},
-                order_by={"created_at": "desc"}
-            )
+            documents = self.db.query(DocumentModel).filter(
+                DocumentModel.user_id == user_id
+            ).order_by(DocumentModel.created_at.desc()).all()
 
             return [
                 {
-                    "id": doc.id,
+                    "id": str(doc.id),
                     "document_type": doc.document_type,
                     "document_name": doc.document_name,
                     "file_path": doc.file_path,
@@ -329,16 +360,15 @@ class OnboardingService:
             raise DatabaseException(f"Failed to get user documents: {str(e)}")
 
     async def get_user_bank_accounts(self, user_id: str) -> List[Dict[str, Any]]:
-        """Get all bank accounts for a user"""
+        """Get all bank accounts for a user using ORM model"""
         try:
-            bank_accounts = await self.db.bankaccount.find_many(
-                where={"user_id": user_id},
-                order_by={"created_at": "desc"}
-            )
+            bank_accounts = self.db.query(BankAccountModel).filter(
+                BankAccountModel.user_id == user_id
+            ).order_by(BankAccountModel.created_at.desc()).all()
 
             return [
                 {
-                    "id": account.id,
+                    "id": str(account.id),
                     "account_number": account.account_number,
                     "ifsc_code": account.ifsc_code,
                     "bank_name": account.bank_name,
@@ -355,4 +385,3 @@ class OnboardingService:
         except Exception as e:
             logger.error("Failed to get user bank accounts", user_id=user_id, error=str(e))
             raise DatabaseException(f"Failed to get user bank accounts: {str(e)}")
-

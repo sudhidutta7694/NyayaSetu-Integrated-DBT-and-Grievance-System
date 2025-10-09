@@ -21,6 +21,7 @@ import {
 } from 'lucide-react'
 import { useLanguage } from '@/contexts/LanguageContext'
 import toast from 'react-hot-toast'
+import { uploadDocument } from '@/lib/api/documents'
 
 const documentUploadSchema = z.object({
   documents: z.array(z.object({
@@ -38,10 +39,12 @@ interface DocumentUploadStepProps {
   onComplete: (data: DocumentUploadForm) => void
   onPrevious: () => void
   initialData?: any
+  uploadedDocumentsS3?: any[]  // Pre-uploaded S3 documents
+  category?: string // Category from personal info step
 }
 
 interface DocumentFile {
-  id: string
+  id: string | number
   type: string
   name: string
   file?: File
@@ -50,13 +53,24 @@ interface DocumentFile {
   status: 'PENDING' | 'UPLOADED' | 'VERIFIED' | 'REJECTED'
   uploadProgress?: number
   error?: string
+  s3Key?: string
+  fileUrl?: string
+  fileSize?: number
+  contentType?: string
 }
 
-export default function DocumentUploadStep({ onComplete, onPrevious, initialData }: DocumentUploadStepProps) {
+export default function DocumentUploadStep({ 
+  onComplete, 
+  onPrevious, 
+  initialData, 
+  uploadedDocumentsS3,
+  category 
+}: DocumentUploadStepProps) {
   const { t } = useLanguage()
   const [isLoading, setIsLoading] = useState(false)
   const [documents, setDocuments] = useState<DocumentFile[]>([])
   const [selectedType, setSelectedType] = useState<string>('')
+  const [viewingDocument, setViewingDocument] = useState<DocumentFile | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const {
@@ -70,44 +84,64 @@ export default function DocumentUploadStep({ onComplete, onPrevious, initialData
     },
   })
 
+  // Load initial documents when component mounts or initialData changes
+  useEffect(() => {
+    if (initialData && Array.isArray(initialData) && initialData.length > 0) {
+      // If initialData is an array of documents, use it directly
+      setDocuments(initialData)
+    } else if (initialData?.documents && Array.isArray(initialData.documents)) {
+      // If initialData has a documents property, use that
+      setDocuments(initialData.documents)
+    }
+  }, [initialData])
+
   // Sync documents state with form value
   useEffect(() => {
     setValue('documents', documents)
   }, [documents, setValue])
 
-  const documentTypes = [
-    {
-      id: 'CASTE_CERTIFICATE',
-      name: t('documents.casteCertificate', 'Caste Certificate'),
-    },
-    {
-      id: 'AADHAAR_CARD',
-      name: t('documents.aadhaarCard', 'Aadhaar Card'),
-    },
-    {
-      id: 'RATION_CARD',
-      name: t('documents.rationCard', 'Ration Card'),
-    },
-    {
-      id: 'BPL_CARD',
-      name: t('documents.bplCard', 'BPL Card'),
-    },
-    {
-      id: 'INCOME_CERTIFICATE',
-      name: t('documents.incomeCertificate', 'Income Certificate'),
-    },
-    {
-      id: 'BIRTH_CERTIFICATE',
-      name: t('documents.birthCertificate', 'Birth Certificate'),
-    },
-  ]
+  // Document types for Step 2 - Only 4 documents (PAN_CARD and BANK_PASSBOOK moved to Step 3)
+  const documentTypes = React.useMemo(() => {
+    const types = [
+      {
+        id: 'AADHAAR_CARD',
+        name: t('documents.aadhaarCard', 'Aadhaar Card'),
+        required: true,
+        description: t('documents.aadhaarDesc', 'Government issued identity proof'),
+      },
+      {
+        id: 'BIRTH_CERTIFICATE',
+        name: t('documents.birthCertificate', 'Birth Certificate'),
+        required: true,
+        description: t('documents.birthDesc', 'Official birth certificate'),
+      },
+      {
+        id: 'INCOME_CERTIFICATE',
+        name: t('documents.incomeCertificate', 'Income Certificate'),
+        required: true,
+        description: t('documents.incomeDesc', 'Annual income proof'),
+      },
+    ]
+
+    // Only add category certificate if category is not GENERAL
+    if (category && category !== 'GENERAL') {
+      types.splice(1, 0, {  // Insert after Aadhaar
+        id: 'CATEGORY_CERTIFICATE',
+        name: t('documents.categoryCertificate', 'Category Certificate (SC/ST/OBC)'),
+        required: true,
+        description: t('documents.categoryDesc', 'Caste/category certificate'),
+      })
+    }
+
+    return types
+  }, [category, t])
 
   const handleFileSelect = (type: string) => {
     setSelectedType(type)
     fileInputRef.current?.click()
   }
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (!file || !selectedType) return
 
@@ -124,8 +158,28 @@ export default function DocumentUploadStep({ onComplete, onPrevious, initialData
       return
     }
 
+    // Check if document of this type already exists
+    const existingDoc = documents.find(doc => doc.type === selectedType)
+    
+    if (existingDoc) {
+      // Show confirmation dialog
+      const confirmReplace = window.confirm(
+        `A ${documentTypes.find(t => t.id === selectedType)?.name} document already exists. Do you want to replace it?`
+      )
+      
+      if (!confirmReplace) {
+        setSelectedType('')
+        return
+      }
+      
+      // Remove old document from state before uploading new one
+      setDocuments(prev => prev.filter(doc => doc.type !== selectedType))
+      toast.success(t('documents.replacingDocument', 'Replacing existing document...'))
+    }
+
+    const tempId = `temp_${selectedType}_${Date.now()}`
     const newDocument: DocumentFile = {
-      id: `${selectedType}_${Date.now()}`,
+      id: tempId,
       type: selectedType,
       name: file.name,
       file,
@@ -135,24 +189,55 @@ export default function DocumentUploadStep({ onComplete, onPrevious, initialData
     }
 
     setDocuments(prev => [...prev, newDocument])
-    simulateUpload(newDocument.id)
     setSelectedType('')
-  }
 
-  const simulateUpload = (documentId: string) => {
-    const interval = setInterval(() => {
-      setDocuments(prev => prev.map(doc => {
-        if (doc.id === documentId && doc.uploadProgress !== undefined) {
-          const newProgress = Math.min(doc.uploadProgress + 10, 100)
-          if (newProgress === 100) {
-            clearInterval(interval)
-            return { ...doc, uploadProgress: 100, status: 'UPLOADED' as const }
-          }
-          return { ...doc, uploadProgress: newProgress }
+    // Upload to S3 using presigned URL
+    try {
+      const result = await uploadDocument(
+        file,
+        selectedType,
+        undefined,
+        (progress: number) => {
+          setDocuments(prev => prev.map(doc => 
+            doc.id === tempId 
+              ? { ...doc, uploadProgress: progress }
+              : doc
+          ))
         }
-        return doc
-      }))
-    }, 200)
+      )
+
+      // Update document with S3 details
+      // Note: document_id is NOT returned during onboarding - only after completion
+      setDocuments(prev => prev.map(doc => 
+        doc.id === tempId
+          ? {
+              ...doc,
+              // Keep tempId - real DB id will be assigned after onboarding completes
+              s3Key: result.data.s3_key,
+              fileUrl: result.data.file_url,
+              fileSize: file.size,
+              contentType: file.type,
+              status: 'UPLOADED' as const,
+              uploadProgress: 100,
+            }
+          : doc
+      ))
+
+      toast.success(t('documents.uploadSuccess', 'Document uploaded successfully'))
+    } catch (error: any) {
+      console.error('Upload error:', error)
+      setDocuments(prev => prev.map(doc => 
+        doc.id === tempId
+          ? {
+              ...doc,
+              status: 'REJECTED' as const,
+              error: error.message || 'Upload failed',
+              uploadProgress: 0,
+            }
+          : doc
+      ))
+      toast.error(error.message || t('documents.uploadError', 'Failed to upload document'))
+    }
   }
 
   const handleDigilockerImport = async (type: string) => {
@@ -179,8 +264,12 @@ export default function DocumentUploadStep({ onComplete, onPrevious, initialData
     }
   }
 
-  const removeDocument = (documentId: string) => {
+  const removeDocument = (documentId: string | number) => {
     setDocuments(prev => prev.filter(doc => doc.id !== documentId))
+  }
+
+  const handleViewDocument = (doc: DocumentFile) => {
+    setViewingDocument(doc)
   }
 
   const getStatusIcon = (status: string) => {
@@ -217,18 +306,27 @@ export default function DocumentUploadStep({ onComplete, onPrevious, initialData
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000))
       
-      setValue('documents', documents.map(doc => ({
-        type: doc.type,
-        file: doc.file,
-        digilockerId: doc.digilockerId,
-        isDigilocker: doc.isDigilocker,
-        status: doc.status,
-      })))
-
-      toast.success('Documents uploaded successfully!')
-      onComplete(data)
+      toast.success('Documents saved successfully!')
+      
+      // Collect all uploaded S3 documents
+      const s3Documents = documents
+        .filter(doc => doc.status === 'UPLOADED' && doc.s3Key)
+        .map(doc => ({
+          s3Key: doc.s3Key,
+          fileUrl: doc.fileUrl,
+          documentType: doc.type,
+          fileName: doc.name,
+          fileSize: doc.fileSize || 0,
+          contentType: doc.contentType || 'application/pdf'
+        }))
+      
+      // Pass the documents in the expected format with S3 data
+      onComplete({ 
+        documents,
+        uploadedDocumentsS3: s3Documents
+      } as any)
     } catch (error) {
-      toast.error('Failed to upload documents')
+      toast.error('Failed to save documents')
     } finally {
       setIsLoading(false)
     }
@@ -260,24 +358,35 @@ export default function DocumentUploadStep({ onComplete, onPrevious, initialData
           {/* Document Types */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {documentTypes.map((docType) => {
-              const isUploaded = documents.some(doc => doc.type === docType.id)
+              const uploadedDoc = documents.find(doc => doc.type === docType.id)
+              const isUploaded = !!uploadedDoc
               return (
                 <div key={docType.id} className="border border-gray-200 rounded-xl p-6 bg-white shadow-sm flex flex-col gap-3 min-h-[180px] justify-between">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="font-semibold text-base text-gray-900">{docType.name}</h3>
-                    {/* Required badge removed as per request */}
+                  <div>
+                    <div className="flex items-center justify-between gap-2 mb-2">
+                      <h3 className="font-semibold text-base text-gray-900">{docType.name}</h3>
+                      {docType.required && (
+                        <Badge variant="secondary" className="text-xs">Required</Badge>
+                      )}
+                    </div>
+                    {isUploaded && uploadedDoc && (
+                      <div className="text-xs text-green-600 flex items-center gap-1 mb-2">
+                        <CheckCircle className="h-3 w-3" />
+                        <span>Uploaded: {uploadedDoc.name}</span>
+                      </div>
+                    )}
                   </div>
                   <div className="flex gap-2 mt-auto flex-wrap">
                     <Button
                       type="button"
-                      variant="outline"
+                      variant={isUploaded ? "secondary" : "outline"}
                       size="sm"
                       onClick={() => handleFileSelect(docType.id)}
-                      disabled={isUploaded}
+                      disabled={isUploaded || isLoading}
                       className="flex-1 min-w-[120px] font-medium border-gray-300"
                     >
                       <Upload className="h-4 w-4 mr-1" />
-                      {t('documents.upload', 'Upload File')}
+                      {isUploaded ? t('documents.uploaded', 'Uploaded') : t('documents.upload', 'Upload File')}
                     </Button>
                     <Button
                       type="button"
@@ -342,6 +451,19 @@ export default function DocumentUploadStep({ onComplete, onPrevious, initialData
                           </div>
                         </Badge>
                         
+                        {/* View button - only show if document is uploaded and has fileUrl */}
+                        {doc.fileUrl && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleViewDocument(doc)}
+                            title={t('documents.view', 'View Document')}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        )}
+                        
                         <Button
                           type="button"
                           variant="ghost"
@@ -383,15 +505,144 @@ export default function DocumentUploadStep({ onComplete, onPrevious, initialData
             >
               {t('onboarding.previous', 'Previous')}
             </Button>
-            <Button
-              type="submit"
-              className="bg-orange-600 hover:bg-orange-700"
-              disabled={isLoading || documents.length === 0}
-            >
-              {isLoading ? t('onboarding.saving', 'Saving...') : t('onboarding.continue', 'Continue')}
-            </Button>
+            <div className="flex gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  const s3Documents = documents
+                    .filter(doc => doc.status === 'UPLOADED' && doc.s3Key)
+                    .map(doc => ({
+                      s3Key: doc.s3Key,
+                      fileUrl: doc.fileUrl,
+                      documentType: doc.type,
+                      fileName: doc.name,
+                      fileSize: doc.fileSize || 0,
+                      contentType: doc.contentType || 'application/pdf'
+                    }))
+                  onComplete({ 
+                    documents,
+                    uploadedDocumentsS3: s3Documents
+                  } as any)
+                }}
+                disabled={isLoading}
+                className="border-orange-300 text-orange-700 hover:bg-orange-50"
+              >
+                {t('onboarding.skip', 'Skip for Now')}
+              </Button>
+              <Button
+                type="submit"
+                className="bg-orange-600 hover:bg-orange-700"
+                disabled={isLoading}
+              >
+                {isLoading ? t('onboarding.saving', 'Saving...') : t('onboarding.continue', 'Continue')}
+              </Button>
+            </div>
           </div>
         </form>
+
+        {/* Document Viewer Modal */}
+        {viewingDocument && (
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4"
+            onClick={() => setViewingDocument(null)}
+          >
+            <div 
+              className="bg-white rounded-xl shadow-2xl max-w-5xl w-full max-h-[95vh] flex flex-col"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Modal Header */}
+              <div className="flex items-center justify-between px-6 py-4 border-b bg-gradient-to-r from-orange-50 to-white">
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 bg-orange-100 rounded-lg">
+                    <FileText className="h-5 w-5 text-orange-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg text-gray-900">{viewingDocument.name}</h3>
+                    <p className="text-sm text-gray-600">
+                      {documentTypes.find(t => t.id === viewingDocument.type)?.name}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <Badge className={`${getStatusColor(viewingDocument.status)} px-3 py-1`}>
+                    <div className="flex items-center space-x-1.5">
+                      {getStatusIcon(viewingDocument.status)}
+                      <span className="text-xs font-medium">
+                        {t(`documents.status.${viewingDocument.status.toLowerCase()}`, viewingDocument.status)}
+                      </span>
+                    </div>
+                  </Badge>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setViewingDocument(null)}
+                    className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg h-9 w-9 p-0"
+                  >
+                    <span className="text-xl">×</span>
+                  </Button>
+                </div>
+              </div>
+
+              {/* Modal Content */}
+              <div className="flex-1 overflow-auto p-6 bg-gray-50">
+                {viewingDocument.fileUrl ? (
+                  viewingDocument.name.toLowerCase().endsWith('.pdf') ? (
+                    // PDF Viewer using iframe
+                    <div className="bg-white rounded-lg shadow-sm overflow-hidden h-[calc(95vh-180px)]">
+                      <iframe
+                        src={viewingDocument.fileUrl}
+                        className="w-full h-full"
+                        title={viewingDocument.name}
+                      />
+                    </div>
+                  ) : (
+                    // Image Viewer
+                    <div className="flex items-center justify-center bg-white rounded-lg shadow-sm p-4 min-h-[calc(95vh-180px)]">
+                      <img
+                        src={viewingDocument.fileUrl}
+                        alt={viewingDocument.name}
+                        className="max-w-full h-auto max-h-[calc(95vh-200px)] object-contain rounded-lg"
+                      />
+                    </div>
+                  )
+                ) : (
+                  <div className="flex items-center justify-center h-96 bg-white rounded-lg shadow-sm">
+                    <div className="text-center">
+                      <FileText className="h-16 w-16 text-gray-300 mx-auto mb-3" />
+                      <p className="text-gray-500">{t('documents.noPreview', 'No preview available')}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Modal Footer */}
+              <div className="flex items-center justify-center gap-3 px-6 py-4 border-t bg-white">
+                {viewingDocument.fileUrl && (
+                  <Button
+                    variant="outline"
+                    size="default"
+                    onClick={() => {
+                      window.open(viewingDocument.fileUrl, '_blank')
+                    }}
+                    className="min-w-[160px] font-medium"
+                  >
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    {t('documents.openInNewTab', 'Open in New Tab')}
+                  </Button>
+                )}
+                <Button
+                  variant="default"
+                  size="default"
+                  onClick={() => setViewingDocument(null)}
+                  className="min-w-[120px] bg-orange-600 hover:bg-orange-700 font-medium"
+                >
+                  {t('documents.close', 'Close')}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   )

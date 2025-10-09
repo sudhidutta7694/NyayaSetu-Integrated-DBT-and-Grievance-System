@@ -9,8 +9,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import or_
 
 from app.core.exceptions import AuthenticationException, ConflictException
-from app.models.user import UserCreate
-from models.user import User, UserRole
+from app.schema.user import User, UserRole
 from app.core.security import generate_application_number
 
 logger = structlog.get_logger()
@@ -21,55 +20,6 @@ class AuthService:
     
     def __init__(self, db: Session):
         self.db = db
-    
-    def register_user(self, user_data: UserCreate) -> User:
-        """Register a new user"""
-        try:
-            # Check if user already exists
-            existing_user = self.db.query(User).filter(
-                or_(
-                    User.email == user_data.email,
-                    User.phone_number == user_data.phone_number
-                )
-            ).first()
-            
-            if existing_user:
-                if existing_user.email == user_data.email:
-                    raise ConflictException("Email already registered")
-                if existing_user.phone_number == user_data.phone_number:
-                    raise ConflictException("Phone number already registered")
-            # Use provided role if present, else default to PUBLIC
-            user_role = user_data.role if user_data.role else UserRole.PUBLIC
-            # Create user
-            user = User(
-                email=user_data.email,
-                phone_number=user_data.phone_number,
-                full_name=user_data.full_name,
-                aadhaar_number=user_data.aadhaar_number,
-                date_of_birth=user_data.date_of_birth,
-                gender=user_data.gender,
-                category=user_data.category,
-                address=user_data.address,
-                district=user_data.district,
-                state=user_data.state,
-                pincode=user_data.pincode,
-                profile_image=user_data.profile_image,
-                role=user_role,
-                is_active=True,
-                is_verified=False
-            )
-            self.db.add(user)
-            self.db.commit()
-            self.db.refresh(user)
-            
-            logger.info("User registered successfully", user_id=user.id)
-            return user
-            
-        except ConflictException:
-            raise
-        except Exception as e:
-            logger.error("User registration failed", error=str(e))
-            raise AuthenticationException("Registration failed")
     
     def get_user_by_id(self, user_id: str) -> Optional[User]:
         """Get user by ID"""

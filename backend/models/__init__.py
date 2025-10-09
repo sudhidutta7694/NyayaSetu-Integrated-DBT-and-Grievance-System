@@ -5,6 +5,8 @@ from .user_role_assignment import UserRoleAssignment
 from .document import Document, DocumentStatus
 from .application import Application, ApplicationStatus, ApplicationType
 from .otp import OTP
+from .onboarding import OnboardingStep, BankAccount
+from .uidai import UIDAI
 
 __all__ = [
     "Base",
@@ -13,5 +15,8 @@ __all__ = [
     "UserRoleAssignment", 
     "Document", "DocumentStatus",
     "Application", "ApplicationStatus", "ApplicationType",
-    "OTP"
+    "OTP",
+    "OnboardingStep",
+    "BankAccount",
+    "UIDAI"
 ]

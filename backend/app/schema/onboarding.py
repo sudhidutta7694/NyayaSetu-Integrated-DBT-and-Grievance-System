@@ -1,21 +1,9 @@
-"""
-Onboarding models and schemas
-"""
-
-from datetime import datetime
+from datetime import datetime, date
 from typing import Optional, List, Dict, Any
 from pydantic import BaseModel, validator
 from enum import Enum
 
-from app.models.user import Gender, Category
-
-
-class OnboardingStepType(str, Enum):
-    PERSONAL_INFO = "PERSONAL_INFO"
-    DOCUMENT_UPLOAD = "DOCUMENT_UPLOAD"
-    BANK_DETAILS = "BANK_DETAILS"
-    VERIFICATION = "VERIFICATION"
-    COMPLETED = "COMPLETED"
+from app.schema.user import Gender, Category
 
 
 class DocumentType(str, Enum):
@@ -26,29 +14,13 @@ class DocumentType(str, Enum):
     OTHER = "OTHER"
 
 
-class OnboardingStepBase(BaseModel):
-    """Base onboarding step model"""
-    step_number: int
-    step_name: str
-    is_completed: bool = False
-    data: Optional[Dict[str, Any]] = None
-
-
-class OnboardingStepCreate(OnboardingStepBase):
-    """Onboarding step creation model"""
-    user_id: str
-
-
-class OnboardingStepUpdate(BaseModel):
-    """Onboarding step update model"""
-    is_completed: Optional[bool] = None
-    data: Optional[Dict[str, Any]] = None
-
-
-class OnboardingStep(OnboardingStepBase):
-    """Onboarding step response model"""
+class OnboardingStep(BaseModel):
     id: str
     user_id: str
+    step_number: int
+    step_name: str
+    is_completed: bool
+    data: Optional[Dict[str, Any]] = None
     completed_at: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
@@ -57,14 +29,29 @@ class OnboardingStep(OnboardingStepBase):
         from_attributes = True
 
 
+class OnboardingStepCreate(BaseModel):
+    """Create onboarding step"""
+    user_id: str
+    step_number: int
+    step_name: str
+
+
+class OnboardingStepUpdate(BaseModel):
+    """Update onboarding step"""
+    is_completed: Optional[bool] = None
+    data: Optional[Dict[str, Any]] = None
+
+
 class PersonalInfoData(BaseModel):
-    """Personal information data model"""
+    """Personal information data for step 1"""
+    full_name: str
     father_name: str
     mother_name: str
-    date_of_birth: datetime
+    date_of_birth: date
     age: int
     gender: Gender
     category: Category
+    mobile_number: str
     address: str
     district: str
     state: str
@@ -76,20 +63,31 @@ class PersonalInfoData(BaseModel):
             raise ValueError('Age must be between 0 and 150')
         return v
 
+    @validator('mobile_number')
+    def validate_mobile_number(cls, v):
+        if not v.isdigit() or len(v) != 10:
+            raise ValueError('Mobile number must be 10 digits')
+        return v
+
+    @validator('pincode')
+    def validate_pincode(cls, v):
+        if not v.isdigit() or len(v) != 6:
+            raise ValueError('Pincode must be 6 digits')
+        return v
+
 
 class DocumentUploadData(BaseModel):
-    """Document upload data model"""
+    """Document upload data for step 2"""
     document_type: DocumentType
     file_name: str
     file_size: int
     mime_type: str
     is_digilocker: bool = False
     digilocker_id: Optional[str] = None
-    ocr_data: Optional[Dict[str, Any]] = None
 
 
 class BankDetailsData(BaseModel):
-    """Bank details data model"""
+    """Bank details data for step 3"""
     account_number: str
     ifsc_code: str
     bank_name: str
@@ -104,13 +102,12 @@ class BankDetailsData(BaseModel):
 
     @validator('ifsc_code')
     def validate_ifsc_code(cls, v):
-        if len(v) != 11 or not v[:4].isalpha() or not v[4:].isalnum():
+        if len(v) != 11 or not v[:4].isalpha():
             raise ValueError('Invalid IFSC code format')
-        return v
+        return v.upper()
 
 
 class OnboardingProgress(BaseModel):
-    """Onboarding progress model"""
     user_id: str
     current_step: int
     total_steps: int
@@ -119,7 +116,6 @@ class OnboardingProgress(BaseModel):
 
 
 class OnboardingStatus(BaseModel):
-    """Onboarding status model"""
     is_onboarded: bool
     current_step: int
     total_steps: int
@@ -127,32 +123,4 @@ class OnboardingStatus(BaseModel):
     next_step_name: Optional[str] = None
     can_proceed: bool = False
 
-
-class DigiLockerDocument(BaseModel):
-    """DigiLocker document model"""
-    document_id: str
-    document_type: str
-    document_name: str
-    issued_by: str
-    issued_date: datetime
-    expiry_date: Optional[datetime] = None
-    file_url: str
-    is_verified: bool = False
-
-
-class DocumentVerificationRequest(BaseModel):
-    """Document verification request model"""
-    document_id: str
-    status: str  # VERIFIED, REJECTED
-    comments: Optional[str] = None
-    verified_by: str
-
-
-class DocumentVerificationResponse(BaseModel):
-    """Document verification response model"""
-    document_id: str
-    status: str
-    verified_at: datetime
-    verified_by: str
-    comments: Optional[str] = None
 
