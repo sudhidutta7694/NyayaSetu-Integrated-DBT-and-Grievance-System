@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { ArrowLeft, Shield, Clock, User, Phone } from 'lucide-react'
+import Link from 'next/link'
 import toast from 'react-hot-toast'
 import { tokenStorage } from '@/lib/tokenStorage'
 
@@ -130,8 +131,11 @@ export default function LoginPage() {
         console.log('Token stored:', tokenStorage.getToken())
         
         toast.success('Login successful!')
-        
-        if (result.requires_onboarding) {
+        // Role-based redirect: if FI, go to FI dashboard directly
+        const role = result.user?.role
+        if (role === 'FINANCIAL_INSTITUTION') {
+          router.push('/fi/dashboard')
+        } else if (result.requires_onboarding) {
           router.push('/onboarding')
         } else {
           router.push('/dashboard')
@@ -176,6 +180,11 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-green-50">
+      <Link href='/' aria-label='Back to Home'
+        className='fixed top-4 left-4 z-50 inline-flex items-center gap-2 bg-white/90 backdrop-blur border border-orange-300 text-orange-700 hover:bg-orange-50 px-3 py-2 rounded-full shadow-md transition-colors'>
+        <ArrowLeft className='h-4 w-4' />
+        <span className='hidden sm:inline text-sm font-medium'>Home</span>
+      </Link>
       <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-8">
           <div className="text-center">

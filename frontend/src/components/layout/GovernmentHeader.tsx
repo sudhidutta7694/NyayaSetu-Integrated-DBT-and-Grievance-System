@@ -10,7 +10,7 @@ export function GovernmentHeader() {
   const [loginDropdownOpen, setLoginDropdownOpen] = useState(false)
   const loginDropdownRef = useRef<HTMLDivElement>(null)
   const { t } = useLanguage()
-  const { user, logout } = useAuth()
+  // Removed notifications & status legend UI per request
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -42,75 +42,46 @@ export function GovernmentHeader() {
         </div>
         {/* Language, Login/Logout, and Menu */}
         <div className="flex items-center gap-x-4">
-          {/* Show Logout if logged in, else Login dropdown */}
-          {user ? (
+          {/* Notifications & Status Legend removed */}
+          {/* Login Dropdown - hidden on mobile */}
+          <div className="relative hidden md:block" ref={loginDropdownRef}>
             <button
-              className="border border-orange-200 bg-white hover:border-orange-400 px-4 py-2 rounded-lg shadow transition-colors flex items-center font-semibold text-orange-700"
-              onClick={logout}
-              aria-label="Logout"
+              className="border border-orange-200 bg-white hover:border-orange-400 px-4 py-2 rounded-lg shadow transition-colors flex items-center"
+              onClick={() => setLoginDropdownOpen((open) => !open)}
+              aria-haspopup="true"
+              aria-expanded={loginDropdownOpen}
+              aria-label="Login options"
             >
-              {t('header.logout', 'Logout')}
+              {t('header.login', 'Login')}
+              <ChevronDown className="ml-2 h-4 w-4" />
             </button>
-          ) : (
-            <div className="relative hidden md:block" ref={loginDropdownRef}>
-              <button
-                className="border border-orange-200 bg-white hover:border-orange-400 px-4 py-2 rounded-lg shadow transition-colors flex items-center"
-                onClick={() => setLoginDropdownOpen((open) => !open)}
-                aria-haspopup="true"
-                aria-expanded={loginDropdownOpen}
-                aria-label="Login options"
-              >
-                {t('header.login', 'Login')}
-                <ChevronDown className="ml-2 h-4 w-4" />
-              </button>
-              {loginDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-50 animate-fade-in" role="menu" aria-label="Login options">
-                  <ul className="py-2">
-                    <li>
-                      <a
-                        href="/login"
-                        className="block px-6 py-3 text-gray-800 hover:bg-orange-50 hover:text-orange-700 transition-colors text-left w-full font-semibold"
-                        onClick={() => setLoginDropdownOpen(false)}
-                        role="menuitem"
-                      >
-                        {t('header.loginIndividual', 'Common Individual')}
-                      </a>
-                    </li>
-                    <li>
-                      <a
-                        href="/district/login"
-                        className="block px-6 py-3 text-gray-800 hover:bg-orange-50 hover:text-orange-700 transition-colors text-left w-full font-semibold"
-                        onClick={() => setLoginDropdownOpen(false)}
-                        role="menuitem"
-                      >
-                        {t('header.loginDistrict', 'District Authorities')}
-                      </a>
-                    </li>
-                    <li>
-                      <a
-                        href="/social-welfare/login"
-                        className="block px-6 py-3 text-gray-800 hover:bg-orange-50 hover:text-orange-700 transition-colors text-left w-full font-semibold"
-                        onClick={() => setLoginDropdownOpen(false)}
-                        role="menuitem"
-                      >
-                        {t('header.loginSocialWelfare', 'Social Welfare')}
-                      </a>
-                    </li>
-                    <li>
-                      <a
-                        href="/login/financial-institution"
-                        className="block px-6 py-3 text-gray-800 hover:bg-orange-50 hover:text-orange-700 transition-colors text-left w-full font-semibold"
-                        onClick={() => setLoginDropdownOpen(false)}
-                        role="menuitem"
-                      >
-                        {t('header.loginFinancial', 'Financial Institutions')}
-                      </a>
-                    </li>
-                  </ul>
-                </div>
-              )}
-            </div>
-          )}
+            {loginDropdownOpen && (
+              <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-50 animate-fade-in" role="menu" aria-label="Login options">
+                <ul className="py-2">
+                  <li>
+                    <a
+                      href="/login"
+                      className="block px-5 py-3 text-gray-800 hover:bg-orange-50 hover:text-orange-700 transition-colors text-left w-full font-semibold"
+                      onClick={() => setLoginDropdownOpen(false)}
+                      role="menuitem"
+                    >
+                      {t('header.loginCitizen', 'Common User')}
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="/admin/login"
+                      className="block px-5 py-3 text-gray-800 hover:bg-orange-50 hover:text-orange-700 transition-colors text-left w-full font-semibold"
+                      onClick={() => setLoginDropdownOpen(false)}
+                      role="menuitem"
+                    >
+                      {t('header.loginAuthority', 'Authority Login')}
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            )}
+          </div>
           {/* LanguageSelector - hidden on mobile */}
           <div className="hidden md:block">
             <LanguageSelector />

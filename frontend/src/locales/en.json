@@ -242,12 +242,23 @@
       "createFirst": "Create Your First Application",
       "applicationNumber": "Application",
       "amount": "Amount",
+      "amountRequested": "Requested",
+      "amountApproved": "Approved",
+      "lastUpdated": "Last updated",
       "approved": "approved",
       "status": {
         "approved": "Approved",
         "under_review": "Under Review",
         "rejected": "Rejected",
-        "pending": "Pending"
+        "pending": "Pending",
+        "tooltip": {
+          "draft": "Not yet submitted. Continue editing.",
+          "submitted": "Submitted. Awaiting initial screening.",
+          "under_review": "Under evaluation by officers.",
+          "approved": "Approved. Awaiting disbursal steps.",
+          "rejected": "Rejected. See remarks for next steps.",
+          "disbursed": "Benefits disbursed or case closed."
+        }
       }
     },
     "documents": {
@@ -273,6 +284,55 @@
       "updateProfile": "Update Profile",
       "getHelp": "Get Help"
     }
+  },
+  "applications": {
+    "list": {
+      "title": "Applications",
+      "results": "Results",
+      "empty": "No applications found",
+      "export": "Export CSV",
+      "pagination": "Page",
+      "total": "total"
+    },
+    "filters": {
+      "allActs": "All Acts",
+      "pcr": "PCR Act",
+      "poa": "PoA Act",
+      "incentive": "Incentive",
+      "searchPlaceholder": "Search App ID or text"
+    },
+    "status": {
+      "draft": "Draft",
+      "submitted": "Submitted",
+      "under_review": "Under Review",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "disbursed": "Disbursed"
+    }
+  },
+  "wizard": {
+    "title": "New Application",
+    "autosaved": "Draft saved",
+    "saving": "Saving...",
+    "lastSaved": "Last saved",
+    "prev": "Previous",
+    "next": "Next",
+    "saveDraft": "Save Draft",
+    "submit": "Submit Application",
+    "submitted": "Application submitted",
+    "step1": { "title": "Applicant Info", "desc": "Prefilled from profile where available." },
+    "step2": { "title": "Incident Details", "desc": "Provide incident date and FIR details." },
+    "step3": { "title": "Relief Requested", "desc": "Specify monetary relief and benefits." },
+    "step4": { "title": "Document Checklist", "desc": "Upload or reuse existing documents." },
+    "step5": { "title": "Review & Consent", "desc": "Confirm details and submit." },
+    "fields": { "fullName": "Full Name", "phone": "Phone Number" },
+    "aria": { "label": "New application wizard", "steps": "Progress steps" }
+  },
+  "application": {
+    "detail": { "requested": "Requested", "approved": "Approved" },
+    "timeline": { "label": "Application timeline", "title": "Timeline", "draft": "Draft", "submitted": "Submitted", "district": "District Review", "state": "State Review", "finance": "Finance", "disbursed": "Disbursed" },
+    "actions": { "download": "Download", "raiseQuery": "Raise Query", "print": "Print" },
+    "sections": { "nextActions": "Next Action", "nextActions.desc": "Under District Review — expected response in 10 days", "activityLog": "Activity Log", "documents": "Documents", "documents.desc": "Grouped by category (placeholder).", "messages": "Messages / Reviewer Comments", "messages.desc": "Thread will appear here (placeholder)." }
   },
   "admin": {
     "dashboard": {
