@@ -4,9 +4,9 @@ import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-// import { Progress } from '@/components/ui/progress'
 import { CheckCircle, Circle, FileText, CreditCard, Shield, Upload } from 'lucide-react'
-import { useLanguage } from '@/contexts/LanguageContext'
+import { useTranslations } from 'next-intl'
+import { LanguageSwitcher } from '@/components/accessibility/LanguageSwitcher'
 import PersonalInfoStep from '@/components/onboarding/PersonalInfoStep'
 import DocumentUploadStep from '@/components/onboarding/DocumentUploadStep'
 import BankDetailsStep from '@/components/onboarding/BankDetailsStep'
@@ -18,7 +18,7 @@ import {
 import toast from 'react-hot-toast'
 
 const OnboardingPage = () => {
-  const { t } = useLanguage()
+  const t = useTranslations('onboarding')
   const router = useRouter()
   const [currentStep, setCurrentStep] = useState(1)
   const [isLoading, setIsLoading] = useState(true)
@@ -53,7 +53,7 @@ const OnboardingPage = () => {
       
       // Check if user is already onboarded
       if (userData.is_onboarded) {
-        toast.success('You have already completed onboarding!')
+        toast.success(t('alreadyOnboarded'))
         router.push('/dashboard')
         return
       }
@@ -81,7 +81,7 @@ const OnboardingPage = () => {
       
     } catch (error: any) {
       console.error('Failed to load onboarding data:', error)
-      toast.error('Failed to load onboarding data. Please try again.')
+      toast.error(t('loadError'))
       
       // If error is authentication related, redirect to login
       if (error.message?.includes('authentication') || error.message?.includes('401')) {
@@ -95,20 +95,20 @@ const OnboardingPage = () => {
   const steps = [
     {
       id: 1,
-      title: t('onboarding.step1.title', 'Personal Information'),
-      description: t('onboarding.step1.description', 'Basic personal details'),
+      title: t('steps.personalInfo.title'),
+      description: t('steps.personalInfo.description'),
       icon: FileText
     },
     {
       id: 2,
-      title: t('onboarding.step2.title', 'Document Upload'),
-      description: t('onboarding.step2.description', 'Upload required documents'),
+      title: t('steps.documents.title'),
+      description: t('steps.documents.description'),
       icon: Upload
     },
     {
       id: 3,
-      title: t('onboarding.step3.title', 'Bank Details'),
-      description: t('onboarding.step3.description', 'Bank account information'),
+      title: t('steps.bankDetails.title'),
+      description: t('steps.bankDetails.description'),
       icon: CreditCard
     }
   ]
@@ -202,8 +202,22 @@ const OnboardingPage = () => {
           const paddedMonth = month.length === 1 ? '0' + month : month
           const paddedDay = day.length === 1 ? '0' + day : day
           const isoDate = `${year}-${paddedMonth}-${paddedDay}T00:00:00Z`
-          // CRITICAL: Use mergedS3Docs directly, not from state!
-          const uploadedDocs = mergedS3Docs.map((doc: any) => ({
+          
+          // Prepare DigiLocker documents
+          const digilockerDocs = (onboardingData.documents || [])
+            .filter((doc: any) => doc.isDigilocker)
+            .map((doc: any) => ({
+              s3_key: '',  // Empty string for DigiLocker documents (no S3 storage)
+              document_type: doc.type,
+              filename: doc.name,
+              file_size: 0,
+              content_type: 'application/pdf',
+              is_digilocker: true,
+              digilocker_id: doc.digilockerId
+            }))
+          
+          // Prepare uploaded S3 documents
+          const uploadedS3Docs = mergedS3Docs.map((doc: any) => ({
             s3_key: doc.s3Key,
             document_type: doc.documentType,
             filename: doc.fileName,
@@ -212,6 +226,9 @@ const OnboardingPage = () => {
             is_digilocker: false,
             digilocker_id: null
           }))
+          
+          // Combine both DigiLocker and uploaded documents
+          const uploadedDocs = [...digilockerDocs, ...uploadedS3Docs]
           // Prepare bank details (may be empty if skipped)
           const bankDetails = data.accountNumber ? {
             account_number: data.accountNumber,
@@ -231,6 +248,7 @@ const OnboardingPage = () => {
               gender: onboardingData.personalInfo.gender,
               category: onboardingData.personalInfo.category,
               mobile_number: onboardingData.personalInfo.mobileNumber,
+              email: onboardingData.personalInfo.email || null,
               address: onboardingData.personalInfo.address,
               district: onboardingData.personalInfo.district,
               state: onboardingData.personalInfo.state,
@@ -302,13 +320,18 @@ const OnboardingPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
+      {/* Language Switcher - Top Right */}
+      <div className="fixed top-4 right-4 z-50">
+        <LanguageSwitcher />
+      </div>
+
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Loading State */}
         {isLoading ? (
           <div className="flex items-center justify-center min-h-screen">
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 mx-auto"></div>
-              <p className="mt-4 text-gray-600">Loading onboarding data...</p>
+              <p className="mt-4 text-gray-600">{t('loading')}</p>
             </div>
           </div>
         ) : (
@@ -316,10 +339,10 @@ const OnboardingPage = () => {
             {/* Header */}
             <div className="text-center mb-8">
               <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                {t('onboarding.title', 'Complete Your Profile')}
+                {t('title')}
               </h1>
               <p className="text-lg text-gray-600">
-                {t('onboarding.subtitle', 'Please complete all steps to access government services')}
+                {t('subtitle')}
               </p>
             </div>
 
@@ -327,10 +350,10 @@ const OnboardingPage = () => {
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <span className="text-sm font-medium text-gray-700">
-              {t('onboarding.progress', 'Progress')}: {Math.round(progress)}%
+              {t('progress')}: {Math.round(progress)}%
             </span>
             <span className="text-sm text-gray-500">
-              {t('onboarding.step', 'Step')} {currentStep} {t('onboarding.of', 'of')} {steps.length}
+              {t('step', { current: currentStep, total: steps.length })}
             </span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2">

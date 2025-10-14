@@ -7,23 +7,34 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { socialWelfareDashboardApi } from "@/lib/api/socialWelfareDashboard";
-import { Loader2, Eye } from "lucide-react";
+import { Loader2, Eye, CheckCircle2 } from "lucide-react";
 
 /* ---------- tiny UI helpers ---------- */
 
 function StatusPill({ status }: { status?: string }) {
-  const map: Record<string, string> = {
-    APPROVED: "bg-gray-100 text-gray-700",
-    PENDING: "bg-gray-100 text-gray-700",
-    REJECTED: "bg-gray-100 text-gray-700",
-  };
-  const cls = map[status || ""] || "bg-gray-100 text-gray-700";
+  // Use same classes as in /applications page
+  const statusKey = status?.toLowerCase().replace(/_/g,'-') || 'draft';
+  const className = `status-badge status-${statusKey}`;
+  
+  // Format display status
+  let displayStatus = status || "UNKNOWN";
+  if (status === "SOCIAL_WELFARE_APPROVED") {
+    displayStatus = "SW Approved";
+  } else if (status === "DOCUMENTS_APPROVED" || status === "APPROVED") {
+    displayStatus = "Documents Approved";
+  } else if (status === "DOCUMENTS_REJECTED" || status === "DISTRICT_AUTHORITY_REJECTED") {
+    displayStatus = "Documents Rejected";
+  } else if (status === "SOCIAL_WELFARE_REJECTED") {
+    displayStatus = "SW Rejected";
+  } else if (status === "FI_REJECTED") {
+    displayStatus = "FI Rejected";
+  } else if (status?.includes("_")) {
+    displayStatus = status.replace(/_/g, ' ');
+  }
+  
   return (
-    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${cls}`}>
-      {status === "APPROVED" && "✓ "}
-      {status === "PENDING" && "• "}
-      {status === "REJECTED" && "✗ "}
-      {status || "UNKNOWN"}
+    <span className={className}>
+      {displayStatus}
     </span>
   );
 }
@@ -157,7 +168,7 @@ export default function SocialWelfareDashboardPage() {
                 <div className="bg-white rounded-lg border border-gray-200">
                   <table className="min-w-[720px] w-full text-sm">
                     <thead>
-                      <TableHeadRow cols={["Title", "Application Id", "Submitted At", "Actions"]} />
+                      <TableHeadRow cols={["Title", "Application Id", "Status", "Submitted At", "Actions"]} />
                     </thead>
 
                     {caseLoading ? (
@@ -176,6 +187,9 @@ export default function SocialWelfareDashboardPage() {
                               </td>
                               <td className="px-3 sm:px-4 py-4 sm:py-5 text-gray-600 font-mono text-xs sm:text-sm">
                                 <div className="truncate">{c.application_number}</div>
+                              </td>
+                              <td className="px-3 sm:px-4 py-4 sm:py-5">
+                                <StatusPill status={c.status} />
                               </td>
                               <td className="px-3 sm:px-4 py-4 sm:py-5 text-gray-600 text-xs sm:text-sm">
                                 <div className="hidden sm:block">{new Date(c.submitted_at).toLocaleString()}</div>

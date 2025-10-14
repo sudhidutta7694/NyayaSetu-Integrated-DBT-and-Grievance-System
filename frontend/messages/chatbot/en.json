@@ -1,0 +1,14 @@
+{
+  "title": "NyayaSetu Assistant",
+  "greeting": "Hello! How can I help you with the NyayaSetu portal?",
+  "placeholder": "Type your message...",
+  "send": "Send",
+  "close": "Close chat",
+  "minimize": "Minimize chat",
+  "open": "Open Chatbot",
+  "error": "Sorry, I didn't understand that. Could you please rephrase?",
+  "voiceOut": "Voice Out",
+  "voiceInput": "Voice Input",
+  "voiceInputNotSupported": "Speech recognition is not supported in this browser.",
+  "listening": "Listening..."
+}

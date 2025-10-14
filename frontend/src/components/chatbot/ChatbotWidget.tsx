@@ -1,25 +1,33 @@
 "use client";
 import React, { useState, useRef, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 import { chatbotApi } from '@/lib/api/chatbot';
-import { useLanguage } from '@/contexts/LanguageContext';
 import { MessageSquare, X, Mic, Volume2 } from 'lucide-react';
 
 const ChatbotWidget: React.FC = () => {
-  const { t, currentLanguage } = useLanguage();
+  const t = useTranslations('chatbot');
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState([
-    { from: 'bot', text: t('chatbot.greeting', 'Hello! How can I help you with the NyayaSetu portal?') }
+    { from: 'bot', text: '' } // Will be set dynamically from translations
   ]);
-  const [listening, setListening] = useState(false);
   const recognitionRef = useRef<any>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const [listening, setListening] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Initialize greeting message from translations
+  useEffect(() => {
+    if (!isInitialized) {
+      setMessages([{ from: 'bot', text: t('greeting') }]);
+      setIsInitialized(true);
+    }
+  }, [t, isInitialized]);
 
   const speak = (text: string) => {
     if (typeof window === 'undefined' || !window.speechSynthesis) return;
     const utter = new window.SpeechSynthesisUtterance(text);
-    // Try to set language for TTS
-    utter.lang = currentLanguage || 'en-IN';
+    utter.lang = 'en-IN';
     window.speechSynthesis.speak(utter);
   };
 
@@ -35,7 +43,7 @@ const ChatbotWidget: React.FC = () => {
     }
     const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
     const recognition = new SpeechRecognition();
-    recognition.lang = currentLanguage || 'en-IN';
+    recognition.lang = 'en-IN';
     recognition.interimResults = false;
     recognition.maxAlternatives = 1;
     recognition.onstart = () => setListening(true);
@@ -63,7 +71,7 @@ const ChatbotWidget: React.FC = () => {
     } catch (err) {
       setMessages(msgs => [
         ...msgs,
-        { from: 'bot', text: t('chatbot.error', 'Sorry, I could not get a response. Please try again later.') }
+        { from: 'bot', text: t('error') }
       ]);
     }
   };
@@ -81,7 +89,7 @@ const ChatbotWidget: React.FC = () => {
       <button
         className="fixed bottom-6 right-6 z-50 bg-orange-600 hover:bg-orange-700 text-white rounded-full shadow-lg p-4 flex items-center justify-center focus:outline-none"
         onClick={() => setOpen(true)}
-        aria-label="Open Chatbot"
+        aria-label={t('open')}
         style={{ display: open ? 'none' : 'flex' }}
       >
         <MessageSquare className="h-7 w-7" />
@@ -90,8 +98,8 @@ const ChatbotWidget: React.FC = () => {
       {open && (
         <div className="fixed bottom-6 right-6 z-50 w-80 max-w-full bg-white rounded-xl shadow-2xl flex flex-col overflow-hidden border border-orange-200 animate-fade-in">
           <div className="flex items-center justify-between bg-orange-600 text-white px-4 py-3">
-            <span className="font-semibold">NyayaSetu Chatbot</span>
-            <button onClick={() => setOpen(false)} aria-label="Close Chatbot">
+            <span className="font-semibold">{t('title')}</span>
+            <button onClick={() => setOpen(false)} aria-label={t('close')}>
               <X className="h-5 w-5" />
             </button>
           </div>
@@ -104,14 +112,14 @@ const ChatbotWidget: React.FC = () => {
                     <div className="relative group ml-2">
                       <button
                         className="p-1 rounded border border-orange-200 bg-white hover:bg-orange-100 transition-colors flex items-center justify-center"
-                        aria-label="Voice Output"
+                        aria-label={t('voiceOut')}
                         onClick={() => speak(msg.text)}
                         tabIndex={0}
                       >
                         <Volume2 className="h-4 w-4 text-orange-600" />
                       </button>
                       <span className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 px-2 py-1 rounded bg-gray-800 text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
-                        Voice Out
+                        {t('voiceOut')}
                       </span>
                     </div>
                   )}
@@ -123,7 +131,7 @@ const ChatbotWidget: React.FC = () => {
           <div className="flex items-center gap-2 p-3 border-t bg-white">
             <button
               className={`p-2 rounded hover:bg-orange-50 ${listening ? 'bg-orange-100' : ''}`}
-              aria-label="Voice Input"
+              aria-label={t('voiceInput')}
               onClick={handleVoiceInput}
               disabled={listening}
             >
@@ -132,7 +140,7 @@ const ChatbotWidget: React.FC = () => {
             <input
               className="flex-1 border border-orange-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-400"
               type="text"
-              placeholder={t('chatbot.inputPlaceholder', 'Type your question...')}
+              placeholder={t('placeholder')}
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={e => e.key === 'Enter' ? handleSend() : undefined}
@@ -140,7 +148,7 @@ const ChatbotWidget: React.FC = () => {
             <button
               className="bg-orange-600 hover:bg-orange-700 text-white p-2 rounded-lg font-semibold flex items-center justify-center"
               onClick={handleSend}
-              aria-label="Send"
+              aria-label={t('send')}
             >
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-5 w-5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14m0 0l-6-6m6 6l-6 6" />

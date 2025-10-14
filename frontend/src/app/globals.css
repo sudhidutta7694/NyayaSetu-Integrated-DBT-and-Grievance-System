@@ -71,15 +71,31 @@
 
 /* Status badge utility classes */
 .status-badge {
-  @apply inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium border;
+  @apply inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium border uppercase;
 }
-.status-draft { background: hsl(var(--status-draft-bg)); color: hsl(var(--status-draft-fg)); }
-.status-submitted { background: hsl(var(--status-submitted-bg)); color: hsl(var(--status-submitted-fg)); }
-.status-under-review { background: hsl(var(--status-under-review-bg)); color: hsl(var(--status-under-review-fg)); }
-.status-approved { background: hsl(var(--status-approved-bg)); color: hsl(var(--status-approved-fg)); }
-.status-rejected { background: hsl(var(--status-rejected-bg)); color: hsl(var(--status-rejected-fg)); }
-.status-disbursed { background: hsl(var(--status-disbursed-bg)); color: hsl(var(--status-disbursed-fg)); }
-.status-pending { background: hsl(var(--status-pending-bg)); color: hsl(var(--status-pending-fg)); }
+
+/* Blue - Submitted/In Progress states */
+.status-draft { background: hsl(214 95% 93%); color: hsl(217 91% 60%); border-color: hsl(214 95% 85%); }
+.status-submitted { background: hsl(214 95% 93%); color: hsl(217 91% 60%); border-color: hsl(214 95% 85%); }
+.status-under-review { background: hsl(214 95% 93%); color: hsl(217 91% 60%); border-color: hsl(214 95% 85%); }
+.status-document-verification-pending { background: hsl(214 95% 93%); color: hsl(217 91% 60%); border-color: hsl(214 95% 85%); }
+.status-pending { background: hsl(214 95% 93%); color: hsl(217 91% 60%); border-color: hsl(214 95% 85%); }
+
+/* Green - All approval states */
+.status-approved { background: hsl(142 71% 94%); color: hsl(142 72% 29%); border-color: hsl(142 71% 85%); }
+.status-documents-approved { background: hsl(142 71% 94%); color: hsl(142 72% 29%); border-color: hsl(142 71% 85%); }
+.status-social-welfare-approved { background: hsl(142 71% 94%); color: hsl(142 72% 29%); border-color: hsl(142 71% 85%); }
+.status-fund-disbursed { background: hsl(142 71% 94%); color: hsl(142 72% 29%); border-color: hsl(142 71% 85%); }
+.status-disbursed { background: hsl(142 71% 94%); color: hsl(142 72% 29%); border-color: hsl(142 71% 85%); }
+.status-completed { background: hsl(142 71% 94%); color: hsl(142 72% 29%); border-color: hsl(142 71% 85%); }
+.status-verified { background: hsl(142 71% 94%); color: hsl(142 72% 29%); border-color: hsl(142 71% 85%); }
+
+/* Red - All rejection states */
+.status-rejected { background: hsl(0 93% 94%); color: hsl(0 72% 41%); border-color: hsl(0 93% 85%); }
+.status-documents-rejected { background: hsl(0 93% 94%); color: hsl(0 72% 41%); border-color: hsl(0 93% 85%); }
+.status-district-authority-rejected { background: hsl(0 93% 94%); color: hsl(0 72% 41%); border-color: hsl(0 93% 85%); }
+.status-social-welfare-rejected { background: hsl(0 93% 94%); color: hsl(0 72% 41%); border-color: hsl(0 93% 85%); }
+.status-fi-rejected { background: hsl(0 93% 94%); color: hsl(0 72% 41%); border-color: hsl(0 93% 85%); }
 
 /* Timeline animations */
 @keyframes timelinePop { 0% { opacity:0; transform:scale(.85) translateY(6px);} 60% { opacity:1; transform:scale(1.04);} 100% { opacity:1; transform:scale(1);} }

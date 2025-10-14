@@ -1,0 +1,15 @@
+{
+  "welcome": "Welcome",
+  "subtitle": "Track applications, manage documents, and view status updates.",
+  "newApplication": "New Application",
+  "cards": {
+    "allApplications": "All Applications",
+    "verifiedDocs": "Verified Docs",
+    "inProgress": "In Progress"
+  },
+  "recentApplications": {
+    "title": "Recent Applications",
+    "viewAll": "View All",
+    "noApplications": "No applications yet."
+  }
+}

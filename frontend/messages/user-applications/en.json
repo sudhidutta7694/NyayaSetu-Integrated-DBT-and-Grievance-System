@@ -1,0 +1,332 @@
+{
+  "list": {
+    "title": "Applications",
+    "subtitle": "Track and manage all your applications",
+    "buttons": {
+      "export": "Export",
+      "new": "New"
+    },
+    "filters": {
+      "allTypes": "All Types",
+      "compensation": "Compensation",
+      "poaCompensation": "PoA Compensation",
+      "legalAid": "Legal Aid",
+      "incentive": "Incentive"
+    },
+    "statuses": {
+      "draft": "DRAFT",
+      "submitted": "SUBMITTED",
+      "underReview": "UNDER REVIEW",
+      "approved": "APPROVED",
+      "rejected": "REJECTED",
+      "disbursed": "DISBURSED",
+      "documentsApproved": "Documents Approved",
+      "documentsRejected": "Documents Rejected",
+      "socialWelfareRejected": "Social Welfare Rejected",
+      "fiRejected": "FI Rejected"
+    },
+    "search": {
+      "placeholder": "Search ID or title"
+    },
+    "results": {
+      "title": "Results",
+      "empty": "No applications.",
+      "createNew": "Create one"
+    },
+    "card": {
+      "type": "Type:",
+      "requested": "Requested:",
+      "approved": "Approved:",
+      "updated": "Updated:"
+    },
+    "pagination": {
+      "page": "Page",
+      "of": "/",
+      "total": "total",
+      "prev": "Prev",
+      "next": "Next"
+    }
+  },
+  "new": {
+    "title": "New Application",
+    "subtitle": "Submit a new application for benefits",
+    "steps": {
+      "applicantInfo": "Applicant Info",
+      "incidentDetails": "Incident Details",
+      "documentChecklist": "Document Checklist",
+      "bankDetails": "Bank Details",
+      "reviewConsent": "Review & Consent"
+    },
+    "step1": {
+      "title": "Applicant Information",
+      "description": "Enter your personal details",
+      "fields": {
+        "fullName": {
+          "label": "Full Name",
+          "placeholder": "Enter your full name"
+        },
+        "email": {
+          "label": "Email",
+          "placeholder": "Enter your email address"
+        },
+        "phone": {
+          "label": "Phone Number",
+          "placeholder": "Enter 10-digit mobile number"
+        },
+        "address": {
+          "label": "Address",
+          "placeholder": "Enter your complete address"
+        },
+        "district": {
+          "label": "District",
+          "placeholder": "Select your district"
+        }
+      }
+    },
+    "step2": {
+      "title": "Incident Details",
+      "description": "Provide information about the incident",
+      "fields": {
+        "actType": {
+          "label": "Application Type",
+          "placeholder": "Select application type",
+          "options": {
+            "pcrRelief": "PCR Relief",
+            "poaCompensation": "PoA Compensation",
+            "interCasteMarriage": "Inter-Caste Marriage Incentive",
+            "other": "Other"
+          }
+        },
+        "title": {
+          "label": "Application Title",
+          "placeholder": "Brief title for your application"
+        },
+        "description": {
+          "label": "Description",
+          "placeholder": "Describe the incident or situation in detail"
+        },
+        "incidentDate": {
+          "label": "Incident Date",
+          "placeholder": "Select date"
+        },
+        "incidentDistrict": {
+          "label": "Incident District",
+          "placeholder": "Select district where incident occurred"
+        },
+        "policeStation": {
+          "label": "Police Station",
+          "placeholder": "Enter police station name"
+        },
+        "firNumber": {
+          "label": "FIR Number",
+          "placeholder": "Enter FIR number",
+          "hint": "Not required for Inter-Caste Marriage applications"
+        },
+        "requestedBenefits": {
+          "label": "Requested Benefits",
+          "options": {
+            "compensation": "Compensation",
+            "legalAid": "Legal Aid",
+            "rehabilitation": "Rehabilitation",
+            "incentive": "Incentive"
+          }
+        },
+        "amountRequested": {
+          "label": "Amount Requested",
+          "placeholder": "Enter amount in ₹"
+        }
+      }
+    },
+    "step3": {
+      "title": "Document Checklist",
+      "description": "Upload required documents or link from DigiLocker",
+      "notice": {
+        "title": "Document Requirements",
+        "points": [
+          "Supported formats: PDF, JPG, PNG",
+          "Maximum file size: 10MB",
+          "Clear and legible documents",
+          "DigiLocker integration available"
+        ]
+      },
+      "documents": {
+        "aadhaar": "Aadhaar Card",
+        "categoryProof": "Category Certificate",
+        "incomeProof": "Income Certificate",
+        "addressProof": "Address Proof",
+        "marriageCertificate": "Marriage Certificate",
+        "affidavit": "Affidavit",
+        "medicalReport": "Medical Report",
+        "firCopy": "FIR Copy",
+        "courtOrder": "Court Order",
+        "deathCertificate": "Death Certificate",
+        "photos": "Photos/Evidence",
+        "other": "Other Documents"
+      },
+      "buttons": {
+        "upload": "Upload File",
+        "digilocker": "Import from DigiLocker",
+        "remove": "Remove",
+        "view": "View"
+      },
+      "status": {
+        "uploading": "Uploading...",
+        "uploaded": "Uploaded",
+        "verified": "Verified",
+        "pending": "Pending"
+      }
+    },
+    "step4": {
+      "title": "Bank Account Details",
+      "description": "Enter your bank details for fund disbursement",
+      "notice": {
+        "title": "Secure Information",
+        "description": "Your bank details are encrypted and stored securely for fund disbursement purposes only."
+      },
+      "fields": {
+        "accountNumber": {
+          "label": "Account Number",
+          "placeholder": "Enter bank account number",
+          "hint": "9-18 digits numeric only"
+        },
+        "ifscCode": {
+          "label": "IFSC Code",
+          "placeholder": "Enter IFSC code",
+          "hint": "11 characters (e.g., SBIN0001234)"
+        },
+        "bankName": {
+          "label": "Bank Name",
+          "placeholder": "Enter bank name"
+        },
+        "bankBranch": {
+          "label": "Branch Name",
+          "placeholder": "Enter branch name"
+        },
+        "accountHolderName": {
+          "label": "Account Holder Name",
+          "placeholder": "Enter account holder name"
+        }
+      },
+      "bankDocuments": {
+        "title": "Bank Related Documents (Optional)",
+        "panCard": "PAN Card",
+        "passbook": "Bank Passbook"
+      }
+    },
+    "step5": {
+      "title": "Review & Submit",
+      "description": "Review your application before submission",
+      "sections": {
+        "applicantInfo": "Applicant Information",
+        "incidentDetails": "Incident Details",
+        "documents": "Documents",
+        "bankDetails": "Bank Details"
+      },
+      "declaration": {
+        "label": "I declare that all information provided is true and correct to the best of my knowledge"
+      },
+      "summary": {
+        "documentsUploaded": "documents uploaded",
+        "noDocuments": "No documents uploaded",
+        "noBankDetails": "Bank details not provided"
+      }
+    },
+    "buttons": {
+      "previous": "Previous",
+      "next": "Next",
+      "submit": "Submit Application",
+      "submitting": "Submitting...",
+      "cancel": "Cancel"
+    },
+    "validation": {
+      "required": "This field is required",
+      "email": "Invalid email address",
+      "phone": "Phone number must be 10 digits",
+      "amount": "Amount must be a positive number",
+      "declaration": "You must accept the declaration to proceed"
+    },
+    "messages": {
+      "success": "Application submitted successfully!",
+      "error": "Failed to submit application. Please try again.",
+      "uploadSuccess": "Document uploaded successfully",
+      "uploadError": "Failed to upload document",
+      "saving": "Saving...",
+      "saved": "Progress saved"
+    }
+  },
+  "detail": {
+    "title": "Application Details",
+    "buttons": {
+      "back": "Back to Applications",
+      "edit": "Edit",
+      "download": "Download",
+      "cancel": "Cancel Application"
+    },
+    "sections": {
+      "overview": "Application Overview",
+      "applicant": "Applicant Information",
+      "incident": "Incident Details",
+      "documents": "Documents",
+      "bank": "Bank Details",
+      "timeline": "Application Timeline",
+      "comments": "Comments & Notes"
+    },
+    "status": {
+      "title": "Current Status",
+      "lastUpdated": "Last Updated"
+    },
+    "fields": {
+      "applicationNumber": "Application Number",
+      "type": "Type",
+      "status": "Status",
+      "submittedAt": "Submitted At",
+      "fullName": "Full Name",
+      "email": "Email",
+      "phone": "Phone",
+      "address": "Address",
+      "district": "District",
+      "title": "Title",
+      "description": "Description",
+      "incidentDate": "Incident Date",
+      "incidentDistrict": "Incident District",
+      "policeStation": "Police Station",
+      "firNumber": "FIR Number",
+      "requestedBenefits": "Requested Benefits",
+      "amountRequested": "Amount Requested",
+      "amountApproved": "Amount Approved",
+      "accountNumber": "Account Number",
+      "ifscCode": "IFSC Code",
+      "bankName": "Bank Name",
+      "branchName": "Branch Name",
+      "accountHolderName": "Account Holder Name"
+    },
+    "documents": {
+      "title": "Attached Documents",
+      "empty": "No documents attached",
+      "verified": "Verified",
+      "pending": "Pending Verification",
+      "rejected": "Rejected",
+      "view": "View",
+      "download": "Download"
+    },
+    "timeline": {
+      "submitted": "Application Submitted",
+      "underReview": "Under Review",
+      "documentsVerified": "Documents Verified",
+      "approved": "Application Approved",
+      "rejected": "Application Rejected",
+      "disbursed": "Funds Disbursed"
+    }
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "noData": "No data available",
+    "confirmation": "Are you sure?",
+    "yes": "Yes",
+    "no": "No",
+    "save": "Save",
+    "cancel": "Cancel",
+    "close": "Close"
+  }
+}

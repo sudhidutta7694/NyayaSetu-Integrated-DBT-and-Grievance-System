@@ -85,7 +85,7 @@ async def get_applications(
 
 
 @router.get("/my", response_model=List[Application])
-async def get_my_applications(
+def get_my_applications(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
     current_user: User = Depends(get_current_active_user_dependency()),
@@ -93,16 +93,17 @@ async def get_my_applications(
 ):
     """Get current user's applications"""
     try:
+        logger.info(f"get_my_applications called with skip={skip} (type={type(skip)}), limit={limit} (type={type(limit)}), current_user={getattr(current_user, 'id', None)}")
         application_service = ApplicationService(db)
-        applications = await application_service.get_user_applications(
+        applications = application_service.get_user_applications(
             current_user.id, skip=skip, limit=limit
         )
         return applications
     except Exception as e:
-        logger.error("Failed to get user applications", error=str(e))
+        logger.error("Failed to get user applications", error=str(e), skip=skip, limit=limit, current_user=str(current_user))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to get applications"
+            detail=f"Failed to get applications: {str(e)}"
         )
 
 
@@ -141,17 +142,30 @@ async def get_application(
         application_service = ApplicationService(db)
         application = await application_service.get_application(application_id)
         
-        # Check permission
-        if not PermissionChecker.can_view_application(current_user, application.user_id):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Access denied to this application"
-            )
-        
+        # Check if application exists first
         if not application:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Application not found"
+            )
+        
+        # Debug logging for permission check
+        logger.info("Permission check", 
+                   user_id=current_user.id, 
+                   user_role=current_user.role,
+                   application_user_id=application.user_id,
+                   application_id=application_id)
+        
+        # Check permission
+        if not PermissionChecker.can_view_application(current_user, application.user_id):
+            logger.warning("Permission denied", 
+                          user_id=current_user.id,
+                          user_role=current_user.role, 
+                          application_user_id=application.user_id,
+                          match=current_user.id == application.user_id)
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied to this application"
             )
         
         return application

@@ -3,7 +3,6 @@ import React, { useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 
 export default function GlobalError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
-  useEffect(()=> { console.error('Global error boundary:', error)}, [error])
   return (
     <html>
       <body className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 to-white p-6">

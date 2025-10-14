@@ -5,8 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { socialWelfareDashboardApi } from "@/lib/api/socialWelfareDashboard";
+import toast from 'react-hot-toast';
 import { 
   ChevronLeft, 
   Loader2, 
@@ -46,43 +48,6 @@ const SectionHeader = ({ title }: { title: string }) => (
   </div>
 );
 
-const StatusPill = ({ status }: { status?: string }) => {
-  const configs = {
-    APPROVED: {
-      bg: "bg-gradient-to-r from-emerald-50 to-emerald-100",
-      text: "text-emerald-800",
-      border: "border-emerald-200",
-      icon: <CheckCircle2 className="h-4 w-4" />
-    },
-    PENDING: {
-      bg: "bg-gradient-to-r from-amber-50 to-yellow-100",
-      text: "text-amber-800",
-      border: "border-amber-200",
-      icon: <Clock className="h-4 w-4" />
-    },
-    REJECTED: {
-      bg: "bg-gradient-to-r from-rose-50 to-red-100",
-      text: "text-rose-800",
-      border: "border-rose-200",
-      icon: <XCircle className="h-4 w-4" />
-    },
-  };
-  
-  const config = configs[status as keyof typeof configs] || {
-    bg: "bg-gray-100",
-    text: "text-gray-700",
-    border: "border-gray-200",
-    icon: <AlertCircle className="h-4 w-4" />
-  };
-  
-  return (
-    <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium border ${config.bg} ${config.text} ${config.border} shadow-sm`}>
-      {config.icon}
-      {status || "UNKNOWN"}
-    </div>
-  );
-};
-
 function CaseDetailContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -93,12 +58,15 @@ function CaseDetailContent() {
   const [caseDetailsLoading, setCaseDetailsLoading] = useState(false);
   const [caseDetailsError, setCaseDetailsError] = useState<string | null>(null);
 
-  // sanction
-  const [decisionType, setDecisionType] = useState<"" | "approve" | "reject">("");
-  const [amountApproved, setAmountApproved] = useState("");
-  const [approvalNotes, setApprovalNotes] = useState("");
+  // Decision state
   const [approvalLoading, setApprovalLoading] = useState(false);
+  const [rejectionLoading, setRejectionLoading] = useState(false);
+  const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
+  const [amountApproved, setAmountApproved] = useState("");
+  
+  // Document viewing state
+  const [viewingDocument, setViewingDocument] = useState<any | null>(null);
 
   useEffect(() => {
     if (!loading && !user) router.replace("/social-welfare/login");
@@ -121,29 +89,71 @@ function CaseDetailContent() {
     }
   };
 
-  const handleApproveWithAmount = async () => {
+  const handleApproveCase = async () => {
+    if (!caseId) return;
+    
+    // Validate amount
+    const amount = parseFloat(amountApproved);
+    if (!amountApproved || isNaN(amount) || amount <= 0) {
+      toast.error("Please enter a valid amount greater than zero");
+      return;
+    }
+    
     setApprovalLoading(true);
     try {
-      await socialWelfareDashboardApi.approveCase(caseId!);
-      router.push("/social-welfare/dashboard");
+      await socialWelfareDashboardApi.approveCase(caseId, amount);
+      toast.success(`Application approved with ₹${amount.toLocaleString()}`);
+      setTimeout(() => {
+        router.push("/social-welfare/dashboard");
+      }, 1000);
+    } catch (error: any) {
+      console.error("Approval error:", error);
+      toast.error(error.response?.data?.detail || error.response?.data?.message || "Failed to approve application");
     } finally {
       setApprovalLoading(false);
     }
   };
 
   const handleRejectCase = async () => {
-    setApprovalLoading(true);
+    if (!caseId) return;
+    
+    // Validate rejection reason
+    if (!rejectionReason || !rejectionReason.trim()) {
+      toast.error("Please provide a reason for rejection");
+      return;
+    }
+    
+    setRejectionLoading(true);
     try {
-      router.push("/social-welfare/dashboard");
+      await socialWelfareDashboardApi.rejectCase(caseId, rejectionReason.trim());
+      toast.success("Application rejected");
+      setTimeout(() => {
+        router.push("/social-welfare/dashboard");
+      }, 1000);
+    } catch (error: any) {
+      console.error("Rejection error:", error);
+      toast.error(error.response?.data?.detail || error.response?.data?.message || "Failed to reject application");
     } finally {
-      setApprovalLoading(false);
+      setRejectionLoading(false);
+      setShowRejectModal(false);
     }
   };
 
+  const handleViewDocument = (doc: any) => {
+    // Document should have file_url or file_path from backend response
+    const documentUrl = doc.file_url || doc.file_path;
+    if (!documentUrl) {
+      toast.error("Can't load document - File not available");
+      return;
+    }
+    // Set document with the URL available
+    setViewingDocument({ ...doc, file_url: documentUrl });
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <div className="min-h-screen bg-gray-50">
       {/* Enhanced header with better visual hierarchy */}
-      <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200 shadow-sm sticky top-0 z-10">
+      <div className="bg-white border-b border-gray-200 shadow-sm">
         <header className="max-w-7xl mx-auto w-full px-4 sm:px-6 py-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-3">
             <div className="flex items-center gap-3 sm:gap-4">
@@ -178,20 +188,20 @@ function CaseDetailContent() {
                 <Calendar className="h-4 w-4" />
                 <span className="truncate">Submitted: {caseDetails.submitted_at ? new Date(caseDetails.submitted_at).toLocaleDateString() : "-"}</span>
               </div>
-              <div className="flex items-center gap-2">
-                <IndianRupee className="h-4 w-4" />
-                <span>₹{caseDetails.amount_requested?.toLocaleString() ?? "N/A"}</span>
-              </div>
               <div className="flex items-center gap-2 min-w-0">
                 <User2 className="h-4 w-4" />
                 <span className="truncate">{caseDetails.applicant?.full_name ?? "N/A"}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Shield className="h-4 w-4" />
+                <StatusBadge status={caseDetails.status} label={caseDetails.status?.replace(/_/g, ' ')} />
               </div>
             </div>
           )}
         </header>
       </div>
 
-      <main className="px-4 sm:px-6 py-6 sm:py-8 max-w-7xl mx-auto w-full">
+      <main className="max-w-7xl mx-auto w-full h-full">
         {caseDetailsLoading ? (
           <div className="flex flex-col items-center justify-center py-16 space-y-4">
             <div className="relative">
@@ -204,8 +214,8 @@ function CaseDetailContent() {
             </div>
           </div>
         ) : caseDetailsError ? (
-          <div className="max-w-md mx-auto">
-            <div className="bg-white rounded-2xl border border-red-200 shadow-lg p-8 text-center">
+          <div className="max-w-md mx-auto py-16 px-4">
+            <div className="bg-white rounded-xl border border-red-200 shadow-sm p-8 text-center">
               <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <AlertCircle className="h-8 w-8 text-red-600" />
               </div>
@@ -220,13 +230,13 @@ function CaseDetailContent() {
             </div>
           </div>
         ) : caseDetails ? (
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-8">
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 p-6">
             {/* LEFT: Enhanced accordion with better design */}
             <div className="xl:col-span-2 order-2 xl:order-1">
               <Accordion type="multiple" defaultValue={["overview"]} className="w-full space-y-4">
                 
                 {/* OVERVIEW SECTION */}
-                <AccordionItem value="overview" className="border-none bg-white rounded-2xl shadow-sm overflow-hidden">
+                <AccordionItem value="overview" className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
                   <AccordionTrigger className="text-lg font-semibold py-4 px-6 hover:bg-gray-50 data-[state=open]:bg-blue-50 data-[state=open]:border-b border-gray-100 transition-all duration-200">
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-blue-100 rounded-lg">
@@ -255,42 +265,46 @@ function CaseDetailContent() {
                         icon={<CreditCard className="h-4 w-4" />} 
                       />
                       <Row 
-                        label="Submission Date" 
-                        value={caseDetails.submitted_at ? new Date(caseDetails.submitted_at).toLocaleString() : "Not available"} 
-                        icon={<Calendar className="h-4 w-4" />} 
+                        label="Incident Description" 
+                        value={caseDetails.incident_description || "Not provided"} 
+                        icon={<AlertCircle className="h-4 w-4" />} 
                       />
                       <Row 
-                        label="Amount Requested" 
-                        value={
-                          <span className="text-lg font-semibold text-green-600">
-                            ₹{caseDetails.amount_requested?.toLocaleString() ?? "Not specified"}
-                          </span>
-                        } 
-                        icon={<IndianRupee className="h-4 w-4" />} 
+                        label="Incident District" 
+                        value={caseDetails.incident_district || "Not provided"} 
+                        icon={<MapPin className="h-4 w-4" />} 
                       />
                       <Row 
-                        label="FIR Number" 
-                        value={
-                          <div className="flex items-center gap-2">
-                            <span className="font-mono bg-gray-100 px-2 py-1 rounded text-sm">
-                              {caseDetails.fir_number ?? "Not provided"}
-                            </span>
-                            {caseDetails.fir_number && (
-                              <span className="inline-flex items-center gap-1 text-emerald-700 text-xs bg-emerald-50 px-2 py-1 rounded-full">
-                                <CheckCircle2 className="h-3 w-3" />
-                                Verified
-                              </span>
-                            )}
-                          </div>
-                        } 
+                        label="Police Station" 
+                        value={caseDetails.police_station || "Not provided"} 
                         icon={<Shield className="h-4 w-4" />} 
                       />
+                      {/* Only show FIR for non-inter-caste marriage applications */}
+                      {caseDetails.application_type !== 'INTER_CASTE_MARRIAGE' && (
+                        <Row 
+                          label="FIR Number" 
+                          value={
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-mono bg-gray-100 px-2 py-1 rounded text-sm">
+                                {caseDetails.fir_number || "-"}
+                              </span>
+                              {caseDetails.cctns_verified && (
+                                <span className="inline-flex items-center gap-1.5 text-green-600 font-medium text-xs px-2.5 py-1 bg-green-50 rounded-md border border-green-200">
+                                  <CheckCircle2 className="h-3.5 w-3.5" />
+                                  <span>Verified with CCTNS</span>
+                                </span>
+                              )}
+                            </div>
+                          } 
+                          icon={<Shield className="h-4 w-4" />} 
+                        />
+                      )}
                     </div>
                   </AccordionContent>
                 </AccordionItem>
 
                 {/* APPLICANT SECTION */}
-                <AccordionItem value="applicant" className="border-none bg-white rounded-2xl shadow-sm overflow-hidden">
+                <AccordionItem value="applicant" className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
                   <AccordionTrigger className="text-lg font-semibold py-4 px-6 hover:bg-gray-50 data-[state=open]:bg-blue-50 data-[state=open]:border-b border-gray-100 transition-all duration-200">
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-emerald-100 rounded-lg">
@@ -345,7 +359,7 @@ function CaseDetailContent() {
                 </AccordionItem>
 
                 {/* DOCUMENTS SECTION */}
-                <AccordionItem value="documents" className="border-none bg-white rounded-2xl shadow-sm overflow-hidden">
+                <AccordionItem value="documents" className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
                   <AccordionTrigger className="text-lg font-semibold py-4 px-6 hover:bg-gray-50 data-[state=open]:bg-blue-50 data-[state=open]:border-b border-gray-100 transition-all duration-200">
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-purple-100 rounded-lg">
@@ -378,35 +392,15 @@ function CaseDetailContent() {
                                 <CheckCircle2 className="h-3 w-3" />
                                 Verified
                               </span>
-                              {doc.file_path ? (
-                                <div className="flex gap-2">
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => window.open(doc.file_path, '_blank')}
-                                    className="gap-2 hover:bg-blue-50 border-blue-200 text-blue-700"
-                                  >
-                                    <Eye className="h-4 w-4" />
-                                    View
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => {
-                                      const link = document.createElement('a');
-                                      link.href = doc.file_path;
-                                      link.download = doc.document_name;
-                                      link.click();
-                                    }}
-                                    className="gap-2 hover:bg-green-50 border-green-200 text-green-700"
-                                  >
-                                    <Download className="h-4 w-4" />
-                                    Download
-                                  </Button>
-                                </div>
-                              ) : (
-                                <span className="text-sm text-gray-400">No file available</span>
-                              )}
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleViewDocument(doc)}
+                                className="gap-2 hover:bg-blue-50 border-blue-200 text-blue-700"
+                              >
+                                <Eye className="h-4 w-4" />
+                                View
+                              </Button>
                             </div>
                           </div>
                         ))}
@@ -427,7 +421,7 @@ function CaseDetailContent() {
             {/* RIGHT: Enhanced Sanction Panel */}
             <aside className="xl:col-span-1 order-1 xl:order-2">
               <div className="xl:sticky xl:top-28">
-                <div className="bg-white rounded-2xl border shadow-lg overflow-hidden">
+                <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                   {/* Header */}
                   <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
                     <h2 className="text-xl font-bold text-white mb-1">Case Decision</h2>
@@ -437,150 +431,82 @@ function CaseDetailContent() {
                   {/* Content */}
                   <div className="p-6 space-y-6">
                     
-                    {/* Decision Type Selection */}
-                    <div className="space-y-3">
-                      <Label className="text-sm font-semibold text-gray-900 block">
-                        Choose Decision *
-                      </Label>
-                      <div className="grid grid-cols-2 gap-3">
-                        <Button
-                          variant={decisionType === "approve" ? "default" : "outline"}
-                          onClick={() => setDecisionType("approve")}
-                          className={`h-12 font-semibold transition-all duration-200 ${
-                            decisionType === "approve" 
-                              ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg" 
-                              : "border-emerald-200 text-emerald-700 hover:bg-emerald-50"
-                          }`}
-                        >
-                          <CheckCircle2 className="h-4 w-4 mr-2" />
-                          Approve
-                        </Button>
-                        <Button
-                          variant={decisionType === "reject" ? "destructive" : "outline"}
-                          onClick={() => setDecisionType("reject")}
-                          className={`h-12 font-semibold transition-all duration-200 ${
-                            decisionType === "reject"
-                              ? "bg-red-600 hover:bg-red-700 text-white shadow-lg"
-                              : "border-red-200 text-red-700 hover:bg-red-50"
-                          }`}
-                        >
-                          <XCircle className="h-4 w-4 mr-2" />
-                          Reject
-                        </Button>
+                    {/* Amount Approval Section */}
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="amount" className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                          <IndianRupee className="h-4 w-4 text-emerald-600" />
+                          Approved Amount
+                          <span className="text-red-500">*</span>
+                        </Label>
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-semibold">₹</span>
+                          <Input
+                            id="amount"
+                            type="number"
+                            placeholder="Enter amount to approve"
+                            value={amountApproved}
+                            onChange={(e) => setAmountApproved(e.target.value)}
+                            className="pl-8 h-12 text-lg font-semibold"
+                            min="0"
+                            step="0.01"
+                          />
+                        </div>
+                        <p className="text-xs text-gray-500">
+                          Enter the amount you approve for disbursement
+                        </p>
+                      </div>
+
+                      <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
+                        <div className="flex items-start gap-3">
+                          <CheckCircle2 className="h-5 w-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                          <div>
+                            <h4 className="font-semibold text-emerald-900 mb-1">Approval Action</h4>
+                            <p className="text-sm text-emerald-700">
+                              The application will be moved to the fund disbursement stage after approval.
+                            </p>
+                          </div>
+                        </div>
                       </div>
                     </div>
 
-                    {/* Approval Section - Only show when approve is selected */}
-                    {decisionType === "approve" && (
-                      <div className="space-y-4 border-t pt-4">
-                        <div>
-                          <Label htmlFor="amount" className="text-sm font-semibold text-gray-900 mb-2 block">
-                            Approved Amount *
-                          </Label>
-                          <div className="relative">
-                            <IndianRupee className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
-                            <Input
-                              id="amount"
-                              type="number"
-                              placeholder="Enter amount to approve"
-                              value={amountApproved}
-                              onChange={(e) => setAmountApproved(e.target.value)}
-                              className="pl-10 h-12 border-2 focus:border-emerald-500 focus:ring-emerald-500"
-                            />
-                          </div>
-                          {caseDetails.amount_requested && (
-                            <p className="text-xs text-gray-500 mt-1">
-                              Requested: ₹{caseDetails.amount_requested.toLocaleString()}
-                            </p>
-                          )}
-                        </div>
+                    {/* Action Buttons */}
+                    <div className="pt-2 space-y-3">
+                      <Button
+                        onClick={handleApproveCase}
+                        disabled={approvalLoading || rejectionLoading}
+                        className="w-full h-12 font-semibold shadow-lg hover:shadow-xl transition-all duration-200 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white"
+                      >
+                        {approvalLoading ? (
+                          <>
+                            <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                            Approving Application...
+                          </>
+                        ) : (
+                          <>
+                            <CheckCircle2 className="h-5 w-5 mr-2" />
+                            Approve Application
+                          </>
+                        )}
+                      </Button>
 
-                        <div>
-                          <Label htmlFor="notes" className="text-sm font-semibold text-gray-900 mb-2 block">
-                            Approval Notes (Optional)
-                          </Label>
-                          <Input
-                            id="notes"
-                            placeholder="Add approval notes for records"
-                            value={approvalNotes}
-                            onChange={(e) => setApprovalNotes(e.target.value)}
-                            className="h-12 border-2 focus:border-emerald-500 focus:ring-emerald-500"
-                          />
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Rejection Section - Only show when reject is selected */}
-                    {decisionType === "reject" && (
-                      <div className="space-y-4 border-t pt-4">
-                        <div>
-                          <Label htmlFor="reject-reason" className="text-sm font-semibold text-gray-900 mb-2 block">
-                            Rejection Reason *
-                          </Label>
-                          <textarea
-                            id="reject-reason"
-                            placeholder="Please provide a detailed reason for rejection"
-                            value={rejectionReason}
-                            onChange={(e) => setRejectionReason(e.target.value)}
-                            rows={4}
-                            className="w-full px-3 py-3 border-2 border-gray-200 rounded-md focus:border-red-500 focus:ring-red-500 focus:outline-none resize-none"
-                          />
-                          <p className="text-xs text-gray-500 mt-1">
-                            This will be sent to the applicant as feedback
-                          </p>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Submit Button - Only show when a decision is selected */}
-                    {decisionType && (
-                      <div className="pt-4 border-t">
-                        <Button
-                          onClick={decisionType === "approve" ? handleApproveWithAmount : handleRejectCase}
-                          disabled={
-                            approvalLoading || 
-                            (decisionType === "approve" && !amountApproved) ||
-                            (decisionType === "reject" && !rejectionReason.trim())
-                          }
-                          className={`w-full h-12 font-semibold shadow-lg hover:shadow-xl transition-all duration-200 ${
-                            decisionType === "approve"
-                              ? "bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white"
-                              : "bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white"
-                          }`}
-                        >
-                          {approvalLoading ? (
-                            <>
-                              <Loader2 className="h-5 w-5 animate-spin mr-2" />
-                              Processing {decisionType === "approve" ? "Approval" : "Rejection"}...
-                            </>
-                          ) : (
-                            <>
-                              {decisionType === "approve" ? (
-                                <>
-                                  <CheckCircle2 className="h-5 w-5 mr-2" />
-                                  Confirm Approval
-                                </>
-                              ) : (
-                                <>
-                                  <XCircle className="h-5 w-5 mr-2" />
-                                  Confirm Rejection
-                                </>
-                              )}
-                            </>
-                          )}
-                        </Button>
-                      </div>
-                    )}
+                      <Button
+                        onClick={() => setShowRejectModal(true)}
+                        disabled={approvalLoading || rejectionLoading}
+                        variant="outline"
+                        className="w-full h-12 font-semibold border-2 border-red-200 text-red-700 hover:bg-red-50 hover:border-red-300"
+                      >
+                        <XCircle className="h-5 w-5 mr-2" />
+                        Reject Application
+                      </Button>
+                    </div>
 
                     {/* Footer Note */}
                     <div className="bg-gray-50 rounded-xl p-4 border-t">
                       <p className="text-xs text-gray-600 flex items-start gap-2">
                         <AlertCircle className="h-4 w-4 text-amber-500 flex-shrink-0 mt-0.5" />
                         <span>
-                          {decisionType 
-                            ? `${decisionType === "approve" ? "Approval" : "Rejection"} decisions are final and will be recorded in the audit trail.`
-                            : "Please select a decision type above to proceed with the application review."
-                          }
+                          All decisions are final and will be recorded in the audit trail. Ensure all details are verified before approving or rejecting.
                         </span>
                       </p>
                     </div>
@@ -591,6 +517,164 @@ function CaseDetailContent() {
           </div>
         ) : null}
       </main>
+
+      {/* Rejection Modal */}
+      {showRejectModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full">
+            <div className="bg-red-600 px-6 py-4 rounded-t-2xl">
+              <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                <XCircle className="h-6 w-6" />
+                Reject Application
+              </h3>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <p className="text-sm text-red-800">
+                  <strong>Warning:</strong> Rejection is permanent and will be recorded in the system. 
+                  Please provide a clear reason for rejection.
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="rejection-reason" className="text-sm font-semibold text-gray-900">
+                  Rejection Reason <span className="text-red-500">*</span>
+                </Label>
+                <textarea
+                  id="rejection-reason"
+                  value={rejectionReason}
+                  onChange={(e) => setRejectionReason(e.target.value)}
+                  placeholder="Enter detailed reason for rejection..."
+                  className="w-full min-h-[120px] p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
+                  disabled={rejectionLoading}
+                />
+                <p className="text-xs text-gray-500">
+                  Minimum 10 characters required
+                </p>
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <Button
+                  onClick={() => {
+                    setShowRejectModal(false);
+                    setRejectionReason("");
+                  }}
+                  variant="outline"
+                  className="flex-1"
+                  disabled={rejectionLoading}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleRejectCase}
+                  disabled={rejectionLoading || !rejectionReason.trim() || rejectionReason.trim().length < 10}
+                  className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                >
+                  {rejectionLoading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      Rejecting...
+                    </>
+                  ) : (
+                    <>
+                      <XCircle className="h-4 w-4 mr-2" />
+                      Confirm Rejection
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Enhanced Document Viewer Modal */}
+      {viewingDocument && viewingDocument.file_url && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4 overflow-auto">
+          <div className="bg-white rounded-xl shadow-2xl max-w-5xl w-full max-h-[95vh] flex flex-col">
+            {/* Header with gradient */}
+            <div className="flex items-center justify-between px-6 py-4 border-b bg-gradient-to-r from-blue-50 to-white">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <FileText className="h-5 w-5 text-blue-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    {viewingDocument.document_type?.replace(/_/g, ' ').toUpperCase() || 'Document'}
+                  </h3>
+                  <p className="text-sm text-gray-500">
+                    Application: {caseDetails?.application_number || 'N/A'}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <StatusBadge status={viewingDocument.status} label={viewingDocument.status?.replace(/_/g, ' ')} />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setViewingDocument(null)}
+                  className="text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+                >
+                  <XCircle className="h-5 w-5" />
+                </Button>
+              </div>
+            </div>
+
+            {/* Document Content */}
+            <div className="flex-1 overflow-auto p-6 bg-gray-50">
+              {viewingDocument.document_name?.toLowerCase().endsWith('.pdf') ? (
+                <div className="bg-white rounded-lg shadow-sm overflow-hidden h-[calc(95vh-180px)]">
+                  <iframe
+                    src={viewingDocument.file_url}
+                    className="w-full h-full"
+                    title={viewingDocument.document_name}
+                  />
+                </div>
+              ) : (
+                <div className="flex items-center justify-center bg-white rounded-lg shadow-sm p-4 min-h-[calc(95vh-180px)]">
+                  <img
+                    src={viewingDocument.file_url}
+                    alt={viewingDocument.document_name || 'Document'}
+                    className="max-w-full max-h-full object-contain rounded"
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center justify-between px-6 py-4 border-t bg-gray-50">
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <FileText className="h-4 w-4" />
+                <span className="font-medium">{viewingDocument.document_name || 'Unknown'}</span>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const link = document.createElement('a');
+                    link.href = viewingDocument.file_url;
+                    link.download = viewingDocument.document_name || 'document';
+                    link.click();
+                  }}
+                  className="gap-2"
+                >
+                  <Download className="h-4 w-4" />
+                  Download
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setViewingDocument(null)}
+                >
+                  Close
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -598,7 +682,7 @@ function CaseDetailContent() {
 export default function CaseDetailPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center space-y-4">
           <div className="relative mx-auto w-16 h-16">
             <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>

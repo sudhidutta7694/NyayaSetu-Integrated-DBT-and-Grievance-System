@@ -20,6 +20,10 @@ export const toastStatusChanged = (newStatus: string) => {
 
 export const toastDraftSaved = () => toast.success('Draft saved')
 
+export const showSuccessToast = (message: string) => toast.success(message)
+
+export const showErrorToast = (message: string) => toast.error(message)
+
 // Stub analytics (to be wired to real service later)
 export function analytics(event: string, meta: Record<string, any> = {}) {
   if (typeof window !== 'undefined') {

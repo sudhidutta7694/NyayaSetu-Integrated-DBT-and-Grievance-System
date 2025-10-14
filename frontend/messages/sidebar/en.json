@@ -1,0 +1,25 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "applications": "Applications",
+    "documents": "Documents",
+    "announcements": "Announcements",
+    "beneficiaries": "Beneficiaries",
+    "disbursements": "Disbursements",
+    "reports": "Reports",
+    "grievances": "Grievances",
+    "profile": "Profile",
+    "logout": "Logout"
+  },
+    "feedback": "Feedback",
+  "help": "Help",
+  "logout": "Logout",
+  "copyright": "© {year} NyayaSetu",
+  "welcome": "Welcome",
+  "aria": {
+    "closeSidebar": "Close menu",
+    "expandSidebar": "Expand sidebar",
+    "collapseSidebar": "Collapse sidebar",
+    "openMenu": "Open menu"
+  }
+}

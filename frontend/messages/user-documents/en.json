@@ -1,0 +1,75 @@
+{
+  "title": "My Documents",
+  "subtitle": "Manage your uploaded documents. Each document type can have only one file.",
+  "buttons": {
+    "refresh": "Refresh",
+    "view": "View",
+    "download": "Download",
+    "replace": "Replace Document",
+    "uploadFile": "Upload File",
+    "importDigilocker": "Import from DigiLocker",
+    "openNewTab": "Open in New Tab",
+    "close": "Close"
+  },
+  "documentTypes": {
+    "AADHAAR_CARD": {
+      "name": "Aadhaar Card",
+      "description": "Government issued identity proof"
+    },
+    "PAN_CARD": {
+      "name": "PAN Card",
+      "description": "Permanent Account Number card"
+    },
+    "BIRTH_CERTIFICATE": {
+      "name": "Birth Certificate",
+      "description": "Official birth certificate"
+    },
+    "BANK_PASSBOOK": {
+      "name": "Bank Passbook",
+      "description": "Bank account proof"
+    },
+    "CATEGORY_CERTIFICATE": {
+      "name": "Category Certificate",
+      "description": "SC/ST/OBC certificate"
+    },
+    "INCOME_CERTIFICATE": {
+      "name": "Income Certificate",
+      "description": "Annual income proof"
+    },
+    "MARRIAGE_CERTIFICATE": {
+      "name": "Marriage Certificate",
+      "description": "Legal marriage proof"
+    }
+  },
+  "status": {
+    "PENDING": "Pending",
+    "VERIFIED": "Verified",
+    "REJECTED": "Rejected",
+    "UNDER_REVIEW": "Under Review"
+  },
+  "upload": {
+    "uploading": "Uploading...",
+    "fileInfo": "PDF, JPG, PNG • Max 10MB",
+    "replaceConfirm": "A {docType} already exists. Do you want to replace it?"
+  },
+  "labels": {
+    "uploaded": "Uploaded",
+    "digilocker": "DigiLocker"
+  },
+  "messages": {
+    "uploadSuccess": "Document uploaded successfully",
+    "uploadFailed": "Failed to upload document",
+    "downloadSuccess": "Document downloaded",
+    "downloadFailed": "Failed to download document",
+    "loadFailed": "Failed to load documents",
+    "viewFailed": "Failed to load document",
+    "invalidFileType": "Please upload PDF, JPG, or PNG files only",
+    "fileSizeExceeded": "File size must be less than 10MB",
+    "connectingDigilocker": "Connecting to DigiLocker...",
+    "digilockerSuccess": "Document imported from DigiLocker successfully",
+    "digilockerFailed": "Failed to import from DigiLocker"
+  },
+  "viewer": {
+    "noPreview": "No preview available"
+  }
+}

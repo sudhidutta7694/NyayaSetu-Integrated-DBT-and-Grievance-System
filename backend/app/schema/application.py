@@ -13,6 +13,12 @@ class ApplicationStatus(str, Enum):
     UNDER_REVIEW = "UNDER_REVIEW"
     DOCUMENT_VERIFICATION_PENDING = "DOCUMENT_VERIFICATION_PENDING"
     APPROVED = "APPROVED"
+    DOCUMENTS_APPROVED = "DOCUMENTS_APPROVED"
+    DISTRICT_AUTHORITY_REJECTED = "DISTRICT_AUTHORITY_REJECTED"
+    DOCUMENTS_REJECTED = "DOCUMENTS_REJECTED"
+    SOCIAL_WELFARE_APPROVED = "SOCIAL_WELFARE_APPROVED"
+    SOCIAL_WELFARE_REJECTED = "SOCIAL_WELFARE_REJECTED"
+    FI_REJECTED = "FI_REJECTED"
     REJECTED = "REJECTED"
     FUND_DISBURSED = "FUND_DISBURSED"
     COMPLETED = "COMPLETED"
@@ -30,31 +36,35 @@ class ApplicationBase(BaseModel):
     title: str
     description: Optional[str] = None
     application_type: ApplicationType
-    amount_requested: Optional[Decimal] = None
+    
+    # Incident details
+    incident_date: Optional[datetime] = None
+    incident_description: Optional[str] = None
+    incident_district: Optional[str] = None
+    police_station: Optional[str] = None
+    fir_number: Optional[str] = None
+    
     bank_account_number: Optional[str] = None
     bank_ifsc_code: Optional[str] = None
     bank_name: Optional[str] = None
     bank_branch: Optional[str] = None
     account_holder_name: Optional[str] = None
 
-    @validator('amount_requested')
-    def validate_amount(cls, v):
-        if v is not None and v < 0:
-            raise ValueError('Amount cannot be negative')
-        return v
-
     @validator('bank_account_number')
     def validate_account_number(cls, v):
-        if v and not v.isdigit():
-            raise ValueError('Bank account number must contain only digits')
-        if v and len(v) < 10:
-            raise ValueError('Bank account number must be at least 10 digits')
+        if v and (not v.isdigit() or len(v) < 9 or len(v) > 18):
+            raise ValueError('Bank account number must be 9-18 digits')
         return v
 
     @validator('bank_ifsc_code')
     def validate_ifsc_code(cls, v):
-        if v and len(v) != 11:
-            raise ValueError('IFSC code must be 11 characters')
+        if v:
+            import re
+            v = v.upper()
+            if len(v) != 11:
+                raise ValueError('IFSC code must be exactly 11 characters')
+            if not re.match(r'^[A-Z]{4}0[A-Z0-9]{6}$', v):
+                raise ValueError('Invalid IFSC code format. Must start with 4 letters, followed by 0, then 6 alphanumeric characters (e.g., SBIN0001234)')
         return v
 
 
@@ -68,31 +78,35 @@ class ApplicationUpdate(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
     application_type: Optional[ApplicationType] = None
-    amount_requested: Optional[Decimal] = None
+    
+    # Incident details
+    incident_date: Optional[datetime] = None
+    incident_description: Optional[str] = None
+    incident_district: Optional[str] = None
+    police_station: Optional[str] = None
+    fir_number: Optional[str] = None
+    
     bank_account_number: Optional[str] = None
     bank_ifsc_code: Optional[str] = None
     bank_name: Optional[str] = None
     bank_branch: Optional[str] = None
     account_holder_name: Optional[str] = None
 
-    @validator('amount_requested')
-    def validate_amount(cls, v):
-        if v is not None and v < 0:
-            raise ValueError('Amount cannot be negative')
-        return v
-
     @validator('bank_account_number')
     def validate_account_number(cls, v):
-        if v and not v.isdigit():
-            raise ValueError('Bank account number must contain only digits')
-        if v and len(v) < 10:
-            raise ValueError('Bank account number must be at least 10 digits')
+        if v and (not v.isdigit() or len(v) < 9 or len(v) > 18):
+            raise ValueError('Bank account number must be 9-18 digits')
         return v
 
     @validator('bank_ifsc_code')
     def validate_ifsc_code(cls, v):
-        if v and len(v) != 11:
-            raise ValueError('IFSC code must be 11 characters')
+        if v:
+            import re
+            v = v.upper()
+            if len(v) != 11:
+                raise ValueError('IFSC code must be exactly 11 characters')
+            if not re.match(r'^[A-Z]{4}0[A-Z0-9]{6}$', v):
+                raise ValueError('Invalid IFSC code format. Must start with 4 letters, followed by 0, then 6 alphanumeric characters (e.g., SBIN0001234)')
         return v
 
 
@@ -102,6 +116,8 @@ class Application(ApplicationBase):
     application_number: str
     user_id: str
     status: ApplicationStatus
+    cctns_verified: Optional[bool] = False
+    cctns_verification_date: Optional[datetime] = None
     amount_approved: Optional[Decimal] = None
     amount_disbursed: Optional[Decimal] = None
     submitted_at: Optional[datetime] = None
@@ -109,6 +125,10 @@ class Application(ApplicationBase):
     approved_at: Optional[datetime] = None
     disbursed_at: Optional[datetime] = None
     rejection_reason: Optional[str] = None
+    district_comments: Optional[str] = None
+    district_reviewed_at: Optional[datetime] = None
+    social_welfare_comments: Optional[str] = None
+    social_welfare_reviewed_at: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
 
@@ -175,7 +195,6 @@ class ApplicationStats(BaseModel):
     approved_applications: int
     rejected_applications: int
     disbursed_applications: int
-    total_amount_requested: Decimal
     total_amount_approved: Decimal
     total_amount_disbursed: Decimal
 

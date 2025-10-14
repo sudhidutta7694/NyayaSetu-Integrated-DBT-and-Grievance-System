@@ -29,6 +29,46 @@ def get_current_user(
         payload = verify_token(token)  # Only pass token, not "access"
         logger.info("Token verified", payload=payload)
         
+        # Handle mock tokens for demo/testing
+        if payload.get("is_mock"):
+            logger.info("Mock token detected, creating mock user", payload=payload)
+            from app.schema.user import UserRole, Gender
+            from datetime import datetime
+            
+            role_str = payload.get("role", "DISTRICT_AUTHORITY")
+            logger.info("Creating mock user with role", role_str=role_str)
+            
+            # Ensure role_str matches enum exactly
+            try:
+                user_role = UserRole[role_str] if hasattr(UserRole, role_str) else UserRole.DISTRICT_AUTHORITY
+            except KeyError:
+                logger.warning("Invalid role in mock token, using DISTRICT_AUTHORITY", role_str=role_str)
+                user_role = UserRole.DISTRICT_AUTHORITY
+            
+            mock_user_data = {
+                "id": payload.get("sub"),
+                "email": f"{role_str.lower()}@demo.com",
+                "full_name": f"Demo {role_str.replace('_', ' ').title()}",
+                "phone_number": "9999999999",
+                "aadhaar_number": "999999999999",
+                "date_of_birth": datetime(1990, 1, 1),
+                "age": 34,
+                "gender": Gender.MALE,
+                "address": "Demo Address",
+                "district": "Demo District",
+                "state": "Demo State",
+                "pincode": "000000",
+                "role": user_role,
+                "is_active": True,
+                "is_verified": True,
+                "is_onboarded": True,
+                "onboarding_step": 4,
+                "created_at": datetime.utcnow(),
+                "updated_at": datetime.utcnow(),
+            }
+            logger.info("Mock user created successfully", user_id=mock_user_data["id"], role=user_role)
+            return UserSchema(**mock_user_data)
+        
         user_id = payload.get("sub")
         
         if user_id is None:
@@ -71,7 +111,19 @@ def get_current_active_user(
 def require_role(required_roles: list):
     """Dependency factory for role-based authorization"""
     def role_checker(current_user: UserSchema = Depends(get_current_active_user)) -> UserSchema:
-        if current_user.role.value not in [role.value if hasattr(role, 'value') else role for role in required_roles]:
+        user_role_value = current_user.role.value
+        required_role_values = [role.value if hasattr(role, 'value') else role for role in required_roles]
+        
+        logger.info("Role check", 
+                   user_role=user_role_value, 
+                   required_roles=required_role_values,
+                   user_id=current_user.id)
+        
+        if user_role_value not in required_role_values:
+            logger.warning("Access denied", 
+                          user_role=user_role_value, 
+                          required_roles=required_role_values,
+                          user_id=current_user.id)
             raise AuthorizationException(
                 f"Access denied. Required roles: {required_roles}"
             )

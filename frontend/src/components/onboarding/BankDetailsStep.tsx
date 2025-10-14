@@ -24,7 +24,7 @@ import {
   Eye,
   Trash2
 } from 'lucide-react'
-import { useLanguage } from '@/contexts/LanguageContext'
+import { useTranslations } from 'next-intl'
 import toast from 'react-hot-toast'
 import { uploadDocument } from '@/lib/api/documents'
 
@@ -34,7 +34,8 @@ const bankDetailsSchema = z.object({
     .max(18, 'Account number must be at most 18 digits')
     .regex(/^\d+$/, 'Account number must contain only digits'),
   ifscCode: z.string()
-    .regex(/^[A-Z]{4}0[A-Z0-9]{6}$/, 'Invalid IFSC code format'),
+    .length(11, 'IFSC code must be exactly 11 characters')
+    .regex(/^[A-Z]{4}0[A-Z0-9]{6}$/, 'IFSC code must start with 4 letters, followed by 0, then 6 alphanumeric characters (e.g., SBIN0001234)'),
   bankName: z.string().min(2, 'Bank name is required'),
   branchName: z.string().min(2, 'Branch name is required'),
   accountHolderName: z.string().min(2, 'Account holder name is required'),
@@ -64,7 +65,7 @@ interface BankDocument {
 }
 
 export default function BankDetailsStep({ onComplete, onPrevious, initialData, initialDocuments }: BankDetailsStepProps) {
-  const { t } = useLanguage()
+  const t = useTranslations('onboardingBank')
   const [isLoading, setIsLoading] = useState(false)
   const [bankDocuments, setBankDocuments] = useState<BankDocument[]>([])
   const [viewingDocument, setViewingDocument] = useState<BankDocument | null>(null)
@@ -116,22 +117,22 @@ export default function BankDetailsStep({ onComplete, onPrevious, initialData, i
     // Validate file type
     const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png']
     if (!allowedTypes.includes(file.type)) {
-      toast.error('Please upload PDF, JPG, or PNG files only')
+      toast.error(t('validation.fileType'))
       return
     }
 
     // Validate file size (10MB)
     if (file.size > 10 * 1024 * 1024) {
-      toast.error('File size must be less than 10MB')
+      toast.error(t('validation.fileSize'))
       return
     }
 
     // Check if document type already exists and offer to replace
     const existingDoc = bankDocuments.find(doc => doc.type === type)
     if (existingDoc) {
-      const docName = type === 'PAN_CARD' ? 'PAN Card' : 'Bank Passbook'
+      const docName = type === 'PAN_CARD' ? t('documentTypes.PAN_CARD') : t('documentTypes.BANK_PASSBOOK')
       const confirmReplace = window.confirm(
-        `A ${docName} document already exists. Do you want to replace it?`
+        t('messages.replaceConfirm', { documentName: docName })
       )
       
       if (!confirmReplace) {
@@ -140,7 +141,7 @@ export default function BankDetailsStep({ onComplete, onPrevious, initialData, i
       
       // Remove old document from state before uploading new one
       setBankDocuments(prev => prev.filter(doc => doc.type !== type))
-      toast.success(`Replacing ${docName}...`)
+      toast.success(t('messages.replacing', { documentName: docName }))
     }
 
     const tempId = `temp_${type}_${Date.now()}`
@@ -187,7 +188,9 @@ export default function BankDetailsStep({ onComplete, onPrevious, initialData, i
           : doc
       ))
 
-      toast.success(`${type === 'PAN_CARD' ? 'PAN Card' : 'Bank Passbook'} uploaded successfully`)
+      toast.success(t('messages.uploadSuccess', { 
+        documentName: type === 'PAN_CARD' ? t('documentTypes.PAN_CARD') : t('documentTypes.BANK_PASSBOOK')
+      }))
     } catch (error: any) {
       console.error('Upload error:', error)
       setBankDocuments(prev => prev.map(doc => 
@@ -195,12 +198,12 @@ export default function BankDetailsStep({ onComplete, onPrevious, initialData, i
           ? {
               ...doc,
               status: 'REJECTED' as const,
-              error: error.message || 'Upload failed',
+              error: error.message || t('messages.uploadFailed'),
               uploadProgress: 0,
             }
           : doc
       ))
-      toast.error(error.message || 'Failed to upload document')
+      toast.error(error.message || t('messages.uploadFailed'))
     }
 
     // Reset input
@@ -209,7 +212,7 @@ export default function BankDetailsStep({ onComplete, onPrevious, initialData, i
 
   const removeDocument = (documentId: string) => {
     setBankDocuments(prev => prev.filter(doc => doc.id !== documentId))
-    toast.success('Document removed')
+    toast.success(t('messages.documentRemoved'))
   }
 
   const getStatusColor = (status: string) => {
@@ -252,7 +255,7 @@ export default function BankDetailsStep({ onComplete, onPrevious, initialData, i
           contentType: doc.contentType || 'application/pdf'
         }))
       
-      toast.success('Bank details saved successfully!')
+      toast.success(t('messages.saveSuccess'))
       
       // Pass data in same format as DocumentUploadStep
       onComplete({
@@ -261,7 +264,7 @@ export default function BankDetailsStep({ onComplete, onPrevious, initialData, i
         uploadedDocumentsS3: s3Documents  // S3-formatted for backend
       } as any)
     } catch (error) {
-      toast.error('Failed to save bank details')
+      toast.error(t('messages.saveFailed'))
     } finally {
       setIsLoading(false)
     }
@@ -293,7 +296,7 @@ export default function BankDetailsStep({ onComplete, onPrevious, initialData, i
   }
 
   const handleSkip = () => {
-    toast('You can add bank details later from your dashboard', {
+    toast(t('messages.skipNotice'), {
       icon: 'ℹ️',
     })
     
@@ -325,7 +328,7 @@ export default function BankDetailsStep({ onComplete, onPrevious, initialData, i
       <CardHeader>
         <CardTitle className="flex items-center space-x-2">
           <CreditCard className="h-6 w-6 text-orange-600" />
-          <span>{t('onboarding.step3.title', 'Bank Details')}</span>
+          <span>{t('title')}</span>
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -336,10 +339,10 @@ export default function BankDetailsStep({ onComplete, onPrevious, initialData, i
               <Shield className="h-5 w-5 text-green-600 mt-0.5" />
               <div>
                 <h3 className="text-sm font-medium text-green-800">
-                  {t('bank.securityTitle', 'Security Notice')}
+                  {t('securityNotice.title')}
                 </h3>
                 <p className="text-sm text-green-700 mt-1">
-                  {t('bank.securityDescription', 'Your bank account information is encrypted and stored securely. We will only use this information for legitimate government benefit disbursements. You can skip this step and add bank details later from your dashboard.')}
+                  {t('securityNotice.description')}
                 </p>
               </div>
             </div>
@@ -349,24 +352,29 @@ export default function BankDetailsStep({ onComplete, onPrevious, initialData, i
           <div className="space-y-4">
             <h3 className="font-medium flex items-center space-x-2">
               <Building2 className="h-5 w-5" />
-              <span>{t('bank.infoTitle', 'Bank Account Information')}</span>
+              <span>{t('sections.bankInfo.title')}</span>
             </h3>
             <p className="text-sm text-gray-600">
-              {t('bank.infoDescription', 'Please provide your bank account details for fund disbursement. You can validate your details now or skip and add them later from your dashboard.')}
+              {t('sections.bankInfo.description')}
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="accountNumber" className="flex items-center space-x-2">
                   <Hash className="h-4 w-4" />
-                  <span>{t('bank.accountNumber', 'Account Number')} *</span>
+                  <span>{t('fields.accountNumber.label')} *</span>
                 </Label>
                 <Input
                   id="accountNumber"
                   {...register('accountNumber')}
-                  placeholder={t('bank.accountNumberPlaceholder', 'Enter account number')}
+                  placeholder={t('fields.accountNumber.placeholder')}
                   className={errors.accountNumber ? 'border-red-500' : ''}
                 />
+                {!errors.accountNumber && (
+                  <p className="text-xs text-gray-500">
+                    {t('fields.accountNumber.hint')}
+                  </p>
+                )}
                 {errors.accountNumber && (
                   <p className="text-sm text-red-500">{errors.accountNumber.message}</p>
                 )}
@@ -375,15 +383,21 @@ export default function BankDetailsStep({ onComplete, onPrevious, initialData, i
               <div className="space-y-2">
                 <Label htmlFor="ifscCode" className="flex items-center space-x-2">
                   <Building2 className="h-4 w-4" />
-                  <span>{t('bank.ifscCode', 'IFSC Code')} *</span>
+                  <span>{t('fields.ifscCode.label')} *</span>
                 </Label>
                 <Input
                   id="ifscCode"
                   {...register('ifscCode')}
-                  placeholder={t('bank.ifscCodePlaceholder', 'Enter IFSC code')}
+                  placeholder={t('fields.ifscCode.placeholder')}
                   className={errors.ifscCode ? 'border-red-500' : ''}
                   style={{ textTransform: 'uppercase' }}
+                  maxLength={11}
                 />
+                {!errors.ifscCode && (
+                  <p className="text-xs text-gray-500">
+                    {t('fields.ifscCode.hint')}
+                  </p>
+                )}
                 {errors.ifscCode && (
                   <p className="text-sm text-red-500">{errors.ifscCode.message}</p>
                 )}
@@ -392,12 +406,12 @@ export default function BankDetailsStep({ onComplete, onPrevious, initialData, i
               <div className="space-y-2">
                 <Label htmlFor="bankName" className="flex items-center space-x-2">
                   <Building2 className="h-4 w-4" />
-                  <span>{t('bank.bankName', 'Bank Name')} *</span>
+                  <span>{t('fields.bankName.label')} *</span>
                 </Label>
                 <Input
                   id="bankName"
                   {...register('bankName')}
-                  placeholder={t('bank.bankNamePlaceholder', 'Enter bank name')}
+                  placeholder={t('fields.bankName.placeholder')}
                   className={errors.bankName ? 'border-red-500' : ''}
                 />
                 {errors.bankName && (
@@ -408,12 +422,12 @@ export default function BankDetailsStep({ onComplete, onPrevious, initialData, i
               <div className="space-y-2">
                 <Label htmlFor="branchName" className="flex items-center space-x-2">
                   <MapPin className="h-4 w-4" />
-                  <span>{t('bank.branchName', 'Branch Name')} *</span>
+                  <span>{t('fields.branchName.label')} *</span>
                 </Label>
                 <Input
                   id="branchName"
                   {...register('branchName')}
-                  placeholder={t('bank.branchNamePlaceholder', 'Enter branch name')}
+                  placeholder={t('fields.branchName.placeholder')}
                   className={errors.branchName ? 'border-red-500' : ''}
                 />
                 {errors.branchName && (
@@ -424,12 +438,12 @@ export default function BankDetailsStep({ onComplete, onPrevious, initialData, i
               <div className="md:col-span-2 space-y-2">
                 <Label htmlFor="accountHolderName" className="flex items-center space-x-2">
                   <User className="h-4 w-4" />
-                  <span>{t('bank.accountHolderName', 'Account Holder Name')} *</span>
+                  <span>{t('fields.accountHolderName.label')} *</span>
                 </Label>
                 <Input
                   id="accountHolderName"
                   {...register('accountHolderName')}
-                  placeholder={t('bank.accountHolderNamePlaceholder', 'Enter account holder name')}
+                  placeholder={t('fields.accountHolderName.placeholder')}
                   className={errors.accountHolderName ? 'border-red-500' : ''}
                 />
                 {errors.accountHolderName && (
@@ -443,10 +457,10 @@ export default function BankDetailsStep({ onComplete, onPrevious, initialData, i
           <div className="space-y-4 border-t pt-6">
             <h3 className="font-medium flex items-center space-x-2">
               <FileText className="h-5 w-5" />
-              <span>{t('bank.uploadDocuments', 'Upload Supporting Documents')}</span>
+              <span>{t('sections.documents.title')}</span>
             </h3>
             <p className="text-sm text-gray-600">
-              {t('bank.uploadDescription', 'Upload your PAN card and bank passbook for verification (optional)')}
+              {t('sections.documents.description')}
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -455,9 +469,9 @@ export default function BankDetailsStep({ onComplete, onPrevious, initialData, i
                 <div className="flex items-center gap-2 mb-3">
                   <FileText className="h-5 w-5 text-orange-600" />
                   <h4 className="font-semibold text-gray-900">
-                    {t('bank.panCard', 'PAN Card')}
+                    {t('documentTypes.PAN_CARD')}
                   </h4>
-                  <Badge variant="secondary" className="ml-auto">Optional</Badge>
+                  <Badge variant="secondary" className="ml-auto">{t('badges.optional')}</Badge>
                 </div>
                 
                 {!bankDocuments.find(doc => doc.type === 'PAN_CARD') ? (
@@ -469,12 +483,12 @@ export default function BankDetailsStep({ onComplete, onPrevious, initialData, i
                     className="w-full font-medium"
                   >
                     <Upload className="h-4 w-4 mr-2" />
-                    {t('documents.upload', 'Upload File')}
+                    {t('buttons.uploadFile')}
                   </Button>
                 ) : (
                   <div className="text-sm text-green-600 flex items-center">
                     <CheckCircle className="h-4 w-4 mr-2" />
-                    Uploaded
+                    {t('buttons.uploaded')}
                   </div>
                 )}
               </div>
@@ -484,9 +498,9 @@ export default function BankDetailsStep({ onComplete, onPrevious, initialData, i
                 <div className="flex items-center gap-2 mb-3">
                   <FileText className="h-5 w-5 text-orange-600" />
                   <h4 className="font-semibold text-gray-900">
-                    {t('bank.passbook', 'Bank Passbook')}
+                    {t('documentTypes.BANK_PASSBOOK')}
                   </h4>
-                  <Badge variant="secondary" className="ml-auto">Optional</Badge>
+                  <Badge variant="secondary" className="ml-auto">{t('badges.optional')}</Badge>
                 </div>
                 
                 {!bankDocuments.find(doc => doc.type === 'BANK_PASSBOOK') ? (
@@ -498,12 +512,12 @@ export default function BankDetailsStep({ onComplete, onPrevious, initialData, i
                     className="w-full font-medium"
                   >
                     <Upload className="h-4 w-4 mr-2" />
-                    {t('documents.upload', 'Upload File')}
+                    {t('buttons.uploadFile')}
                   </Button>
                 ) : (
                   <div className="text-sm text-green-600 flex items-center">
                     <CheckCircle className="h-4 w-4 mr-2" />
-                    Uploaded
+                    {t('buttons.uploaded')}
                   </div>
                 )}
               </div>
@@ -528,7 +542,7 @@ export default function BankDetailsStep({ onComplete, onPrevious, initialData, i
             {/* Uploaded Documents List */}
             {bankDocuments.length > 0 && (
               <div className="space-y-3 mt-4">
-                <h4 className="font-medium text-sm">{t('documents.uploadedDocuments', 'Uploaded Documents')}</h4>
+                <h4 className="font-medium text-sm">{t('uploadedDocuments.title')}</h4>
                 {bankDocuments.map((doc) => (
                   <div key={doc.id} className="border rounded-lg p-4 bg-gray-50">
                     <div className="flex items-center justify-between">
@@ -537,7 +551,7 @@ export default function BankDetailsStep({ onComplete, onPrevious, initialData, i
                         <div>
                           <p className="font-medium text-sm">{doc.name}</p>
                           <p className="text-xs text-gray-600">
-                            {doc.type === 'PAN_CARD' ? 'PAN Card' : 'Bank Passbook'}
+                            {doc.type === 'PAN_CARD' ? t('documentTypes.PAN_CARD') : t('documentTypes.BANK_PASSBOOK')}
                           </p>
                         </div>
                       </div>
@@ -577,7 +591,7 @@ export default function BankDetailsStep({ onComplete, onPrevious, initialData, i
                     {doc.uploadProgress !== undefined && doc.uploadProgress < 100 && (
                       <div className="mt-3">
                         <div className="flex items-center justify-between text-sm mb-1">
-                          <span>Uploading...</span>
+                          <span>{t('uploadedDocuments.uploading')}</span>
                           <span>{doc.uploadProgress}%</span>
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-2">
@@ -606,7 +620,7 @@ export default function BankDetailsStep({ onComplete, onPrevious, initialData, i
               onClick={handlePrevious}
               disabled={isLoading}
             >
-              {t('onboarding.previous', 'Previous')}
+              {t('buttons.previous')}
             </Button>
             <div className="flex gap-3">
               <Button
@@ -616,14 +630,14 @@ export default function BankDetailsStep({ onComplete, onPrevious, initialData, i
                 disabled={isLoading}
                 className="border-orange-300 text-orange-700 hover:bg-orange-50"
               >
-                {t('onboarding.skip', 'Skip for Now')}
+                {t('buttons.skip')}
               </Button>
               <Button
                 type="submit"
                 className="bg-orange-600 hover:bg-orange-700"
                 disabled={isLoading}
               >
-                {isLoading ? t('onboarding.saving', 'Saving...') : t('onboarding.complete', 'Complete Onboarding')}
+                {isLoading ? t('buttons.saving') : t('buttons.complete')}
               </Button>
             </div>
           </div>

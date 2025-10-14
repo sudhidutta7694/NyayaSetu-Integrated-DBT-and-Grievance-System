@@ -119,22 +119,70 @@ def require_public_or_above(current_user: User = Depends(AuthManager(get_db).get
     return current_user
 
 
+def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: Session = Depends(get_db)
+):
+    """Get current authenticated user"""
+    try:
+        payload = jwt.decode(
+            credentials.credentials,
+            settings.JWT_SECRET_KEY,
+            algorithms=[settings.JWT_ALGORITHM]
+        )
+        
+        user_id = payload.get("sub")
+        if not user_id:
+            raise AuthenticationException("Invalid token")
+        
+        # Import here to avoid circular imports
+        from models.user import User as UserModel
+        
+        user = db.query(UserModel).filter(UserModel.id == user_id).first()
+        if not user:
+            raise AuthenticationException("User not found")
+        
+        return user
+        
+    except JWTError as e:
+        logger.error("JWT decode error", error=str(e))
+        raise AuthenticationException("Invalid token")
+    except Exception as e:
+        logger.error("Authentication error", error=str(e))
+        raise AuthenticationException("Authentication failed")
+
+
+def get_current_active_user(
+    current_user = Depends(get_current_user)
+):
+    """Get current active user"""
+    if not current_user.is_active:
+        raise AuthenticationException("User account is deactivated")
+    return current_user
+
+
+def get_current_verified_user(
+    current_user = Depends(get_current_active_user)
+):
+    """Get current verified user"""
+    if not current_user.is_verified:
+        raise AuthenticationException("User account is not verified")
+    return current_user
+
+
 def get_current_user_dependency():
     """Get current user dependency"""
-    auth_manager = AuthManager(get_db)
-    return auth_manager.get_current_user
+    return get_current_user
 
 
 def get_current_active_user_dependency():
     """Get current active user dependency"""
-    auth_manager = AuthManager(get_db)
-    return auth_manager.get_current_active_user
+    return get_current_active_user
 
 
 def get_current_verified_user_dependency():
     """Get current verified user dependency"""
-    auth_manager = AuthManager(get_db)
-    return auth_manager.get_current_verified_user
+    return get_current_verified_user
 
 
 # Permission checking utilities
@@ -144,13 +192,68 @@ class PermissionChecker:
     @staticmethod
     def can_view_application(user: User, application_user_id: str) -> bool:
         """Check if user can view application"""
-        if user.role == UserRole.ADMIN:
-            return True
-        if user.role in [UserRole.DISTRICT_AUTHORITY, UserRole.SOCIAL_WELFARE, UserRole.FINANCIAL_INSTITUTION]:
-            return True
-        if user.role == UserRole.PUBLIC and user.id == application_user_id:
-            return True
-        return False
+        try:
+            logger.info("Permission check START", 
+                       user_id=user.id,
+                       user_id_type=type(user.id).__name__,
+                       user_role=user.role,
+                       user_role_type=type(user.role).__name__,
+                       user_role_value=user.role.value if hasattr(user.role, 'value') else user.role,
+                       application_user_id=application_user_id,
+                       application_user_id_type=type(application_user_id).__name__,
+                       ids_match=user.id == application_user_id,
+                       ids_match_str=str(user.id) == str(application_user_id))
+            
+            # Get role as string for comparisons
+            user_role_value = user.role.value if hasattr(user.role, 'value') else str(user.role)
+            
+            # Check ADMIN
+            logger.info("Checking ADMIN role...")
+            is_admin = (user.role == UserRole.ADMIN or user_role_value == "ADMIN")
+            logger.info("Admin check", is_admin=is_admin, user_role=user.role, admin_role=UserRole.ADMIN, user_role_value=user_role_value)
+            if is_admin:
+                logger.info("ADMIN access granted")
+                return True
+            
+            # Check Authority roles
+            logger.info("Checking AUTHORITY roles...")
+            is_authority = (user.role in [UserRole.DISTRICT_AUTHORITY, UserRole.SOCIAL_WELFARE, UserRole.FINANCIAL_INSTITUTION] or
+                          user_role_value in ["DISTRICT_AUTHORITY", "SOCIAL_WELFARE", "FINANCIAL_INSTITUTION"])
+            logger.info("Authority check", is_authority=is_authority, user_role_value=user_role_value)
+            if is_authority:
+                logger.info("AUTHORITY access granted")
+                return True
+            
+            # Check PUBLIC with matching ID
+            logger.info("Checking PUBLIC role with ID match...")
+            # Handle both enum and string comparisons
+            user_role_value = user.role.value if hasattr(user.role, 'value') else str(user.role)
+            is_public = (user.role == UserRole.PUBLIC or 
+                        user_role_value == "PUBLIC" or 
+                        str(user.role) == "PUBLIC" or
+                        str(user.role) == "<UserRole.PUBLIC: 'PUBLIC'>")
+            ids_match = user.id == application_user_id
+            logger.info("Public check", 
+                       is_public=is_public, 
+                       ids_match=ids_match, 
+                       should_allow=is_public and ids_match,
+                       user_role_value=user_role_value,
+                       user_role_str=str(user.role))
+            if is_public and ids_match:
+                logger.info("PUBLIC access granted (IDs match)")
+                return True
+            
+            logger.warning("Permission denied - no conditions met", 
+                          is_public=is_public, 
+                          ids_match=ids_match,
+                          user_role=user.role)
+            return False
+            
+        except Exception as e:
+            logger.error("Exception in permission check", error=str(e), error_type=type(e).__name__)
+            import traceback
+            logger.error("Traceback", traceback=traceback.format_exc())
+            return False
     
     @staticmethod
     def can_edit_application(user: User, application_user_id: str) -> bool:

@@ -96,7 +96,6 @@ const AdminDashboard = () => {
       setStats(mockStats)
       setPendingDocuments(mockPendingDocuments)
     } catch (error) {
-      console.error('Failed to fetch dashboard data:', error)
     } finally {
       setIsLoading(false)
     }
@@ -105,11 +104,9 @@ const AdminDashboard = () => {
   const handleVerifyDocument = async (documentId: string, status: 'VERIFIED' | 'REJECTED') => {
     try {
       // Mock API call
-      console.log(`Verifying document ${documentId} as ${status}`)
       // Update local state
       setPendingDocuments(prev => prev.filter(doc => doc.id !== documentId))
     } catch (error) {
-      console.error('Failed to verify document:', error)
     }
   }
 

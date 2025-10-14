@@ -92,12 +92,25 @@ class AuthService:
             return None
     
     def update_user(self, user_id: str, update_data: dict) -> Optional[User]:
-        """Update user information"""
         try:
+            # Protected UIDAI fields that should not be updated
+            protected_fields = {
+                'full_name', 'father_name', 'date_of_birth', 'age',
+                'gender', 'address', 'phone_number', 'aadhaar_number'
+            }
+            
             user = self.db.query(User).filter(User.id == user_id).first()
             if user:
+                # Filter out protected fields
                 for key, value in update_data.items():
-                    setattr(user, key, value)
+                    if key not in protected_fields:
+                        setattr(user, key, value)
+                    else:
+                        logger.warning(
+                            "Attempted to update protected UIDAI field",
+                            user_id=user_id,
+                            field=key
+                        )
                 self.db.commit()
                 self.db.refresh(user)
             logger.info("User updated successfully", user_id=user_id)

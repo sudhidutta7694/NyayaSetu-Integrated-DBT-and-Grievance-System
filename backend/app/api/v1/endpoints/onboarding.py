@@ -187,6 +187,7 @@ async def complete_onboarding(
         user.gender = data.personal_info.gender
         user.category = data.personal_info.category
         user.phone_number = data.personal_info.mobile_number
+        user.email = data.personal_info.email
         user.address = data.personal_info.address
         user.district = data.personal_info.district
         user.state = data.personal_info.state

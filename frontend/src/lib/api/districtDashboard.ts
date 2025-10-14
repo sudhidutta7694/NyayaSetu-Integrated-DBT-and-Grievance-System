@@ -20,21 +20,46 @@ api.interceptors.request.use((config) => {
 export const districtDashboardApi = {
   // Documents
   getPendingDocuments: async () => {
-    const response = await api.get('/documents/pending');
+    const response = await api.get('/admin/verification/documents/pending');
     return response.data;
   },
-  verifyDocument: async (documentId: string) => {
-    const response = await api.post(`/documents/pending/${documentId}/verify`);
+  verifyDocument: async (documentId: string, status: string = 'VERIFIED', comments?: string) => {
+    const response = await api.post(`/district-authority/documents/${documentId}/verify`, {
+      status,
+      comments
+    });
     return response.data;
   },
-  commentOnDocument: async (documentId: string, comment: string, status: string = 'PENDING') => {
-    const response = await api.post(`/documents/pending/${documentId}/comment`, null, {
-      params: { comment, status },
+  
+  // Applications
+  getPendingApplications: async () => {
+    const response = await api.get('/district-authority/applications/pending');
+    return response.data;
+  },
+  // Get all processed applications by district authority (approved + rejected)
+  getApprovedApplications: async () => {
+    const response = await api.get('/district-authority/applications/approved');
+    return response.data;
+  },
+  getApplicationDetails: async (applicationId: string) => {
+    const response = await api.get(`/district-authority/applications/${applicationId}`);
+    return response.data;
+  },
+  cctnsVerifyApplication: async (applicationId: string, firNumber: string) => {
+    const response = await api.post(`/district-authority/applications/${applicationId}/cctns-verify`, { 
+      fir_number: firNumber 
+    });
+    return response.data;
+  },
+  reviewApplication: async (applicationId: string, action: string, comments?: string) => {
+    const response = await api.post(`/district-authority/applications/${applicationId}/review`, {
+      action,
+      comments
     });
     return response.data;
   },
 
-  // Cases
+  // Cases (keeping for backward compatibility)
   getPendingCases: async () => {
     const response = await api.get('/cases/pending');
     return response.data;

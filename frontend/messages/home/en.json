@@ -1,0 +1,123 @@
+{
+  "hero": {
+    "badge": "Empowering Justice & Dignity",
+    "title": "NyayaSetu",
+    "subtitle": "Integrated DBT & Grievance System for Social Justice",
+    "description": "A unified platform for Direct Benefit Transfer and Grievance Redressal, ensuring effective implementation of PCR Act and PoA Act. Technology-driven, transparent, and accessible for all citizens.",
+    "cta": "Apply Now"
+  },
+  "about": {
+    "title": "About Us",
+    "description": "NyayaSetu is a dedicated platform built to ensure the efficient implementation and seamless delivery of benefits under two key legislations.",
+    "pcrAct": {
+      "title": "PCR Act, 1955",
+      "subtitle": "Protection of Civil Rights Act",
+      "description": "The Protection of Civil Rights Act, 1955 aims to abolish untouchability and ensure equal civil rights for all citizens."
+    },
+    "poaAct": {
+      "title": "PoA Act, 1989",
+      "subtitle": "Prevention of Atrocities Act",
+      "description": "Prevention of Atrocities Act, 1989 aims to prevent atrocities and ensure justice for Scheduled Castes and Scheduled Tribes."
+    }
+  },
+  "features": {
+    "title": "Key Features",
+    "description": "NyayaSetu is a comprehensive platform designed for effective implementation of the PCR Act and PoA Act.",
+    "secure": {
+      "title": "Secure & Transparent",
+      "description": "End-to-end encryption and blockchain-ready architecture for maximum security and transparency in all transactions."
+    },
+    "multiRole": {
+      "title": "Multi-Role Support",
+      "description": "Designed for citizens, district authorities, social welfare departments, and financial institutions."
+    },
+    "realTime": {
+      "title": "Real-time Processing",
+      "description": "Instant verification, tracking, and disbursement with real-time notifications and updates."
+    }
+  },
+  "services": {
+    "title": "Main Services",
+    "applicationSubmission": {
+      "title": "Application Submission",
+      "description": "Submit new applications under the PCR Act and PoA Act through a fast, secure, and hassle-free process."
+    },
+    "applicationTracking": {
+      "title": "Application Tracking",
+      "description": "Effortlessly track your application's real-time status with complete transparency, ensuring you stay informed at every step."
+    },
+    "documentVerification": {
+      "title": "Document Verification",
+      "description": "Upload and verify your documents seamlessly through DigiLocker, ensuring a secure and hassle-free process."
+    },
+    "fundDisbursement": {
+      "title": "Fund Disbursement",
+      "description": "Receive funds directly in your bank account, ensuring a fast, transparent, and highly secure disbursement process."
+    },
+    "grievanceRedressal": {
+      "title": "Grievance Redressal",
+      "description": "Easily register your grievances and receive prompt redressal with dedicated 24×7 support to assist you at every step."
+    },
+    "supportServices": {
+      "title": "Support Services",
+      "description": "Access support through chatbot, helpline, and email, with multilingual assistance to ensure smooth communication."
+    }
+  },
+  "contact": {
+    "title": "Contact Information",
+    "description": "Reach out to us through various channels. We are here to assist you.",
+    "helpline": {
+      "title": "Helpline",
+      "phone1": "+91-11-2338-1234",
+      "phone2": "+91-11-2338-5678",
+      "note": "24x7 Support"
+    },
+    "email": {
+      "title": "Email",
+      "email1": "info@nyayasetu.gov.in",
+      "email2": "support@nyayasetu.gov.in",
+      "note": "Response within 24 hours"
+    },
+    "address": {
+      "title": "Address",
+      "line1": "Ministry of Social Justice & Empowerment",
+      "line2": "Shastri Bhawan",
+      "line3": "New Delhi - 110001"
+    },
+    "hours": {
+      "title": "Working Hours",
+      "days": "Mon - Fri",
+      "time": "9:00 AM - 6:00 PM",
+      "note": "Helpline 24x7"
+    }
+  },
+  "faq": {
+    "title": "Frequently Asked Questions",
+    "description": "Find answers to the most common questions here.",
+    "questions": [
+      {
+        "question": "What is NyayaSetu?",
+        "answer": "NyayaSetu is a comprehensive platform designed for effective implementation of the PCR Act and PoA Act. It provides an integrated solution for Direct Benefit Transfer and Grievance System."
+      },
+      {
+        "question": "How to apply?",
+        "answer": "To apply, first log in using Aadhaar OTP, then upload the required documents and submit your application. The entire process is online."
+      },
+      {
+        "question": "How to check application status?",
+        "answer": "To check your application status, log in to the dashboard and go to the \"Application Status\" section. There you can see the real-time status of all your applications."
+      },
+      {
+        "question": "What documents are required?",
+        "answer": "Required documents include caste certificate, bank passbook, Aadhaar card, and other relevant documents. All documents can be uploaded via DigiLocker."
+      },
+      {
+        "question": "How to register a complaint?",
+        "answer": "To register a complaint, go to the \"Help & Support\" section and click on \"Register Grievance\". Your complaint will be resolved within 24-48 hours."
+      }
+    ]
+  },
+  "accessibility": {
+    "skipToMain": "Skip to main content"
+  }
+}

@@ -19,7 +19,7 @@ import {
   ExternalLink,
   Shield
 } from 'lucide-react'
-import { useLanguage } from '@/contexts/LanguageContext'
+import { useTranslations } from 'next-intl'
 import toast from 'react-hot-toast'
 import { uploadDocument } from '@/lib/api/documents'
 
@@ -66,7 +66,7 @@ export default function DocumentUploadStep({
   uploadedDocumentsS3,
   category 
 }: DocumentUploadStepProps) {
-  const { t } = useLanguage()
+  const t = useTranslations('onboardingDocuments')
   const [isLoading, setIsLoading] = useState(false)
   const [documents, setDocuments] = useState<DocumentFile[]>([])
   const [selectedType, setSelectedType] = useState<string>('')
@@ -105,21 +105,21 @@ export default function DocumentUploadStep({
     const types = [
       {
         id: 'AADHAAR_CARD',
-        name: t('documents.aadhaarCard', 'Aadhaar Card'),
+        name: t('documentTypes.AADHAAR_CARD.name'),
         required: true,
-        description: t('documents.aadhaarDesc', 'Government issued identity proof'),
+        description: t('documentTypes.AADHAAR_CARD.description'),
       },
       {
         id: 'BIRTH_CERTIFICATE',
-        name: t('documents.birthCertificate', 'Birth Certificate'),
+        name: t('documentTypes.BIRTH_CERTIFICATE.name'),
         required: true,
-        description: t('documents.birthDesc', 'Official birth certificate'),
+        description: t('documentTypes.BIRTH_CERTIFICATE.description'),
       },
       {
         id: 'INCOME_CERTIFICATE',
-        name: t('documents.incomeCertificate', 'Income Certificate'),
+        name: t('documentTypes.INCOME_CERTIFICATE.name'),
         required: true,
-        description: t('documents.incomeDesc', 'Annual income proof'),
+        description: t('documentTypes.INCOME_CERTIFICATE.description'),
       },
     ]
 
@@ -127,9 +127,9 @@ export default function DocumentUploadStep({
     if (category && category !== 'GENERAL') {
       types.splice(1, 0, {  // Insert after Aadhaar
         id: 'CATEGORY_CERTIFICATE',
-        name: t('documents.categoryCertificate', 'Category Certificate (SC/ST/OBC)'),
+        name: t('documentTypes.CATEGORY_CERTIFICATE.name'),
         required: true,
-        description: t('documents.categoryDesc', 'Caste/category certificate'),
+        description: t('documentTypes.CATEGORY_CERTIFICATE.description'),
       })
     }
 
@@ -148,13 +148,13 @@ export default function DocumentUploadStep({
     // Validate file type
     const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png']
     if (!allowedTypes.includes(file.type)) {
-      toast.error(t('documents.invalidFileType', 'Please upload PDF, JPG, or PNG files only'))
+      toast.error(t('validation.fileType'))
       return
     }
 
     // Validate file size (10MB)
     if (file.size > 10 * 1024 * 1024) {
-      toast.error(t('documents.fileTooLarge', 'File size must be less than 10MB'))
+      toast.error(t('validation.fileSize'))
       return
     }
 
@@ -163,8 +163,9 @@ export default function DocumentUploadStep({
     
     if (existingDoc) {
       // Show confirmation dialog
+      const docName = documentTypes.find(t => t.id === selectedType)?.name || selectedType
       const confirmReplace = window.confirm(
-        `A ${documentTypes.find(t => t.id === selectedType)?.name} document already exists. Do you want to replace it?`
+        t('messages.replaceConfirm', { documentName: docName })
       )
       
       if (!confirmReplace) {
@@ -174,7 +175,7 @@ export default function DocumentUploadStep({
       
       // Remove old document from state before uploading new one
       setDocuments(prev => prev.filter(doc => doc.type !== selectedType))
-      toast.success(t('documents.replacingDocument', 'Replacing existing document...'))
+      toast.success(t('messages.replacing'))
     }
 
     const tempId = `temp_${selectedType}_${Date.now()}`
@@ -223,7 +224,7 @@ export default function DocumentUploadStep({
           : doc
       ))
 
-      toast.success(t('documents.uploadSuccess', 'Document uploaded successfully'))
+      toast.success(t('messages.uploadSuccess'))
     } catch (error: any) {
       console.error('Upload error:', error)
       setDocuments(prev => prev.map(doc => 
@@ -231,12 +232,12 @@ export default function DocumentUploadStep({
           ? {
               ...doc,
               status: 'REJECTED' as const,
-              error: error.message || 'Upload failed',
+              error: error.message || t('messages.uploadFailed'),
               uploadProgress: 0,
             }
           : doc
       ))
-      toast.error(error.message || t('documents.uploadError', 'Failed to upload document'))
+      toast.error(error.message || t('messages.uploadFailed'))
     }
   }
 
@@ -256,9 +257,9 @@ export default function DocumentUploadStep({
       }
 
       setDocuments(prev => [...prev, newDocument])
-      toast.success(t('documents.digilockerSuccess', 'Document imported from DigiLocker'))
+  toast.success('Document imported from DigiLocker')
     } catch (error) {
-      toast.error(t('documents.digilockerError', 'Failed to import from DigiLocker'))
+  toast.error('Failed to import from DigiLocker')
     } finally {
       setIsLoading(false)
     }
@@ -306,7 +307,7 @@ export default function DocumentUploadStep({
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000))
       
-      toast.success('Documents saved successfully!')
+      toast.success(t('messages.saveSuccess'))
       
       // Collect all uploaded S3 documents
       const s3Documents = documents
@@ -326,7 +327,7 @@ export default function DocumentUploadStep({
         uploadedDocumentsS3: s3Documents
       } as any)
     } catch (error) {
-      toast.error('Failed to save documents')
+      toast.error(t('messages.saveFailed'))
     } finally {
       setIsLoading(false)
     }
@@ -337,7 +338,7 @@ export default function DocumentUploadStep({
       <CardHeader>
         <CardTitle className="flex items-center space-x-2">
           <Upload className="h-6 w-6 text-orange-600" />
-          <span>{t('onboarding.step2.title', 'Document Upload')}</span>
+          <span>{t('title')}</span>
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -345,13 +346,13 @@ export default function DocumentUploadStep({
           {/* Document Requirements */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <h3 className="font-medium text-blue-900 mb-2">
-              {t('documents.requirements', 'Document Requirements')}
+              {t('requirements.title')}
             </h3>
             <ul className="text-sm text-blue-800 space-y-1">
-              <li>• {t('documents.requirements1', 'Supported formats: PDF, JPG, PNG')}</li>
-              <li>• {t('documents.requirements2', 'Maximum file size: 10MB')}</li>
-              <li>• {t('documents.requirements3', 'Documents should be clear and readable')}</li>
-              <li>• {t('documents.requirements4', 'DigiLocker documents are pre-verified')}</li>
+              <li>• {t('requirements.formats')}</li>
+              <li>• {t('requirements.maxSize')}</li>
+              <li>• {t('requirements.quality')}</li>
+              <li>• {t('requirements.digilocker')}</li>
             </ul>
           </div>
 
@@ -366,13 +367,13 @@ export default function DocumentUploadStep({
                     <div className="flex items-center justify-between gap-2 mb-2">
                       <h3 className="font-semibold text-base text-gray-900">{docType.name}</h3>
                       {docType.required && (
-                        <Badge variant="secondary" className="text-xs">Required</Badge>
+                        <Badge variant="secondary" className="text-xs">{t('badges.required')}</Badge>
                       )}
                     </div>
                     {isUploaded && uploadedDoc && (
                       <div className="text-xs text-green-600 flex items-center gap-1 mb-2">
                         <CheckCircle className="h-3 w-3" />
-                        <span>Uploaded: {uploadedDoc.name}</span>
+                        <span>{t('badges.uploaded')}: {uploadedDoc.name}</span>
                       </div>
                     )}
                   </div>
@@ -386,7 +387,7 @@ export default function DocumentUploadStep({
                       className="flex-1 min-w-[120px] font-medium border-gray-300"
                     >
                       <Upload className="h-4 w-4 mr-1" />
-                      {isUploaded ? t('documents.uploaded', 'Uploaded') : t('documents.upload', 'Upload File')}
+                      {isUploaded ? t('buttons.uploaded') : t('buttons.uploadFile')}
                     </Button>
                     <Button
                       type="button"
@@ -397,7 +398,7 @@ export default function DocumentUploadStep({
                       className="flex-1 min-w-[160px] font-medium border-gray-300"
                     >
                       <ExternalLink className="h-4 w-4 mr-1" />
-                      {t('documents.digilocker', 'Import from DigiLocker')}
+                      {t('buttons.digilocker')}
                     </Button>
                   </div>
                 </div>
@@ -419,7 +420,7 @@ export default function DocumentUploadStep({
             <div className="space-y-4">
               <h3 className="font-medium flex items-center space-x-2">
                 <FileText className="h-5 w-5" />
-                <span>{t('documents.uploadedDocuments', 'Uploaded Documents')}</span>
+                <span>{t('uploadedDocuments.title')}</span>
               </h3>
               
               <div className="space-y-3">
@@ -446,7 +447,7 @@ export default function DocumentUploadStep({
                           <div className="flex items-center space-x-1">
                             {getStatusIcon(doc.status)}
                             <span className="text-xs">
-                              {t(`documents.status.${doc.status.toLowerCase()}`, doc.status)}
+                              {doc.status}
                             </span>
                           </div>
                         </Badge>
@@ -458,7 +459,7 @@ export default function DocumentUploadStep({
                             variant="ghost"
                             size="sm"
                             onClick={() => handleViewDocument(doc)}
-                            title={t('documents.view', 'View Document')}
+                            title="View Document"
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
@@ -478,7 +479,7 @@ export default function DocumentUploadStep({
                     {doc.uploadProgress !== undefined && doc.uploadProgress < 100 && (
                       <div className="mt-3">
                         <div className="flex items-center justify-between text-sm mb-1">
-                          <span>{t('documents.uploading', 'Uploading')}...</span>
+                          <span>{t('uploadedDocuments.uploading')}</span>
                           <span>{doc.uploadProgress}%</span>
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-2">
@@ -503,7 +504,7 @@ export default function DocumentUploadStep({
               onClick={onPrevious}
               disabled={isLoading}
             >
-              {t('onboarding.previous', 'Previous')}
+              {t('buttons.previous')}
             </Button>
             <div className="flex gap-3">
               <Button
@@ -528,14 +529,15 @@ export default function DocumentUploadStep({
                 disabled={isLoading}
                 className="border-orange-300 text-orange-700 hover:bg-orange-50"
               >
-                {t('onboarding.skip', 'Skip for Now')}
+                {t('buttons.skip')}
               </Button>
               <Button
                 type="submit"
                 className="bg-orange-600 hover:bg-orange-700"
-                disabled={isLoading}
+                disabled={isLoading || documents.length === 0}
+                title={documents.length === 0 ? "Please upload at least one document to continue" : ""}
               >
-                {isLoading ? t('onboarding.saving', 'Saving...') : t('onboarding.continue', 'Continue')}
+                {isLoading ? t('buttons.saving') : t('buttons.continue')}
               </Button>
             </div>
           </div>
@@ -569,7 +571,7 @@ export default function DocumentUploadStep({
                     <div className="flex items-center space-x-1.5">
                       {getStatusIcon(viewingDocument.status)}
                       <span className="text-xs font-medium">
-                        {t(`documents.status.${viewingDocument.status.toLowerCase()}`, viewingDocument.status)}
+                        {viewingDocument.status}
                       </span>
                     </div>
                   </Badge>
@@ -610,7 +612,7 @@ export default function DocumentUploadStep({
                   <div className="flex items-center justify-center h-96 bg-white rounded-lg shadow-sm">
                     <div className="text-center">
                       <FileText className="h-16 w-16 text-gray-300 mx-auto mb-3" />
-                      <p className="text-gray-500">{t('documents.noPreview', 'No preview available')}</p>
+                      <p className="text-gray-500">No preview available</p>
                     </div>
                   </div>
                 )}
@@ -628,7 +630,7 @@ export default function DocumentUploadStep({
                     className="min-w-[160px] font-medium"
                   >
                     <ExternalLink className="h-4 w-4 mr-2" />
-                    {t('documents.openInNewTab', 'Open in New Tab')}
+                    Open in New Tab
                   </Button>
                 )}
                 <Button
@@ -637,7 +639,7 @@ export default function DocumentUploadStep({
                   onClick={() => setViewingDocument(null)}
                   className="min-w-[120px] bg-orange-600 hover:bg-orange-700 font-medium"
                 >
-                  {t('documents.close', 'Close')}
+                  Close
                 </Button>
               </div>
             </div>

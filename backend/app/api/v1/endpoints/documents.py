@@ -91,11 +91,8 @@ async def confirm_upload(
     """
     Confirm that a file was successfully uploaded to S3.
     
-    NOTE: This endpoint does NOT save to database during onboarding.
-    Documents are only saved to DB when user completes the entire onboarding process.
-    This prevents issues with document replacement during onboarding.
-    
-    Returns S3 metadata that frontend will store temporarily until onboarding completes.
+    For onboarded users: Saves document to database immediately
+    For non-onboarded users: Returns S3 metadata for later batch save
     """
     try:
         # Validate file size (10MB)
@@ -118,7 +115,69 @@ async def confirm_upload(
         region = s3_service.s3_client.meta.region_name
         file_url = f"https://{bucket_name}.s3.{region}.amazonaws.com/{request.s3_key}"
         
-        # Return S3 metadata WITHOUT saving to database
+        # If user is already onboarded, save document to database immediately
+        if current_user.is_onboarded:
+            # Check if document of this type already exists
+            existing_doc = db.query(Document).filter(
+                Document.user_id == str(current_user.id),
+                Document.document_type == request.document_type
+            ).first()
+            
+            if existing_doc:
+                # Replace existing document - delete old S3 file if different
+                if existing_doc.file_path != request.s3_key and not existing_doc.is_digilocker:
+                    try:
+                        s3_service.delete_document(existing_doc.file_path)
+                    except Exception as e:
+                        print(f"Could not delete old S3 file: {e}")
+                
+                # Update existing document
+                existing_doc.document_name = request.filename
+                existing_doc.file_path = request.s3_key
+                existing_doc.file_size = str(request.file_size)
+                existing_doc.mime_type = request.content_type
+                existing_doc.is_digilocker = False
+                existing_doc.digilocker_uri = request.digilocker_id
+                existing_doc.status = DocumentStatus.PENDING
+                existing_doc.verified_at = None
+                existing_doc.verified_by = None
+                existing_doc.verification_notes = None
+                db.commit()
+                db.refresh(existing_doc)
+                document_id = existing_doc.id
+            else:
+                # Create new document
+                new_doc = Document(
+                    user_id=str(current_user.id),
+                    document_type=request.document_type,
+                    document_name=request.filename,
+                    file_path=request.s3_key,
+                    file_size=str(request.file_size),
+                    mime_type=request.content_type,
+                    is_digilocker=False,
+                    digilocker_uri=request.digilocker_id
+                )
+                db.add(new_doc)
+                db.commit()
+                db.refresh(new_doc)
+                document_id = new_doc.id
+            
+            return {
+                "success": True,
+                "message": "Document uploaded and saved successfully",
+                "data": {
+                    "document_id": document_id,
+                    "s3_key": request.s3_key,
+                    "file_url": file_url,
+                    "document_type": request.document_type,
+                    "file_name": request.filename,
+                    "file_size": request.file_size,
+                    "content_type": request.content_type,
+                    "status": "PENDING"
+                }
+            }
+        
+        # For non-onboarded users, return S3 metadata without saving to DB
         # Frontend will store this and send it during onboarding completion
         return {
             "success": True,
@@ -152,16 +211,37 @@ async def get_document_download_url(
 ):
     """
     Get a presigned URL to download a document
+    
+    - Public users can only view their own documents
+    - Authority users (District Authority, Social Welfare, Financial Institution, Admin) can view any document
     """
-    document = db.query(Document).filter(
-        Document.id == document_id,
-        Document.user_id == str(current_user.id)
-    ).first()
+    from models.user import UserRole
+    
+    # Check if user is an authority (can view any document)
+    is_authority = current_user.role in [
+        UserRole.DISTRICT_AUTHORITY,
+        UserRole.SOCIAL_WELFARE,
+        UserRole.FINANCIAL_INSTITUTION,
+        UserRole.ADMIN
+    ]
+    
+    # Query document with appropriate filter
+    if is_authority:
+        # Authority users can view any document
+        document = db.query(Document).filter(
+            Document.id == document_id
+        ).first()
+    else:
+        # Public users can only view their own documents
+        document = db.query(Document).filter(
+            Document.id == document_id,
+            Document.user_id == str(current_user.id)
+        ).first()
     
     if not document:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Document not found"
+            detail="Document not found or access denied"
         )
     
     # file_path contains the S3 key
@@ -217,6 +297,88 @@ async def delete_document(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to delete document: {str(e)}"
         )
+
+
+@router.get("/")
+async def get_documents_by_application(
+    application_id: Optional[str] = None,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Get documents by application_id or list all user documents with presigned URLs
+    """
+    from models.user import UserRole
+    from models.application import Application
+    
+    # Check if user is an authority
+    is_authority = current_user.role in [
+        UserRole.DISTRICT_AUTHORITY,
+        UserRole.SOCIAL_WELFARE,
+        UserRole.FINANCIAL_INSTITUTION,
+        UserRole.ADMIN
+    ]
+    
+    # If application_id provided, get documents for that application
+    if application_id:
+        # First verify the application exists
+        application = db.query(Application).filter(
+            Application.id == application_id
+        ).first()
+        
+        if not application:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Application not found"
+            )
+        
+        # Check permission to view this application's documents
+        if not is_authority and application.user_id != str(current_user.id):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied to this application's documents"
+            )
+        
+        # Get documents for the application's user
+        documents = db.query(Document).filter(
+            Document.user_id == application.user_id
+        ).all()
+    else:
+        # List all documents for the current user
+        documents = db.query(Document).filter(
+            Document.user_id == str(current_user.id)
+        ).all()
+    
+    # Generate presigned URLs for all documents
+    document_list = []
+    for doc in documents:
+        doc_data = {
+            "id": doc.id,
+            "document_type": doc.document_type,
+            "file_name": doc.document_name,
+            "file_size": doc.file_size,
+            "file_path": doc.file_path,
+            "status": doc.status.value,
+            "is_digilocker": doc.is_digilocker,
+            "created_at": doc.created_at.isoformat() if doc.created_at else None,
+            "verified_at": doc.verified_at.isoformat() if doc.verified_at else None,
+            "file_url": None
+        }
+        
+        # Generate presigned URL if file exists in S3
+        if doc.file_path and not doc.is_digilocker:
+            try:
+                s3_service = S3Service()
+                doc_data["file_url"] = s3_service.generate_presigned_download_url(doc.file_path, expiration=3600)
+            except Exception as e:
+                print(f"Failed to generate presigned URL for {doc.id}: {e}")
+        
+        document_list.append(doc_data)
+    
+    return {
+        "success": True,
+        "data": document_list
+    }
 
 
 @router.get("/list")

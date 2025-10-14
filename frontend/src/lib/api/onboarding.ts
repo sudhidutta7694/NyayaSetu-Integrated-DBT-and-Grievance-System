@@ -18,7 +18,6 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
  */
 const getAuthHeaders = () => {
   const token = localStorage.getItem('access_token');
-  console.log('Getting auth headers, token:', token ? token.substring(0, 20) + '...' : 'NO TOKEN');
   return {
     'Content-Type': 'application/json',
     ...(token ? { 'Authorization': `Bearer ${token}` } : {}),

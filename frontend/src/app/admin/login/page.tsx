@@ -9,6 +9,8 @@ import { Label } from '@/components/ui/label'
 import { Shield, Building, Landmark, Users, ArrowLeft, Copy } from 'lucide-react'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
+import { useAuth } from '@/components/providers/AuthProvider'
+
 
 interface DummyCred {
   role: 'DISTRICT_AUTHORITY' | 'FINANCIAL_INSTITUTION' | 'SOCIAL_WELFARE'
@@ -52,6 +54,7 @@ const DUMMY_CREDS: DummyCred[] = [
 
 export default function AdminLoginPage(){
   const router = useRouter()
+  const { login } = useAuth()
   const [loading, setLoading] = useState(false)
   const [form, setForm] = useState({ username: '', password: '' })
 
@@ -78,21 +81,37 @@ export default function AdminLoginPage(){
         return
       }
 
-      // Store mock session
+      // Store mock session with correct key for AuthProvider
+      // Include role in token format: mock-token-{timestamp}-{role}
+       const mockToken = `mock-token-${Date.now()}-${matched.role.toLowerCase()}`
       const mockUser = {
-        id: 'mock-'+matched.role,
+        id: 'mock-' + matched.role,
         role: matched.role,
-        name: matched.title + ' User',
-        access_token: 'mock-token-'+Date.now()
-      }
-      localStorage.setItem('user', JSON.stringify(mockUser))
-      localStorage.setItem('token', mockUser.access_token)
-      toast.success('Logged in as '+ matched.title)
+        full_name: matched.title + ' User',
+        email: form.username,
+        is_active: true,
+        is_verified: true,
+        // --- ADDED THESE LINES ---
+        phone_number: '9876543210', // Dummy phone number
+        is_onboarded: true,          // Dummy value
+        created_at: new Date().toISOString(), // Current timestamp
+        updated_at: new Date().toISOString()  // Current timestamp
+      };
+      
+      // Call the login function from AuthProvider
+      login(mockUser, mockToken);
+
+      toast.success('Logged in as ' + matched.title)
+      
       // Redirect based on role
       if (matched.role === 'FINANCIAL_INSTITUTION') {
-        router.push('/fi/dashboard')
+        router.replace('/fi/dashboard')
+      } else if (matched.role === 'DISTRICT_AUTHORITY') {
+        router.replace('/district/dashboard')
+      } else if (matched.role === 'SOCIAL_WELFARE') {
+        router.replace('/social-welfare/dashboard')
       } else {
-        router.push('/admin/dashboard')
+        router.replace('/')
       }
     } catch(err){
       console.error(err)
@@ -101,6 +120,7 @@ export default function AdminLoginPage(){
       setLoading(false)
     }
   }
+
 
   return (
     <div className='min-h-screen h-screen bg-gradient-to-br from-orange-50 via-white to-green-50 px-4 py-6'>

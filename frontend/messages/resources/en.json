@@ -1,0 +1,68 @@
+{
+  "hero": {
+    "title": "Resources",
+    "subtitle": "Empowering Justice Through Knowledge & Technology",
+    "description": "Access comprehensive information, official documents, and educational materials about PCR Act and PoA Act implementation"
+  },
+  "stats": {
+    "securePlatform": "Secure Platform",
+    "supportAvailable": "Support Available",
+    "majorActs": "Major Acts",
+    "fastProcessing": "Fast Processing"
+  },
+  "videos": {
+    "title": "Educational Videos",
+    "description": "Watch comprehensive tutorials and awareness videos about the platform, application process, and your rights under PCR & PoA Acts",
+    "comingSoon": "Coming Soon",
+    "platformOverview": {
+      "title": "Platform Overview",
+      "description": "Get a complete walkthrough of the NyayaSetu platform. Learn about all features, navigation, and how our technology-driven approach ensures transparent, efficient, and timely delivery of justice and benefits.",
+      "aboutTitle": "About NyayaSetu Platform",
+      "aboutDescription": "NyayaSetu is an integrated digital platform for transparent and efficient delivery of benefits under PCR and PoA Acts, ensuring timely justice for marginalized communities.",
+      "comingSoonText": "Platform overview video will be available shortly",
+      "status": "Coming Soon",
+      "languages": "Hindi & English Available"
+    },
+    "poaAct": {
+      "title": "Understanding PoA Act, 1989",
+      "description": "Learn about the Scheduled Castes and Scheduled Tribes (Prevention of Atrocities) Act, 1989. Understand the protections it provides, types of offenses covered, relief and rehabilitation schemes, and how to access justice under this landmark legislation.",
+      "aboutTitle": "About PoA Act, 1989",
+      "aboutDescription": "The Prevention of Atrocities Act protects Scheduled Castes and Scheduled Tribes from discrimination and atrocities, providing stringent punishment for offenders and ensuring relief and rehabilitation for victims.",
+      "duration": "Duration: 8:15 mins",
+      "languages": "Multiple Languages"
+    },
+    "pcrAct": {
+      "title": "Understanding PCR Act, 1955",
+      "description": "Learn about the Protection of Civil Rights Act, 1955, a pivotal legislation that abolishes untouchability. Understand civil rights protections, legal provisions, inter-caste marriage schemes, and how this Act promotes social equality and dignity for all citizens.",
+      "aboutTitle": "About PCR Act, 1955",
+      "aboutDescription": "The Protection of Civil Rights Act abolishes untouchability and ensures equal civil rights for all citizens, promoting dignity and justice for marginalized communities while criminalizing discriminatory practices.",
+      "duration": "Duration: 6:45 mins",
+      "languages": "6 Regional Languages"
+    }
+  },
+  "additionalResources": {
+    "title": "Additional Resources",
+    "description": "Quick access to forms, templates, and helpful information",
+    "applicationForms": {
+      "title": "Application Forms",
+      "description": "Download printable application forms and templates",
+      "button": "Download Forms"
+    },
+    "userManual": {
+      "title": "User Manual",
+      "description": "Comprehensive guide for using the NyayaSetu platform",
+      "button": "View Manual"
+    },
+    "legalFaqs": {
+      "title": "Legal FAQs",
+      "description": "Common questions about PCR & PoA Acts answered",
+      "button": "Read FAQs"
+    }
+  },
+  "cta": {
+    "title": "Ready to Get Started?",
+    "description": "Join thousands of beneficiaries who have successfully accessed their rights through NyayaSetu",
+    "applyNow": "Apply Now",
+    "learnMore": "Learn More"
+  }
+}

@@ -16,7 +16,6 @@ api.interceptors.request.use((config) => {
   // Only access token storage on the client side
   if (typeof window !== 'undefined') {
     const token = tokenStorage.getToken()
-    console.log('Adding auth token to request:', token ? 'Token found' : 'No token')
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }

@@ -1,0 +1,1041 @@
+'use client'
+import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { ChevronRight, ChevronLeft, CheckCircle } from 'lucide-react'
+import { DocumentUploader, UploadFileMeta } from '@/components/documents/DocumentUploader'
+import { DocumentChecklistProvider, useDocumentChecklist } from '@/contexts/DocumentChecklistContext'
+import toast from 'react-hot-toast'
+import { z } from 'zod'
+import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
+import { LanguageSwitcher } from '@/components/accessibility/LanguageSwitcher'
+
+interface DraftApplication { id:string; step:number; data:Record<string,any>; updatedAt:string }
+interface MappedDoc { id:string; requirementType:string; meta:UploadFileMeta; verificationStatus:'PENDING'|'VERIFIED'|'REJECTED' }
+interface TempDocument { file: File; type: string; label: string; uploadedAt: string }
+const TOTAL_STEPS=5
+
+function WizardInner(){
+  const t = useTranslations('userNewApplication')
+  const { act, setAct, requirements, setUserCategory } = useDocumentChecklist()
+  const router = useRouter()
+  const [currentStep, setCurrentStep] = useState(1)
+  const [applicationData, setApplicationData] = useState<Record<string,any>>({})
+  const [tempFormData, setTempFormData] = useState<Record<string,any>>({})
+  const [isSaving,setIsSaving]=useState(false)
+  const [errors,setErrors]=useState<Record<string,string>>({})
+  const [docs,setDocs]=useState<UploadFileMeta[]>([])
+  const [mapped,setMapped]=useState<MappedDoc[]>([])
+  const [declaration,setDeclaration]=useState(false)
+  const [userProfile, setUserProfile] = useState<any>(null)
+  const [existingDocuments, setExistingDocuments] = useState<any[]>([])
+  const [tempDocuments, setTempDocuments] = useState<TempDocument[]>([]) // Temporary docs not saved to DB yet
+  const [viewingDocument, setViewingDocument] = useState<any | null>(null)
+  const [uploadingType, setUploadingType] = useState<string | null>(null)
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const fileInputRef = React.useRef<HTMLInputElement>(null)
+  const [selectedRequirementType, setSelectedRequirementType] = useState<string | null>(null)
+
+  // Step labels with translations
+  const stepLabels = [
+    t('steps.applicantInfo'),
+    t('steps.incidentDetails'),
+    t('steps.documentChecklist'),
+    t('steps.bankDetails'),
+    t('steps.reviewConsent')
+  ]
+
+  // Reset act when component mounts
+  useEffect(() => {
+    setAct('')
+  }, [])
+
+  // Fetch user profile, existing documents, and bank details
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL
+        const token = localStorage.getItem('access_token')
+        const response = await fetch(`${API_BASE_URL}/users/me`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+        if (response.ok) {
+          const data = await response.json()
+          setUserProfile(data)
+          
+          // Set user category for document checklist (to conditionally require category certificate)
+          if (data.category) {
+            setUserCategory(data.category)
+          }
+          
+          // Auto-fill user data and default incident date in main application object
+          const todayDate = new Date().toISOString().split('T')[0]
+          
+          // Auto-fill bank details if user has them
+          const firstBank = data.bank_accounts && data.bank_accounts.length > 0 ? data.bank_accounts[0] : null
+          
+          setApplicationData(prev => ({
+            ...prev,
+            fullName: data.full_name || '',
+            email: data.email || '',
+            phone: data.phone_number || '',
+            address: data.address || '',
+            district: data.district || '',
+            incidentDate: todayDate,
+            // Bank details - auto-filled if available
+            bankAccountNumber: firstBank?.account_number || '',
+            bankIfscCode: firstBank?.ifsc_code || '',
+            bankName: firstBank?.bank_name || '',
+            bankBranch: firstBank?.branch_name || '',
+            accountHolderName: firstBank?.account_holder_name || ''
+          }))
+        }
+      } catch (error) {
+        // Failed to fetch profile
+      }
+    }
+    
+    const fetchExistingDocuments = async () => {
+      try {
+        const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL
+        const token = localStorage.getItem('access_token')
+        const response = await fetch(`${API_BASE_URL}/documents/list`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+        if (response.ok) {
+          const result = await response.json()
+          setExistingDocuments(result.data || [])
+        }
+      } catch (error) {
+        // Failed to fetch documents
+      }
+    }
+    
+    fetchProfile()
+    fetchExistingDocuments()
+  }, [])
+
+  // Get current data (merge saved + temp) - needs to be defined before effectiveRequirements
+  const currentData = useMemo(() => ({...applicationData, ...tempFormData}), [applicationData, tempFormData])
+
+  // Compute effective requirements based on act + requested benefits and scenario
+  const effectiveRequirements = useMemo(()=>{
+    const base = requirements.map(r=> ({...r}))
+    const benefits: string[] = Array.isArray(applicationData.requestedBenefits)? applicationData.requestedBenefits: []
+    const selectedActType = currentData.actType || ''
+    // Rules to tighten requirements per scenario (heuristics based on acts)
+    if(selectedActType==='PCR_RELIEF'){
+      if(benefits.includes('LEGAL_AID')){
+        const idx = base.findIndex(r=> r.type==='COURT_ORDER'); if(idx>=0) base[idx].required = true
+      }
+      if((applicationData.amountRequested||0) > 0){
+        const idx = base.findIndex(r=> r.type==='MEDICAL_REPORT'); if(idx>=0) base[idx].required = true
+      }
+    } else if(selectedActType==='POA_COMPENSATION'){
+      if(benefits.includes('LEGAL_AID')){
+        const idx = base.findIndex(r=> r.type==='COURT_PROCEEDINGS'); if(idx>=0) base[idx].required = true
+      }
+      if(benefits.includes('REHABILITATION')){
+        const idx = base.findIndex(r=> r.type==='REHAB_PROOF'); if(idx>=0) base[idx].required = true
+      }
+      if((applicationData.amountRequested||0) > 0){
+        const idx = base.findIndex(r=> r.type==='MEDICAL_REPORT'); if(idx>=0) base[idx].required = true
+      }
+    } else if(selectedActType==='INTER_CASTE_MARRIAGE'){
+      // Keep marriage-related docs required, optionally tighten address proof
+      if(benefits.includes('INCENTIVE')){
+        const idx = base.findIndex(r=> r.type==='ADDRESS_PROOF_BOTH'); if(idx>=0) base[idx].required = true
+      }
+    }
+    return base
+  }, [requirements, applicationData, tempFormData])
+
+  // Simple field change handler - updates temp form data immediately
+  function handleFieldChange(name:string,value:any){ 
+    setTempFormData(prev => ({...prev, [name]: value}))
+  }
+  
+  // Save temp form data to main application data when moving to next step
+  function next(){ 
+    if(validate(currentStep)){
+      setApplicationData(prev => ({...prev, ...tempFormData}))
+      setTempFormData({})
+      setCurrentStep(prev => Math.min(TOTAL_STEPS, prev + 1))
+    }
+  }
+  
+  function prev(){ 
+    setCurrentStep(prev => Math.max(1, prev - 1))
+  }
+
+  // Zod schemas per step
+  const stepSchemas: Record<number,z.ZodSchema<any>> = {
+    1: z.object({ 
+      actType: z.string().min(1,'Required'),
+      district: z.string().min(1,'District is required from your profile')
+    }),
+    2: z.object({ 
+      incidentDate: z.string().min(1,'Required'), 
+      policeStation: z.string().min(1,'Police Station is required'),
+      firNumber: z.string().optional(), // Made optional - validated conditionally below
+      incidentDescription: z.string().min(10,'Incident description must be at least 10 characters')
+    }),
+    // Step 3 validation is handled separately in validate() function using tempDocuments
+    4: z.object({
+      bankAccountNumber: z.string().min(9, 'Account number must be at least 9 digits'),
+      bankIfscCode: z.string()
+        .length(11, 'IFSC code must be exactly 11 characters')
+        .regex(/^[A-Z]{4}0[A-Z0-9]{6}$/, 'IFSC code must start with 4 letters, followed by 0, then 6 alphanumeric characters (e.g., SBIN0001234)'),
+      bankName: z.string().min(1, 'Bank name is required'),
+      bankBranch: z.string().min(1, 'Branch name is required'),
+      accountHolderName: z.string().min(1, 'Account holder name is required')
+    })
+  }
+  
+  function validate(step=currentStep){
+    const e:Record<string,string>={}
+    for(let s=1; s<=step; s++){
+      const schema=stepSchemas[s]
+      if(schema){
+        const parse = schema.safeParse(currentData)
+        if(!parse.success){
+          parse.error.issues.forEach(i=> { if(i.path[0]) e[i.path[0] as string]= i.message })
+        }
+      }
+    }
+    
+    // Step 2: Conditional FIR validation - required for all types except INTER_CASTE_MARRIAGE
+    if(step>=2 && currentData.actType !== 'INTER_CASTE_MARRIAGE'){
+      if(!currentData.firNumber || currentData.firNumber.trim() === ''){
+        e.firNumber = 'FIR Number is required'
+      }
+    }
+    // Step 3: Documents (checking temporary documents and existing DB docs)
+    if(step>=3){
+      const required = effectiveRequirements.filter(r=> r.required)
+      
+      // Check both temp documents and existing documents from DB
+      const allDocs = [...tempDocuments, ...existingDocuments.map(d => ({type: d.document_type}))]
+      const covered = required.every(r=> allDocs.some(doc=> doc.type === r.type))
+      
+      if(!covered) {
+        const missing = required.filter(r=> !allDocs.some(doc=> doc.type === r.type))
+        e.documents = `Please upload all required documents. Missing: ${missing.map(m=>m.label).join(', ')}`
+      }
+    }
+    if(step>=5 && !declaration) e.declaration='Accept declaration'
+    setErrors(e)
+    return Object.keys(e).length===0
+  }
+  
+  // Determine max navigable step (must complete validations up to previous step)
+  const maxNavigableStep = useMemo(()=>{
+    // Validate incrementally without mutating errors shown (use safeParse directly)
+    for(let s=1; s<=TOTAL_STEPS; s++){
+      const schema = stepSchemas[s]
+      if(s===5){ // allow entering Review without declaration
+        return 5
+      }
+      if(schema){
+        const parse = schema.safeParse(currentData)
+        if(!parse.success){
+          return Math.max(1, s)
+        }
+      }
+    }
+    return TOTAL_STEPS
+  }, [currentData])
+
+  // Memoized validation for step 5 (Review - used in submit button disabled state)
+  // This prevents infinite re-renders by avoiding setErrors during render
+  const isStep5Valid = useMemo(() => {
+    const finalData = { ...applicationData, ...tempFormData }
+
+    // Check schemas for steps 1, 2, and 4 (bank details)
+    for (let s = 1; s <= 4; s++) {
+      const schema = stepSchemas[s]
+      if (schema) {
+        if (!schema.safeParse(finalData).success) {
+          return false
+        }
+      }
+    }
+    
+    // Check documents (step 3)
+    const required = effectiveRequirements.filter(r => r.required)
+    const allDocs = [...tempDocuments, ...existingDocuments.map(d => ({type: d.document_type}))]
+    const covered = required.every(r => allDocs.some(doc => doc.type === r.type))
+    if (!covered) {
+      return false
+    }
+    
+    // Check declaration (step 5)
+    if (!declaration) {
+      return false
+    }
+    
+    return true // All checks pass
+  }, [applicationData, tempFormData, stepSchemas, effectiveRequirements, existingDocuments, tempDocuments, declaration])
+
+  async function submit(){
+    // Save any remaining temp data before submitting
+    const finalData = {...applicationData, ...tempFormData}
+    
+    if(!validate(4)){ toast.error('Fix validation errors'); return }
+    
+    setIsSaving(true)
+    
+    try {
+      const token = localStorage.getItem('access_token')
+      
+      // Step 1: Upload temporary documents to S3 and save metadata to DB
+      if (tempDocuments.length > 0) {
+        toast('Uploading documents...')
+        
+        const { uploadDocument } = await import('@/lib/api/documents')
+        
+        for (const tempDoc of tempDocuments) {
+          try {
+            await uploadDocument(
+              tempDoc.file,
+              tempDoc.type,
+              undefined, // no digilocker_id
+              (progress) => {
+                // Upload progress callback
+              }
+            )
+          } catch (err: any) {
+            throw new Error(`Failed to upload ${tempDoc.label}: ${err.message}`)
+          }
+        }
+        
+        toast.success('Documents uploaded successfully!')
+      }
+      
+      // Step 2: Save/update bank details to user profile (if provided and different from existing)
+      if (finalData.bankAccountNumber && finalData.bankIfscCode) {
+        // Check if bank details are different from existing
+        const hasExistingBank = userProfile?.bank_accounts && userProfile.bank_accounts.length > 0
+        const firstBank = hasExistingBank ? userProfile.bank_accounts[0] : null
+        
+        const isBankDifferent = !firstBank || 
+          firstBank.account_number !== finalData.bankAccountNumber ||
+          firstBank.ifsc_code !== finalData.bankIfscCode ||
+          firstBank.bank_name !== finalData.bankName ||
+          firstBank.branch_name !== finalData.bankBranch ||
+          firstBank.account_holder_name !== finalData.accountHolderName
+        
+        if (isBankDifferent) {
+          try {
+            toast('Saving bank details...')
+            const { usersApi } = await import('@/lib/api/users')
+            
+            await usersApi.saveBankAccount({
+              account_number: finalData.bankAccountNumber,
+              ifsc_code: finalData.bankIfscCode,
+              bank_name: finalData.bankName,
+              branch_name: finalData.bankBranch,
+              account_holder_name: finalData.accountHolderName
+            })
+            
+            toast.success('Bank details saved to your profile!')
+          } catch (err: any) {
+            // Don't fail the whole submission if bank save fails
+            toast.error('Warning: Bank details could not be saved to profile')
+          }
+        }
+      }
+      
+      // Step 3: Create application with all data
+      const title = `${finalData.actType} Application`.trim()
+      
+      // Convert date string to ISO datetime format (YYYY-MM-DDTHH:mm:ss)
+      let incidentDatetime = null
+      if (finalData.incidentDate) {
+        incidentDatetime = `${finalData.incidentDate}T00:00:00`
+      }
+      
+      // Build application payload for backend
+      const payload = {
+        title: title || 'Application',
+        description: finalData.incidentDescription || '',
+        application_type: finalData.actType,
+        incident_date: incidentDatetime,
+        incident_description: finalData.incidentDescription || '',
+        incident_district: finalData.district,
+        police_station: finalData.policeStation || null,
+        fir_number: finalData.firNumber || null,
+        // Bank details
+        bank_account_number: finalData.bankAccountNumber || null,
+        bank_ifsc_code: finalData.bankIfscCode || null,
+        bank_name: finalData.bankName || null,
+        bank_branch: finalData.bankBranch || null,
+        account_holder_name: finalData.accountHolderName || null
+      }
+      
+      const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL
+      const response = await fetch(`${API_BASE_URL}/applications`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      })
+      
+      if (!response.ok) {
+        const error = await response.json()
+        
+        // Format error message - detail can be a string or array of validation errors
+        let errorMessage = 'Failed to submit application'
+        if (typeof error.detail === 'string') {
+          errorMessage = error.detail
+        } else if (Array.isArray(error.detail)) {
+          errorMessage = error.detail.map((e: any) => e.msg || e.message || JSON.stringify(e)).join(', ')
+        } else if (error.detail) {
+          errorMessage = JSON.stringify(error.detail)
+        }
+        
+        throw new Error(errorMessage)
+      }
+      
+      const result = await response.json()
+      toast.success('Application submitted successfully!')
+      
+      // Navigate to applications page after short delay
+      setTimeout(()=> router.push('/applications'), 1000)
+      
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to submit application')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  function renderStep(){
+    switch(currentStep){
+      case 1:
+        return (
+          <div className='space-y-4'>
+            <label className='block text-sm font-medium'>Application Type <span className='text-red-600'>*</span>
+              <select
+                className='mt-1 w-full border rounded px-3 py-2 text-sm'
+                value={tempFormData.actType || currentData.actType || ''}
+                onChange={e=> { 
+                  const value = e.target.value
+                  setAct(value) // Update context for document requirements
+                  handleFieldChange('actType', value)
+                }}
+              >
+                <option value=''>Select Application Type</option>
+                <option value='PCR_RELIEF'>PCR Relief</option>
+                <option value='POA_COMPENSATION'>PoA Compensation</option>
+                <option value='INTER_CASTE_MARRIAGE'>Inter-Caste Marriage Incentive</option>
+                <option value='OTHER'>Other</option>
+              </select>
+              {errors.actType && <span className='text-red-600 text-xs mt-1 block'>{errors.actType}</span>}
+            </label>
+            
+            <div className='bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3'>
+              <p className='text-sm font-medium text-blue-900'>Your Details (Auto-filled from profile)</p>
+              <div className='grid md:grid-cols-2 gap-3'>
+                <div>
+                  <label className='text-xs text-gray-600'>Full Name</label>
+                  <div className='text-sm font-medium text-gray-900'>{currentData.fullName || 'Loading...'}</div>
+                </div>
+                <div>
+                  <label className='text-xs text-gray-600'>Phone</label>
+                  <div className='text-sm font-medium text-gray-900'>{currentData.phone || 'Loading...'}</div>
+                </div>
+                <div>
+                  <label className='text-xs text-gray-600'>Email</label>
+                  <div className='text-sm font-medium text-gray-900'>{currentData.email || 'Loading...'}</div>
+                </div>
+                <div>
+                  <label className='text-xs text-gray-600'>District</label>
+                  <div className='text-sm font-medium text-gray-900'>{currentData.district || 'Loading...'}</div>
+                </div>
+                <div className='md:col-span-2'>
+                  <label className='text-xs text-gray-600'>Address</label>
+                  <div className='text-sm font-medium text-gray-900'>{currentData.address || 'Loading...'}</div>
+                </div>
+              </div>
+              <p className='text-xs text-gray-500 mt-2'>To update your details, please visit your profile page.</p>
+            </div>
+          </div>
+        )
+      case 2:
+        return (
+          <div className='space-y-4'>
+            <div className='grid md:grid-cols-2 gap-4'>
+              <label className='text-sm font-medium flex flex-col'>Incident Date <span className='text-red-600'>*</span>
+                <input 
+                  type='date' 
+                  className='mt-1 border rounded px-3 py-2 text-sm' 
+                  value={tempFormData.incidentDate || currentData.incidentDate || ''} 
+                  onChange={e=> handleFieldChange('incidentDate',e.target.value)} 
+                />
+                {errors.incidentDate && <span className='text-red-600 text-xs mt-1'>{errors.incidentDate}</span>}
+              </label>
+              <label className='text-sm font-medium flex flex-col'>Police Station <span className='text-red-600'>*</span>
+                <input 
+                  className='mt-1 border rounded px-3 py-2 text-sm' 
+                  value={tempFormData.policeStation || currentData.policeStation||''} 
+                  onChange={e=> handleFieldChange('policeStation',e.target.value)} 
+                />
+                {errors.policeStation && <span className='text-red-600 text-xs mt-1'>{errors.policeStation}</span>}
+              </label>
+            </div>
+            {/* FIR Number - Not required for Inter-Caste Marriage applications */}
+            {(currentData.actType !== 'INTER_CASTE_MARRIAGE') && (
+              <label className='text-sm font-medium flex flex-col'>FIR Number <span className='text-red-600'>*</span>
+                <input 
+                  className='mt-1 border rounded px-3 py-2 text-sm' 
+                  value={tempFormData.firNumber || currentData.firNumber||''} 
+                  onChange={e=> handleFieldChange('firNumber',e.target.value)} 
+                />
+                {errors.firNumber && <span className='text-red-600 text-xs mt-1'>{errors.firNumber}</span>}
+              </label>
+            )}
+            <label className='block text-sm font-medium'>Incident Description <span className='text-red-600'>*</span>
+              <textarea 
+                className='mt-1 w-full border rounded px-3 py-2 text-sm' 
+                rows={4}
+                placeholder='Please describe the incident in detail...'
+                value={tempFormData.incidentDescription || currentData.incidentDescription||''} 
+                onChange={e=> handleFieldChange('incidentDescription',e.target.value)} 
+              />
+              {errors.incidentDescription && <span className='text-red-600 text-xs mt-1 block'>{errors.incidentDescription}</span>}
+            </label>
+          </div>
+        )
+      case 3:
+        const handleFileSelect = (requirementType: string) => {
+          setSelectedRequirementType(requirementType)
+          fileInputRef.current?.click()
+        }
+        
+        const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+          const file = event.target.files?.[0]
+          if (!file || !selectedRequirementType) return
+
+          const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png']
+          if (!allowedTypes.includes(file.type)) {
+            toast.error('Please upload PDF, JPG, or PNG files only')
+            return
+          }
+
+          if (file.size > 10 * 1024 * 1024) {
+            toast.error('File size must be less than 10MB')
+            return
+          }
+
+          try {
+            setUploadingType(selectedRequirementType)
+            setUploadProgress(0)
+
+            // Simulate upload progress
+            for (let i = 0; i <= 100; i += 20) {
+              setUploadProgress(i)
+              await new Promise(resolve => setTimeout(resolve, 100))
+            }
+
+            // Store document temporarily (not in DB yet)
+            const reqLabel = effectiveRequirements.find(r => r.type === selectedRequirementType)?.label || selectedRequirementType
+            const tempDoc: TempDocument = {
+              file: file,
+              type: selectedRequirementType,
+              label: reqLabel,
+              uploadedAt: new Date().toISOString()
+            }
+            
+            setTempDocuments(prev => {
+              // Remove any existing document of this type
+              const filtered = prev.filter(d => d.type !== selectedRequirementType)
+              return [...filtered, tempDoc]
+            })
+            
+            toast.success('Document uploaded! It will be saved when you submit the application.')
+          } catch (error: any) {
+            toast.error(error.message || 'Failed to upload document')
+          } finally {
+            setUploadingType(null)
+            setUploadProgress(0)
+            setSelectedRequirementType(null)
+            if (fileInputRef.current) {
+              fileInputRef.current.value = ''
+            }
+          }
+        }
+        
+        const handleDigilockerImport = async (requirementType: string) => {
+          try {
+            setUploadingType(requirementType)
+            setUploadProgress(0)
+            
+            // Simulate DigiLocker authentication and fetch
+            toast('Connecting to DigiLocker...', { icon: '🔗' })
+            await new Promise(resolve => setTimeout(resolve, 1000))
+            
+            // Simulate progress
+            for (let i = 20; i <= 100; i += 20) {
+              setUploadProgress(i)
+              await new Promise(resolve => setTimeout(resolve, 300))
+            }
+            
+            // Create a mock document file
+            const requirement = effectiveRequirements.find(r => r.type === requirementType)
+            const docLabel = requirement?.label || requirementType
+            const mockFile = new File(
+              ['Mock DigiLocker document content'], 
+              `${docLabel}_DigiLocker.pdf`,
+              { type: 'application/pdf' }
+            )
+            
+            // Store temporarily (will be uploaded on final submission)
+            const tempDoc: TempDocument = {
+              file: mockFile,
+              type: requirementType,
+              label: docLabel,
+              uploadedAt: new Date().toISOString()
+            }
+            
+            setTempDocuments(prev => {
+              const filtered = prev.filter(d => d.type !== requirementType)
+              return [...filtered, tempDoc]
+            })
+            
+            toast.success('Document imported from DigiLocker! It will be saved when you submit the application.')
+          } catch (error: any) {
+            toast.error(error.message || 'Failed to import from DigiLocker')
+          } finally {
+            setUploadingType(null)
+            setUploadProgress(0)
+          }
+        }
+        
+        const handleView = async (doc: any) => {
+          try {
+            // If it's a temporary document, create a blob URL
+            if (doc.is_temp) {
+              const tempDoc = tempDocuments.find(d => d.type === doc.document_type)
+              if (tempDoc) {
+                const blobUrl = URL.createObjectURL(tempDoc.file)
+                setViewingDocument({
+                  ...doc,
+                  file_url: blobUrl
+                })
+              }
+              return
+            }
+            
+            // For existing documents from DB, fetch from S3
+            const { getDocumentDownloadUrl } = await import('@/lib/api/documents')
+            const downloadUrl = await getDocumentDownloadUrl(doc.id)
+            setViewingDocument({
+              ...doc,
+              file_url: downloadUrl
+            })
+          } catch (error) {
+            toast.error('Failed to load document. Please try again.')
+          }
+        }
+        
+        const getDocumentForRequirement = (requirementType: string) => {
+          // Check temp documents first (newly uploaded in this session)
+          const tempDoc = tempDocuments.find(doc => doc.type === requirementType)
+          if (tempDoc) {
+            return {
+              file_name: tempDoc.file.name,
+              created_at: tempDoc.uploadedAt,
+              status: 'PENDING',
+              document_type: tempDoc.type,
+              is_temp: true // Flag to identify temp documents
+            }
+          }
+          // Then check existing documents from DB
+          const doc = existingDocuments.find(doc => doc.document_type === requirementType)
+          return doc
+        }
+        
+        return (
+          <div className='space-y-6'>
+            <p className='text-sm text-gray-600'>Upload required documents below. They will be saved to the database when you submit the application.</p>
+            <div className='text-xs text-gray-500 mb-2'>
+              Temporary uploads: {tempDocuments.length} | Saved in database: {existingDocuments.length}
+            </div>
+            <div className='grid md:grid-cols-2 gap-4'>
+              {effectiveRequirements.map(r=> {
+                const existingDoc = getDocumentForRequirement(r.type)
+                const isUploading = uploadingType === r.type
+                
+                return (
+                  <div key={r.type} className='border border-gray-200 rounded-xl p-6 bg-white shadow-sm flex flex-col gap-4 min-h-[240px]'>
+                    {/* Header */}
+                    <div>
+                      <div className='mb-2'>
+                        <h3 className='font-semibold text-base text-gray-900'>{r.label}</h3>
+                      </div>
+                      {r.sampleUrl && (
+                        <a href={r.sampleUrl} target='_blank' rel='noopener noreferrer' className='text-xs text-orange-600 hover:underline'>
+                          View Sample Document
+                        </a>
+                      )}
+                    </div>
+
+                    {/* Content */}
+                    <div className='flex-1 flex flex-col gap-3'>
+                      {existingDoc ? (
+                        <>
+                          {/* Existing Document Info */}
+                          <div className='bg-gray-50 rounded-lg p-3 space-y-2'>
+                            <div className='flex items-start gap-2'>
+                              <svg className='h-4 w-4 text-orange-600 mt-0.5 flex-shrink-0' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' />
+                              </svg>
+                              <div className='flex-1 min-w-0'>
+                                <p className='text-sm font-medium text-gray-900 truncate'>{existingDoc.file_name}</p>
+                                <p className='text-xs text-gray-500 mt-1'>
+                                  Uploaded: {new Date(existingDoc.created_at).toLocaleDateString('en-IN')}
+                                </p>
+                              </div>
+                            </div>
+                            
+                            {existingDoc.status && (
+                              <div className='inline-flex'>
+                                <span className={`text-[10px] px-2 py-1 rounded font-medium ${
+                                  existingDoc.status === 'VERIFIED' ? 'bg-green-100 text-green-700' :
+                                  existingDoc.status === 'REJECTED' ? 'bg-red-100 text-red-700' :
+                                  'bg-yellow-100 text-yellow-700'
+                                }`}>
+                                  {existingDoc.status}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Actions */}
+                          <div className='flex gap-2 mt-auto'>
+                            <button
+                              type='button'
+                              className='flex-1 text-sm px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50 font-medium flex items-center justify-center gap-1'
+                              onClick={() => handleView(existingDoc)}
+                            >
+                              <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M15 12a3 3 0 11-6 0 3 3 0 016 0z' />
+                                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z' />
+                              </svg>
+                              View
+                            </button>
+                            <button
+                              type='button'
+                              className='flex-1 text-sm px-3 py-2 border border-orange-300 text-orange-600 rounded-md hover:bg-orange-50 font-medium flex items-center justify-center gap-1'
+                              onClick={() => handleFileSelect(r.type)}
+                            >
+                              <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15' />
+                              </svg>
+                              Replace
+                            </button>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          {/* No Document - Show Upload */}
+                          {isUploading ? (
+                            <div className='space-y-2 mt-auto'>
+                              <div className='flex items-center justify-between text-sm text-gray-700'>
+                                <span>Uploading...</span>
+                                <span className='font-semibold'>{uploadProgress}%</span>
+                              </div>
+                              <div className='h-2 bg-gray-200 rounded-full overflow-hidden'>
+                                <div
+                                  className='h-full bg-orange-600 transition-all duration-300'
+                                  style={{ width: `${uploadProgress}%` }}
+                                />
+                              </div>
+                            </div>
+                          ) : (
+                            <div className='flex flex-col gap-3 mt-auto'>
+                              <button
+                                type='button'
+                                className='w-full text-sm px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50 font-medium flex items-center justify-center gap-2'
+                                onClick={() => handleFileSelect(r.type)}
+                              >
+                                <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12' />
+                                </svg>
+                                Upload File
+                              </button>
+                              <button
+                                type='button'
+                                className='w-full text-sm px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50 font-medium flex items-center justify-center gap-2'
+                                onClick={() => handleDigilockerImport(r.type)}
+                              >
+                                <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' />
+                                </svg>
+                                Import from DigiLocker
+                              </button>
+                              <div className='text-xs text-gray-500 text-center'>
+                                PDF, JPG, PNG • Max 10MB
+                              </div>
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+            
+            {/* Hidden file input */}
+            <input
+              ref={fileInputRef}
+              type='file'
+              hidden
+              accept='application/pdf,image/jpeg,image/jpg,image/png'
+              onChange={handleFileUpload}
+            />
+            
+            {errors.documents && <div className='text-red-600 text-sm mt-4'>{errors.documents}</div>}
+          </div>
+        )
+      case 4:
+        // Bank Details Step
+        return (
+          <div className='space-y-6'>
+            <p className='text-sm text-gray-600'>Provide your bank account details for benefit transfer. Your details {userProfile?.bank_accounts?.length > 0 ? 'have been auto-filled from your profile' : 'will be saved to your profile when you submit'}.</p>
+            <div className='grid sm:grid-cols-2 gap-4'>
+              <label className='text-sm font-medium flex flex-col'>Account Holder Name <span className='text-red-600'>*</span>
+                <input 
+                  className='mt-1 border rounded px-3 py-2 text-sm' 
+                  value={tempFormData.accountHolderName !== undefined ? tempFormData.accountHolderName : currentData.accountHolderName||''} 
+                  onChange={e=> handleFieldChange('accountHolderName',e.target.value)} 
+                  placeholder='Full name as per bank account'
+                />
+                {errors.accountHolderName && <span className='text-red-600 text-xs mt-1'>{errors.accountHolderName}</span>}
+              </label>
+              <label className='text-sm font-medium flex flex-col'>Account Number <span className='text-red-600'>*</span>
+                <input 
+                  className='mt-1 border rounded px-3 py-2 text-sm' 
+                  value={tempFormData.bankAccountNumber !== undefined ? tempFormData.bankAccountNumber : currentData.bankAccountNumber||''} 
+                  onChange={e=> handleFieldChange('bankAccountNumber',e.target.value)} 
+                  placeholder='Enter account number'
+                />
+                {errors.bankAccountNumber && <span className='text-red-600 text-xs mt-1'>{errors.bankAccountNumber}</span>}
+              </label>
+              <label className='text-sm font-medium flex flex-col'>IFSC Code <span className='text-red-600'>*</span>
+                <input 
+                  className='mt-1 border rounded px-3 py-2 text-sm uppercase' 
+                  value={tempFormData.bankIfscCode !== undefined ? tempFormData.bankIfscCode : currentData.bankIfscCode||''} 
+                  onChange={e=> handleFieldChange('bankIfscCode',e.target.value.toUpperCase())} 
+                  placeholder='e.g., SBIN0001234'
+                  maxLength={11}
+                />
+                {errors.bankIfscCode ? (
+                  <span className='text-red-600 text-xs mt-1'>{errors.bankIfscCode}</span>
+                ) : (
+                  <span className='text-gray-500 text-xs mt-1'>11-character code (4 letters + 0 + 6 digits)</span>
+                )}
+              </label>
+              <label className='text-sm font-medium flex flex-col'>Bank Name <span className='text-red-600'>*</span>
+                <input 
+                  className='mt-1 border rounded px-3 py-2 text-sm' 
+                  value={tempFormData.bankName !== undefined ? tempFormData.bankName : currentData.bankName||''} 
+                  onChange={e=> handleFieldChange('bankName',e.target.value)} 
+                  placeholder='Name of your bank'
+                />
+                {errors.bankName && <span className='text-red-600 text-xs mt-1'>{errors.bankName}</span>}
+              </label>
+              <label className='text-sm font-medium flex flex-col sm:col-span-2'>Branch Name <span className='text-red-600'>*</span>
+                <input 
+                  className='mt-1 border rounded px-3 py-2 text-sm' 
+                  value={tempFormData.bankBranch !== undefined ? tempFormData.bankBranch : currentData.bankBranch||''} 
+                  onChange={e=> handleFieldChange('bankBranch',e.target.value)} 
+                  placeholder='Branch name and location'
+                />
+                {errors.bankBranch && <span className='text-red-600 text-xs mt-1'>{errors.bankBranch}</span>}
+              </label>
+            </div>
+          </div>
+        )
+      case 5:
+        // Review & Consent Step
+        return (
+          <div className='space-y-4'>
+            <div className='border rounded-md p-4 bg-gray-50 text-sm space-y-2'>
+              <p><strong>Applicant:</strong> {currentData.fullName||'—'} • {currentData.phone||'—'}</p>
+              <p><strong>Email:</strong> {currentData.email||'—'}</p>
+              <p><strong>Application Type:</strong> {currentData.actType?.replace(/_/g, ' ') || 'Not selected'}</p>
+              <p><strong>Incident Date:</strong> {currentData.incidentDate||'—'}</p>
+              <p><strong>District:</strong> {currentData.district||'—'}</p>
+              {currentData.policeStation && <p><strong>Police Station:</strong> {currentData.policeStation}</p>}
+              {/* Only show FIR for non-inter-caste marriage applications */}
+              {currentData.firNumber && currentData.actType !== 'INTER_CASTE_MARRIAGE' && (
+                <p><strong>FIR Number:</strong> {currentData.firNumber}</p>
+              )}
+              <div className='pt-2'>
+                <p className='font-medium'>Incident Description:</p>
+                <p className='text-xs text-gray-700 bg-white p-2 rounded border'>{currentData.incidentDescription || '—'}</p>
+              </div>
+              <p><strong>Documents Attached:</strong> {tempDocuments.length + existingDocuments.length}/{effectiveRequirements.filter(r=> r.required).length} required</p>
+              <div className='pt-2'>
+                <p className='font-medium'>Bank Details</p>
+                <p className='text-[13px] text-gray-700'>{currentData.accountHolderName || '—'} • {currentData.bankAccountNumber ? `****${currentData.bankAccountNumber.slice(-4)}` : '—'}</p>
+                <p className='text-[13px] text-gray-700'>{currentData.bankName || '—'} ({currentData.bankIfscCode || '—'})</p>
+              </div>
+            </div>
+            <label className='flex items-start gap-2 text-sm'>
+              <input type='checkbox' checked={declaration} onChange={e=> setDeclaration(e.target.checked)} />
+              <span>I declare that all the information provided is true and accurate to the best of my knowledge.</span>
+            </label>
+            {errors.declaration && <div className='text-red-600 text-xs'>{errors.declaration}</div>}
+          </div>
+        )
+      default:
+        return null
+    }
+  }
+
+  return (
+    <div className='space-y-8' aria-label='New application wizard'>
+      {/* Language Switcher - Top Right */}
+      <div className="fixed top-4 right-4 z-50">
+        <LanguageSwitcher />
+      </div>
+      
+      <div className='flex items-center justify-between'>
+        <h1 className='text-xl font-semibold tracking-tight'>{t('title')}</h1>
+      </div>
+      <nav aria-label='Progress steps'>
+        <ol className='grid grid-cols-1 md:grid-cols-5 gap-3'>
+          {stepLabels.map((label,idx)=> { const stepNum=idx+1; const active=stepNum===currentStep; const complete=stepNum<currentStep; const allowed=stepNum<=maxNavigableStep; return (
+            <li key={label} className='flex items-center' aria-current={active? 'step':undefined}>
+              <button disabled={!allowed} onClick={()=> allowed && setCurrentStep(stepNum)} className={`group flex-1 border rounded-md px-3 py-2 text-left text-xs md:text-sm focus:outline-none ${active?'ring-2 ring-orange-500':''} ${allowed? 'bg-white hover:bg-gray-50 focus:ring-2 focus:ring-orange-500':'bg-gray-100 text-gray-400 cursor-not-allowed'}`} title={!allowed? 'Complete previous steps to continue': undefined}>
+                <span className='flex items-center gap-2'>
+                  <span className={`h-5 w-5 inline-flex items-center justify-center rounded-full text-[11px] font-medium ${complete?'bg-green-600 text-white': active? 'bg-orange-600 text-white':'bg-gray-200 text-gray-600'}`}>{complete? <CheckCircle className='h-3 w-3' />: stepNum}</span>
+                  <span>{label}</span>
+                </span>
+              </button>
+            </li>) })}
+        </ol>
+      </nav>
+      <Card className='border-gray-200'>
+        <CardHeader><CardTitle className='text-lg'>{stepLabels[currentStep-1]}</CardTitle></CardHeader>
+        <CardContent>
+          {renderStep()}
+          <div className='flex items-center justify-between mt-10'>
+            <div className='flex gap-2'>
+              <Button variant='outline' disabled={currentStep===1} onClick={prev}><ChevronLeft className='h-4 w-4 mr-1' />Prev</Button>
+              {currentStep<TOTAL_STEPS && <Button onClick={next}>Next<ChevronRight className='h-4 w-4 ml-1' /></Button>}
+            </div>
+            <div className='flex gap-2'>
+              {currentStep===TOTAL_STEPS && <Button className='bg-orange-600 hover:bg-orange-700' disabled={!isStep5Valid || isSaving} onClick={submit}>
+                {isSaving ? 'Submitting...' : 'Submit Application'}
+              </Button>}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Document Viewer Modal */}
+      {viewingDocument && viewingDocument.file_url && (
+        <div 
+          className='fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4'
+          onClick={() => setViewingDocument(null)}
+        >
+          <div 
+            className='bg-white rounded-xl shadow-2xl max-w-5xl w-full max-h-[95vh] flex flex-col'
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className='flex items-center justify-between px-6 py-4 border-b bg-gradient-to-r from-orange-50 to-white'>
+              <div className='flex items-center space-x-3'>
+                <div className='p-2 bg-orange-100 rounded-lg'>
+                  <svg className='h-5 w-5 text-orange-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className='font-semibold text-lg text-gray-900'>{viewingDocument.file_name}</h3>
+                  <p className='text-sm text-gray-600'>{viewingDocument.document_type?.replace(/_/g, ' ')}</p>
+                </div>
+              </div>
+              <button
+                type='button'
+                onClick={() => setViewingDocument(null)}
+                className='text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg h-9 w-9 p-0 flex items-center justify-center'
+              >
+                <span className='text-xl'>×</span>
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className='flex-1 overflow-auto p-6 bg-gray-50'>
+              {viewingDocument.file_url ? (
+                viewingDocument.file_name.toLowerCase().endsWith('.pdf') ? (
+                  // PDF Viewer using iframe
+                  <div className='bg-white rounded-lg shadow-sm overflow-hidden h-[calc(95vh-180px)]'>
+                    <iframe
+                      src={viewingDocument.file_url}
+                      className='w-full h-full'
+                      title={viewingDocument.file_name}
+                    />
+                  </div>
+                ) : (
+                  // Image Viewer
+                  <div className='flex items-center justify-center bg-white rounded-lg shadow-sm p-4 min-h-[calc(95vh-180px)]'>
+                    <img
+                      src={viewingDocument.file_url}
+                      alt={viewingDocument.file_name}
+                      className='max-w-full h-auto max-h-[calc(95vh-200px)] object-contain rounded-lg'
+                    />
+                  </div>
+                )
+              ) : (
+                <div className='flex items-center justify-center h-96 bg-white rounded-lg shadow-sm'>
+                  <div className='text-center'>
+                    <svg className='h-16 w-16 text-gray-300 mx-auto mb-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' />
+                    </svg>
+                    <p className='text-gray-500'>No preview available</p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className='flex items-center justify-center gap-3 px-6 py-4 border-t bg-white'>
+              {viewingDocument.file_url && (
+                <button
+                  type='button'
+                  onClick={() => window.open(viewingDocument.file_url, '_blank')}
+                  className='px-6 py-2 border border-gray-300 rounded-md hover:bg-gray-50 font-medium flex items-center gap-2'
+                >
+                  <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14' />
+                  </svg>
+                  Open in New Tab
+                </button>
+              )}
+              <button
+                type='button'
+                onClick={() => setViewingDocument(null)}
+                className='px-6 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-md font-medium'
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+export default function NewApplicationWizard(){
+  return <DocumentChecklistProvider><WizardInner /></DocumentChecklistProvider>
+}

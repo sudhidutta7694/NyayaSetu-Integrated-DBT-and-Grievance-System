@@ -1,0 +1,75 @@
+{
+  "title": "আমার নথি",
+  "subtitle": "আপনার আপলোড করা নথি পরিচালনা করুন। প্রতিটি নথি প্রকারে শুধুমাত্র একটি ফাইল থাকতে পারে।",
+  "buttons": {
+    "refresh": "রিফ্রেশ করুন",
+    "view": "দেখুন",
+    "download": "ডাউনলোড করুন",
+    "replace": "নথি প্রতিস্থাপন করুন",
+    "uploadFile": "ফাইল আপলোড করুন",
+    "importDigilocker": "DigiLocker থেকে আমদানি করুন",
+    "openNewTab": "নতুন ট্যাবে খুলুন",
+    "close": "বন্ধ করুন"
+  },
+  "documentTypes": {
+    "AADHAAR_CARD": {
+      "name": "আধার কার্ড",
+      "description": "সরকার কর্তৃক জারি পরিচয় প্রমাণ"
+    },
+    "PAN_CARD": {
+      "name": "প্যান কার্ড",
+      "description": "স্থায়ী অ্যাকাউন্ট নম্বর কার্ড"
+    },
+    "BIRTH_CERTIFICATE": {
+      "name": "জন্ম সনদ",
+      "description": "সরকারী জন্ম সনদ"
+    },
+    "BANK_PASSBOOK": {
+      "name": "ব্যাংক পাসবুক",
+      "description": "ব্যাংক অ্যাকাউন্ট প্রমাণ"
+    },
+    "CATEGORY_CERTIFICATE": {
+      "name": "বিভাগ সনদ",
+      "description": "SC/ST/OBC সনদ"
+    },
+    "INCOME_CERTIFICATE": {
+      "name": "আয় সনদ",
+      "description": "বার্ষিক আয়ের প্রমাণ"
+    },
+    "MARRIAGE_CERTIFICATE": {
+      "name": "বিবাহ সনদ",
+      "description": "আইনি বিবাহ প্রমাণ"
+    }
+  },
+  "status": {
+    "PENDING": "মুলতুবি",
+    "VERIFIED": "যাচাইকৃত",
+    "REJECTED": "প্রত্যাখ্যাত",
+    "UNDER_REVIEW": "পর্যালোচনাধীন"
+  },
+  "upload": {
+    "uploading": "আপলোড হচ্ছে...",
+    "fileInfo": "PDF, JPG, PNG • সর্বোচ্চ 10MB",
+    "replaceConfirm": "{docType} ইতিমধ্যে বিদ্যমান। আপনি কি এটি প্রতিস্থাপন করতে চান?"
+  },
+  "labels": {
+    "uploaded": "আপলোড করা হয়েছে",
+    "digilocker": "DigiLocker"
+  },
+  "messages": {
+    "uploadSuccess": "নথি সফলভাবে আপলোড করা হয়েছে",
+    "uploadFailed": "নথি আপলোড করতে ব্যর্থ",
+    "downloadSuccess": "নথি ডাউনলোড করা হয়েছে",
+    "downloadFailed": "নথি ডাউনলোড করতে ব্যর্থ",
+    "loadFailed": "নথি লোড করতে ব্যর্থ",
+    "viewFailed": "নথি লোড করতে ব্যর্থ",
+    "invalidFileType": "অনুগ্রহ করে শুধুমাত্র PDF, JPG, বা PNG ফাইল আপলোড করুন",
+    "fileSizeExceeded": "ফাইলের আকার 10MB এর কম হতে হবে",
+    "connectingDigilocker": "DigiLocker এর সাথে সংযোগ স্থাপন করা হচ্ছে...",
+    "digilockerSuccess": "DigiLocker থেকে নথি সফলভাবে আমদানি করা হয়েছে",
+    "digilockerFailed": "DigiLocker থেকে আমদানি করতে ব্যর্থ"
+  },
+  "viewer": {
+    "noPreview": "কোন পূর্বরূপ উপলব্ধ নেই"
+  }
+}

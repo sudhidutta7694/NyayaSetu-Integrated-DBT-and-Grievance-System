@@ -71,15 +71,13 @@ class UserBase(BaseModel):
 
 
 class UserUpdate(BaseModel):
-    """User update model"""
-    full_name: Optional[str] = None
-    father_name: Optional[str] = None
+    """User update model - only allows editing non-UIDAI fields"""
+    # UIDAI fields (cannot be updated): full_name, father_name, date_of_birth, age, gender, address, phone_number
+    # Note: age is calculated from date_of_birth and both come from UIDAI
+    
+    # Editable fields
     mother_name: Optional[str] = None
-    date_of_birth: Optional[datetime] = None
-    age: Optional[int] = None
-    gender: Optional[Gender] = None
     category: Optional[Category] = None
-    address: Optional[str] = None
     district: Optional[str] = None
     state: Optional[str] = None
     pincode: Optional[str] = None
@@ -99,10 +97,25 @@ class User(UserBase):
     is_active: bool
     is_verified: bool
     is_onboarded: bool
-    onboarding_step: int
+    onboarding_step: Optional[int] = None
     created_at: datetime
     updated_at: datetime
     last_login: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
+class BankAccountResponse(BaseModel):
+    """Bank account response model"""
+    id: str
+    account_number: str
+    ifsc_code: str
+    bank_name: str
+    branch_name: str
+    account_holder_name: str
+    is_verified: bool
+    created_at: datetime
 
     class Config:
         from_attributes = True
@@ -130,9 +143,10 @@ class UserProfile(BaseModel):
     is_active: bool
     is_verified: bool
     is_onboarded: bool
-    onboarding_step: int
+    onboarding_step: Optional[int] = None
     created_at: datetime
     updated_at: datetime
+    bank_accounts: Optional[list] = []
 
     class Config:
         from_attributes = True

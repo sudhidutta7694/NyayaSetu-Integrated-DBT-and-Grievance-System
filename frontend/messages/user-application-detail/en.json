@@ -1,0 +1,104 @@
+{
+  "header": {
+    "backButton": "Back",
+    "requested": "Requested",
+    "approved": "Approved",
+    "notAllocated": "Not allocated yet",
+    "downloadPdf": "Download PDF",
+    "print": "Print"
+  },
+  "toast": {
+    "officialDownloaded": "Official sanction order downloaded!",
+    "mockDownloaded": "Mock PDF downloaded successfully!",
+    "loadFailed": "Failed to load application details",
+    "documentLoadFailed": "Failed to load document",
+    "messagingComingSoon": "Messaging feature coming soon"
+  },
+  "status": {
+    "documentsApproved": "Documents Approved",
+    "documentsRejected": "Documents Rejected",
+    "socialWelfareRejected": "Social Welfare Rejected",
+    "fiRejected": "Financial Institution Rejected",
+    "applicationRejected": "Application Rejected"
+  },
+  "accordion": {
+    "title": "Complete Application Details",
+    "basicInformation": {
+      "title": "Basic Information",
+      "applicationNumber": "Application Number",
+      "titleLabel": "Title",
+      "description": "Description",
+      "applicationType": "Application Type",
+      "firNumber": "FIR Number",
+      "cctnsVerified": "Verified with CCTNS",
+      "cctnsNotVerified": "Not Verified",
+      "amountApproved": "Amount Approved"
+    },
+    "applicantInformation": {
+      "title": "Applicant Information",
+      "fullName": "Full Name",
+      "email": "Email",
+      "phone": "Phone",
+      "aadhaar": "Aadhaar Number",
+      "dateOfBirth": "Date of Birth",
+      "gender": "Gender",
+      "address": "Address"
+    },
+    "reviewComments": {
+      "title": "Review Comments",
+      "districtComments": "District Authority Comments",
+      "socialWelfareComments": "Social Welfare Comments"
+    }
+  },
+  "timeline": {
+    "title": "Application Timeline",
+    "stages": {
+      "submitted": "Submitted",
+      "districtReview": "District Review",
+      "socialWelfareReview": "Social Welfare Review",
+      "financialInstitution": "Financial Institution",
+      "completed": "Completed"
+    },
+    "statusLabels": {
+      "completed": "completed",
+      "rejected": "rejected",
+      "inProgress": "in progress",
+      "pending": "pending"
+    },
+    "ariaLabels": {
+      "on": "on"
+    },
+    "inProgress": "In progress…",
+    "pendingLabel": "Pending",
+    "legend": {
+      "completed": "Completed",
+      "rejected": "Rejected",
+      "current": "Current",
+      "upcoming": "Upcoming"
+    }
+  },
+  "documents": {
+    "title": "Application Documents",
+    "count": "{count}",
+    "status": {
+      "verified": "VERIFIED",
+      "pending": "PENDING",
+      "rejected": "REJECTED"
+    },
+    "viewButton": "View",
+    "noDocuments": "No documents uploaded yet",
+    "modal": {
+      "close": "Close",
+      "openInNewTab": "Open in New Tab",
+      "noPreview": "No preview available"
+    }
+  },
+  "messages": {
+    "title": "Messages / Reviewer Comments",
+    "placeholder": "Type a message",
+    "sendButton": "Send",
+    "noComments": "No comments yet"
+  },
+  "loading": "Loading...",
+  "notAvailable": "-"
+}

@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { ShieldCheck, ArrowLeft, Wallet, Clock, AlertTriangle } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 
 interface BeneficiaryDetail {
   id: string
@@ -13,7 +13,6 @@ interface BeneficiaryDetail {
   bank: { ifsc: string; accountMasked: string; kycStatus: 'VERIFIED' | 'PENDING' | 'FAILED' }
   documents: { type: string; status: 'VERIFIED' | 'PENDING' | 'REJECTED' }[]
   disbursements: { id: string; amount: number; status: string; ts: string }[]
-  riskFlags: string[]
 }
 
 export default function BeneficiaryDetailPage(){
@@ -39,8 +38,7 @@ export default function BeneficiaryDetailPage(){
         disbursements: [
           { id:'TXN34210', amount:15000, status:'COMPLETED', ts: new Date(Date.now()-86400000).toISOString() },
           { id:'TXN34255', amount:5000, status:'PENDING', ts: new Date().toISOString() }
-        ],
-        riskFlags: id==='4'? ['Name mismatch vs bank record','Previous failure - retry'] : []
+        ]
       })
       setLoading(false)
     }, 500)
@@ -120,24 +118,7 @@ export default function BeneficiaryDetailPage(){
                 </ul>
               </CardContent>
             </Card>
-            <Card className='lg:col-span-6'>
-              <CardHeader>
-                <CardTitle>Risk & Validation</CardTitle>
-              </CardHeader>
-              <CardContent className='space-y-4 text-sm'>
-                <div className='flex items-center gap-2 text-green-700'><ShieldCheck className='h-4 w-4' /> <span>e-KYC Passed (Demographic)</span></div>
-                <div className='flex items-center gap-2 text-green-700'><Wallet className='h-4 w-4' /> <span>NPCI Seeded Account</span></div>
-                <div className='flex items-center gap-2 text-green-700'><Clock className='h-4 w-4' /> <span>No pending compliance holds</span></div>
-                {data.riskFlags.length>0 && (
-                  <div className='space-y-2'>
-                    <p className='text-xs font-semibold text-red-600 flex items-center gap-1'><AlertTriangle className='h-4 w-4' /> Risk Flags</p>
-                    <ul className='list-disc list-inside text-[11px] text-red-600 space-y-1'>
-                      {data.riskFlags.map(r=> <li key={r}>{r}</li>)}
-                    </ul>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+
           </div>
         </>
       )}

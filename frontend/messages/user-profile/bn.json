@@ -1,0 +1,95 @@
+{
+  "title": "প্রোফাইল",
+  "editButton": "প্রোফাইল সম্পাদনা করুন",
+  "loading": "লোড হচ্ছে...",
+  "retry": "পুনরায় চেষ্টা করুন",
+  "failedToLoad": "প্রোফাইল লোড করতে ব্যর্থ",
+  "accountDetails": {
+    "title": "অ্যাকাউন্ট বিবরণ",
+    "uidaiNote": "🔒 চিহ্নিত ক্ষেত্রগুলি UIDAI/আধার থেকে যাচাইকৃত এবং সম্পাদনা করা যাবে না।",
+    "fromUidai": "UIDAI/আধার থেকে",
+    "calculatedFromDob": "জন্ম তারিখ থেকে গণনা করা",
+    "fields": {
+      "fullName": "সম্পূর্ণ নাম",
+      "email": "ইমেইল",
+      "phone": "ফোন",
+      "aadhaar": "আধার",
+      "fatherName": "পিতার নাম",
+      "motherName": "মাতার নাম",
+      "dateOfBirth": "জন্ম তারিখ",
+      "age": "বয়স",
+      "ageYears": "{age} বছর",
+      "gender": "লিঙ্গ",
+      "category": "শ্রেণী",
+      "address": "ঠিকানা",
+      "district": "জেলা",
+      "state": "রাজ্য",
+      "pincode": "পিনকোড",
+      "role": "ভূমিকা",
+      "verification": "যাচাইকরণ"
+    },
+    "genderOptions": {
+      "select": "লিঙ্গ নির্বাচন করুন",
+      "male": "পুরুষ",
+      "female": "মহিলা",
+      "other": "অন্যান্য",
+      "preferNotToSay": "বলতে চাই না"
+    },
+    "categoryOptions": {
+      "select": "শ্রেণী নির্বাচন করুন",
+      "sc": "তফসিলি জাতি",
+      "st": "তফসিলি উপজাতি",
+      "obc": "অন্যান্য পশ্চাদপদ শ্রেণী",
+      "general": "সাধারণ",
+      "other": "অন্যান্য"
+    },
+    "verificationStatus": {
+      "verified": "যাচাইকৃত",
+      "pending": "মুলতুবি"
+    }
+  },
+  "bankDetails": {
+    "title": "ব্যাংক বিবরণ",
+    "editButton": "সম্পাদনা করুন",
+    "addButton": "যোগ করুন",
+    "bankDetailsText": "ব্যাংক বিবরণ",
+    "accountNumber": "{index}",
+    "noBankAccount": "এখনও কোনো ব্যাংক অ্যাকাউন্ট যুক্ত করা হয়নি। সুবিধা স্থানান্তরের জন্য আপনার ব্যাংক তথ্য যোগ করতে \"ব্যাংক বিবরণ যোগ করুন\" ক্লিক করুন।",
+    "fields": {
+      "accountHolderName": "অ্যাকাউন্ট ধারকের নাম",
+      "accountHolderPlaceholder": "ব্যাংক অনুযায়ী সম্পূর্ণ নাম",
+      "accountNumber": "অ্যাকাউন্ট নম্বর",
+      "accountNumberPlaceholder": "9-18 সংখ্যা",
+      "ifscCode": "IFSC কোড",
+      "ifscPlaceholder": "XXXX0XXXXXX",
+      "bankName": "ব্যাংকের নাম",
+      "bankNamePlaceholder": "যেমন, স্টেট ব্যাংক অফ ইন্ডিয়া",
+      "branchName": "শাখার নাম",
+      "branchPlaceholder": "যেমন, মুম্বাই প্রধান শাখা",
+      "status": "অবস্থা"
+    },
+    "verificationStatus": {
+      "verified": "যাচাইকৃত",
+      "pending": "যাচাইকরণ মুলতুবি"
+    }
+  },
+  "buttons": {
+    "saveChanges": "পরিবর্তন সংরক্ষণ করুন",
+    "saving": "সংরক্ষণ করা হচ্ছে...",
+    "cancel": "বাতিল করুন",
+    "saveBankDetails": "ব্যাংক বিবরণ সংরক্ষণ করুন"
+  },
+  "toasts": {
+    "profileUpdated": "প্রোফাইল সফলভাবে আপডেট হয়েছে",
+    "profileUpdateFailed": "প্রোফাইল আপডেট করতে ব্যর্থ",
+    "bankSaved": "ব্যাংক বিবরণ সফলভাবে সংরক্ষিত হয়েছে",
+    "bankSaveFailed": "ব্যাংক বিবরণ সংরক্ষণ করতে ব্যর্থ",
+    "fillAllFields": "অনুগ্রহ করে সমস্ত ব্যাংক বিবরণ ক্ষেত্র পূরণ করুন",
+    "invalidIfsc": "অবৈধ IFSC কোড বিন্যাস",
+    "invalidAccountNumber": "অ্যাকাউন্ট নম্বর 9-18 সংখ্যার মধ্যে হতে হবে",
+    "loadFailed": "প্রোফাইল লোড করতে ব্যর্থ"
+  },
+  "notProvided": "প্রদান করা হয়নি",
+  "maskedAccount": "****{last4}",
+  "maskedAadhaar": "****{last4}"
+}

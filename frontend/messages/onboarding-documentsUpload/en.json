@@ -1,0 +1,58 @@
+{
+  "title": "Document Upload",
+  "requirements": {
+    "title": "Document Requirements",
+    "formats": "Supported formats: PDF, JPG, PNG",
+    "maxSize": "Maximum file size: 10MB",
+    "quality": "Documents should be clear and readable",
+    "digilocker": "DigiLocker documents are pre-verified"
+  },
+  "documentTypes": {
+    "AADHAAR_CARD": {
+      "name": "Aadhaar Card",
+      "description": "Government issued identity proof"
+    },
+    "BIRTH_CERTIFICATE": {
+      "name": "Birth Certificate",
+      "description": "Official birth certificate"
+    },
+    "INCOME_CERTIFICATE": {
+      "name": "Income Certificate",
+      "description": "Annual income proof"
+    },
+    "CATEGORY_CERTIFICATE": {
+      "name": "Category Certificate (SC/ST/OBC)",
+      "description": "Caste/category certificate"
+    }
+  },
+  "uploadedDocuments": {
+    "title": "Uploaded Documents",
+    "uploading": "Uploading..."
+  },
+  "badges": {
+    "required": "Required",
+    "uploaded": "Uploaded",
+    "digilocker": "DigiLocker"
+  },
+  "buttons": {
+    "uploadFile": "Upload File",
+    "uploaded": "Uploaded",
+    "digilocker": "Import from DigiLocker",
+    "previous": "Previous",
+    "skip": "Skip for Now",
+    "continue": "Continue",
+    "saving": "Saving..."
+  },
+  "validation": {
+    "fileType": "Please upload PDF, JPG, or PNG files only",
+    "fileSize": "File size must be less than 10MB"
+  },
+  "messages": {
+    "uploadSuccess": "Document uploaded successfully",
+    "uploadFailed": "Failed to upload document",
+    "replacing": "Replacing existing document...",
+    "replaceConfirm": "A {documentName} document already exists. Do you want to replace it?",
+    "saveSuccess": "Documents saved successfully!",
+    "saveFailed": "Failed to save documents"
+  }
+}

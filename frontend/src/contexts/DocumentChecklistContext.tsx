@@ -6,62 +6,82 @@ interface ChecklistContextValue {
   act: string
   setAct: (act: string) => void
   requirements: DocRequirement[]
+  userCategory: string | null
+  setUserCategory: (category: string | null) => void
 }
 
 const DocumentChecklistContext = createContext<ChecklistContextValue | undefined>(undefined)
 
-// Detailed requirements per Act (mandatory first, then optional)
+// All documents are mandatory for all application types
+// Using backend DocumentType enum values: AADHAAR_CARD, PAN_CARD, BIRTH_CERTIFICATE, BANK_PASSBOOK, CATEGORY_CERTIFICATE, INCOME_CERTIFICATE, MARRIAGE_CERTIFICATE
+// Category certificate is only required for non-GENERAL categories (SC/ST/OBC)
 const ACT_MAP: Record<string, DocRequirement[]> = {
-  PCR: [
-    { type: 'CASTE_CERTIFICATE', label: 'Caste Certificate (SC)', required: true, sampleUrl: '#' },
-    { type: 'FIR_COPY', label: 'FIR / Police Report Copy', required: true },
-    { type: 'IDENTITY_PROOF', label: 'Identity Proof (Aadhaar / Voter / PAN)', required: true },
-    { type: 'BANK_PASSBOOK', label: 'Bank Passbook (First Page)', required: true },
-    { type: 'APPLICANT_PHOTO', label: 'Photograph of Applicant', required: true },
-    { type: 'MEDICAL_REPORT', label: 'Medical / Injury Certificate', required: false },
-    { type: 'COURT_ORDER', label: 'Court Order / Charge Sheet', required: false },
-    { type: 'ADDRESS_PROOF', label: 'Address Proof', required: false },
-    { type: 'AFFIDAVIT', label: 'Affidavit / Declaration', required: false, sampleUrl: '#' }
+  PCR_RELIEF: [
+    { type: 'AADHAAR_CARD', label: 'Aadhaar Card', required: true },
+    { type: 'BANK_PASSBOOK', label: 'Bank Passbook', required: true },
+    { type: 'PAN_CARD', label: 'PAN Card', required: true },
+    { type: 'BIRTH_CERTIFICATE', label: 'Birth Certificate', required: true },
+    { type: 'INCOME_CERTIFICATE', label: 'Income Certificate', required: true }
   ],
-  POA: [
-    { type: 'CASTE_CERTIFICATE', label: 'Caste Certificate (SC/ST)', required: true },
-    { type: 'FIR_COPY_POA', label: 'FIR Copy (PoA Sections)', required: true },
-    { type: 'IDENTITY_PROOF', label: 'Identity Proof (Aadhaar / Voter)', required: true },
-    { type: 'BANK_PASSBOOK', label: 'Bank Passbook (First Page)', required: true },
-    { type: 'APPLICANT_PHOTO', label: 'Photograph of Applicant', required: true },
-    { type: 'MEDICAL_REPORT', label: 'Medical / Post-Mortem / Hospital Cert.', required: false },
-    { type: 'COURT_PROCEEDINGS', label: 'Court Proceedings / Charge Sheet', required: false },
-    { type: 'LAND_DAMAGE_CERT', label: 'Land Ownership / Damage Certificate', required: false },
-    { type: 'REHAB_PROOF', label: 'Rehabilitation / Shelter Proof', required: false },
-    { type: 'DISABILITY_CERT', label: 'Disability Certificate', required: false },
-    { type: 'AFFIDAVIT', label: 'Declaration / Affidavit', required: false, sampleUrl: '#' }
+  POA_COMPENSATION: [
+    { type: 'AADHAAR_CARD', label: 'Aadhaar Card', required: true },
+    { type: 'BANK_PASSBOOK', label: 'Bank Passbook', required: true },
+    { type: 'PAN_CARD', label: 'PAN Card', required: true },
+    { type: 'BIRTH_CERTIFICATE', label: 'Birth Certificate', required: true },
+    { type: 'INCOME_CERTIFICATE', label: 'Income Certificate', required: true }
   ],
-  INCENTIVE: [
-    { type: 'MARRIAGE_CERTIFICATE', label: 'Marriage Certificate (Registered)', required: true },
-    { type: 'CASTE_CERTIFICATE_PARTNER', label: 'Caste Certificates (Both Partners)', required: true },
-    { type: 'IDENTITY_PROOF_BOTH', label: 'Identity Proof (Both Partners)', required: true },
-    { type: 'COUPLE_PHOTO', label: 'Joint Photograph', required: true },
-    { type: 'BANK_PASSBOOK', label: 'Bank Passbook (Joint/Either)', required: true },
-    { type: 'ADDRESS_PROOF_BOTH', label: 'Address Proof (Before & After)', required: false },
-    { type: 'AFFIDAVIT_BOTH', label: 'Affidavit (Both Partners)', required: false },
-    { type: 'MARRIAGE_INVITE', label: 'Marriage Invitation / Witness Statements', required: false },
-    { type: 'INCOME_CERTIFICATE', label: 'Income Certificate (Optional)', required: false }
+  INTER_CASTE_MARRIAGE: [
+    { type: 'MARRIAGE_CERTIFICATE', label: 'Marriage Certificate', required: true },
+    { type: 'AADHAAR_CARD', label: 'Aadhaar Card', required: true },
+    { type: 'BANK_PASSBOOK', label: 'Bank Passbook', required: true },
+    { type: 'PAN_CARD', label: 'PAN Card', required: true },
+    { type: 'BIRTH_CERTIFICATE', label: 'Birth Certificate', required: true },
+    { type: 'INCOME_CERTIFICATE', label: 'Income Certificate', required: true }
+  ],
+  OTHER: [
+    { type: 'AADHAAR_CARD', label: 'Aadhaar Card', required: true },
+    { type: 'BANK_PASSBOOK', label: 'Bank Passbook', required: true },
+    { type: 'PAN_CARD', label: 'PAN Card', required: true },
+    { type: 'BIRTH_CERTIFICATE', label: 'Birth Certificate', required: true },
+    { type: 'INCOME_CERTIFICATE', label: 'Income Certificate', required: true }
   ]
 }
 
 export const DocumentChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [act, setActState] = useState('PCR')
+  const [act, setActState] = useState('')
+  const [userCategory, setUserCategory] = useState<string | null>(null)
+  
   // hydrate from localStorage
   useEffect(()=> {
     try { const stored = localStorage.getItem('nyaya.act'); if(stored) setActState(stored) } catch {}
   },[])
+  
   const setAct = (next:string) => {
     setActState(next)
     try { localStorage.setItem('nyaya.act', next) } catch {}
   }
-  const requirements = useMemo(()=> ACT_MAP[act] || [], [act])
+  
+  // Get base requirements and add category certificate if user is not GENERAL
+  const requirements = useMemo(() => {
+    const baseRequirements = ACT_MAP[act] || ACT_MAP['OTHER'] || []
+    
+    // Add category certificate requirement if user is SC/ST/OBC (not GENERAL)
+    if (userCategory && userCategory !== 'GENERAL') {
+      // Check if category certificate is already in the list
+      const hasCategoryCert = baseRequirements.some(r => r.type === 'CATEGORY_CERTIFICATE')
+      if (!hasCategoryCert) {
+        return [
+          ...baseRequirements,
+          { type: 'CATEGORY_CERTIFICATE', label: `Category Certificate (${userCategory})`, required: true }
+        ]
+      }
+    }
+    
+    return baseRequirements
+  }, [act, userCategory])
+  
   return (
-    <DocumentChecklistContext.Provider value={{ act, setAct, requirements }}>
+    <DocumentChecklistContext.Provider value={{ act, setAct, requirements, userCategory, setUserCategory }}>
       {children}
     </DocumentChecklistContext.Provider>
   )

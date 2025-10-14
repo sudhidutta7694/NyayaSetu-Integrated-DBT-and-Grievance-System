@@ -1,3 +1,5 @@
+// AuthProvider.tsx - UPDATED
+
 'use client'
 
 import { createContext, useContext, useEffect, useState } from 'react'
@@ -10,6 +12,8 @@ import { socialWelfareAuthApi } from '@/lib/api/socialWelfareAuth'
 interface AuthContextType {
   user: User | null
   loading: boolean
+  // Add the login function to the context type
+  login: (user: User, token: string) => void
   logout: () => void
   refreshUser: () => Promise<void>
 }
@@ -26,7 +30,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const checkAuth = async () => {
-    // Only run on client side
     if (typeof window === 'undefined') {
       setLoading(false)
       return
@@ -34,58 +37,61 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     try {
       const token = tokenStorage.getToken()
-      console.log('Checking auth, token exists:', !!token)
-      console.log('Token value:', token ? token.substring(0, 30) + '...' : 'NO TOKEN')
+      console.log('Checking auth, token:', token ? token.substring(0, 30) + '...' : 'NO TOKEN')
       
       if (token) {
-        // Try default user endpoint first
-        try {
-          const userData = await authApi.getCurrentUser()
-          setUser(userData)
-        } catch (e) {
-          // If fails, try social welfare endpoint
+        // --- FIX FOR REFRESH WITH MOCK TOKEN ---
+        // If it's a mock token, parse it instead of making an API call
+        if (token.startsWith('mock-token-')) {
+          const storedUser = localStorage.getItem('user');
+          if (storedUser) {
+            setUser(JSON.parse(storedUser));
+          } else {
+             // Fallback if user object isn't in local storage
+             throw new Error("Mock user not found in storage");
+          }
+        } else {
+          // Your existing logic for real API calls
           try {
+            const userData = await authApi.getCurrentUser()
+            setUser(userData)
+          } catch (e) {
             const userData = await socialWelfareAuthApi.getCurrentUser()
             setUser(userData)
-          } catch (err) {
-            localStorage.removeItem('access_token')
-            setUser(null)
           }
         }
       }
     } catch (error: any) {
       console.error('Auth check failed:', error)
-      console.error('Error details:', error.response?.data || error.message)
-      
-      // Only remove token if it's actually an auth error (401)
-      if (error.response?.status === 401) {
-        console.log('Token invalid, removing from storage')
-        tokenStorage.removeToken()
-      } else {
-        console.log('Auth check failed but keeping token (may be network error)')
-      }
+      tokenStorage.removeToken() // Clear bad token
+      setUser(null)
     } finally {
       setLoading(false)
     }
   }
 
+  // --- NEW LOGIN FUNCTION ---
+  const login = (userData: User, token: string) => {
+    tokenStorage.setToken(token);
+    // Also store the mock user for refresh purposes
+    localStorage.setItem('user', JSON.stringify(userData));
+    setUser(userData);
+  }
+
   const logout = () => {
     tokenStorage.removeToken()
+    localStorage.removeItem('user'); // Clean up mock user too
     setUser(null)
     router.push('/')
   }
 
   const refreshUser = async () => {
-    try {
-      const userData = await authApi.getCurrentUser()
-      setUser(userData)
-    } catch (error) {
-      logout()
-    }
+    // This function might need adjustment depending on real vs mock
+    await checkAuth();
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, logout, refreshUser }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   )
@@ -98,4 +104,3 @@ export function useAuth() {
   }
   return context
 }
-

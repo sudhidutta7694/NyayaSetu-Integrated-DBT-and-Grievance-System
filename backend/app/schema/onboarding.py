@@ -52,6 +52,7 @@ class PersonalInfoData(BaseModel):
     gender: Gender
     category: Category
     mobile_number: str
+    email: Optional[str] = None
     address: str
     district: str
     state: str
@@ -97,14 +98,20 @@ class BankDetailsData(BaseModel):
     @validator('account_number')
     def validate_account_number(cls, v):
         if not v.isdigit() or len(v) < 9 or len(v) > 18:
-            raise ValueError('Invalid account number format')
+            raise ValueError('Account number must be 9-18 digits')
         return v
 
     @validator('ifsc_code')
     def validate_ifsc_code(cls, v):
-        if len(v) != 11 or not v[:4].isalpha():
-            raise ValueError('Invalid IFSC code format')
-        return v.upper()
+        import re
+        v = v.upper()
+        # IFSC format: First 4 letters (bank code), 5th character is 0, last 6 are alphanumeric (branch code)
+        # Example: SBIN0001234, HDFC0000123
+        if len(v) != 11:
+            raise ValueError('IFSC code must be exactly 11 characters')
+        if not re.match(r'^[A-Z]{4}0[A-Z0-9]{6}$', v):
+            raise ValueError('Invalid IFSC code format. Must start with 4 letters, followed by 0, then 6 alphanumeric characters (e.g., SBIN0001234)')
+        return v
 
 
 class OnboardingProgress(BaseModel):

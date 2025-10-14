@@ -1,6 +1,6 @@
 'use client'
 import React from 'react'
-import { CheckCircle, Clock, AlertCircle } from 'lucide-react'
+import { CheckCircle, Clock, XCircle } from 'lucide-react'
 
 export interface StatusBadgeProps {
   status: string
@@ -10,38 +10,39 @@ export interface StatusBadgeProps {
   className?: string
 }
 
-const ICONS: Record<string, JSX.Element> = {
-  APPROVED: <CheckCircle className="h-3.5 w-3.5" />,
-  VERIFIED: <CheckCircle className="h-3.5 w-3.5" />,
-  UNDER_REVIEW: <Clock className="h-3.5 w-3.5" />,
-  SUBMITTED: <Clock className="h-3.5 w-3.5" />,
-  PENDING: <Clock className="h-3.5 w-3.5" />,
-  DRAFT: <Clock className="h-3.5 w-3.5" />,
-  REJECTED: <AlertCircle className="h-3.5 w-3.5" />,
-  DISBURSED: <CheckCircle className="h-3.5 w-3.5" />
+function getIconForStatus(status: string): JSX.Element {
+  const upperStatus = status?.toUpperCase() || '';
+  
+  // Red - Rejection states
+  if (upperStatus.includes('REJECT')) {
+    return <XCircle className="h-3.5 w-3.5" />;
+  }
+  
+  // Green - Approval states
+  if (upperStatus.includes('APPROVED') || upperStatus.includes('DISBURSED') || 
+      upperStatus.includes('COMPLETED') || upperStatus.includes('VERIFIED')) {
+    return <CheckCircle className="h-3.5 w-3.5" />;
+  }
+  
+  // Blue - Submitted/In Progress states (default)
+  return <Clock className="h-3.5 w-3.5" />;
 }
 
 function classFor(status: string){
-  const map: Record<string,string> = {
-    DRAFT: 'status-badge status-draft',
-    SUBMITTED: 'status-badge status-submitted',
-    UNDER_REVIEW: 'status-badge status-under-review',
-    APPROVED: 'status-badge status-approved',
-    REJECTED: 'status-badge status-rejected',
-    DISBURSED: 'status-badge status-disbursed',
-    VERIFIED: 'status-badge status-approved',
-    PENDING: 'status-badge status-pending'
-  }
-  return map[status] || 'status-badge status-draft'
+  // Convert status to lowercase and replace underscores with hyphens for CSS class
+  const statusKey = status?.toLowerCase().replace(/_/g, '-') || 'draft'
+  return `status-badge status-${statusKey}`
 }
 
 export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, label, tooltip, officerName, className }) => {
   const base = classFor(status)
-  const content = label || status.replace(/_/g,' ')
+  const content = (label || status.replace(/_/g,' ')).toUpperCase()
+  const icon = getIconForStatus(status)
+  
   return (
     <span className={`relative group ${base} ${className||''}`} aria-label={`Status ${content}${officerName? ' verified by '+officerName:''}`}>
       <span className="flex items-center gap-1">
-        {ICONS[status] || ICONS['DRAFT']}
+        {icon}
         <span>{content}</span>
       </span>
       {(tooltip || officerName) && (

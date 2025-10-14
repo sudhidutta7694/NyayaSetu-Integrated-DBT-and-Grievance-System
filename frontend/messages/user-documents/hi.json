@@ -1,0 +1,75 @@
+{
+  "title": "मेरे दस्तावेज़",
+  "subtitle": "अपने अपलोड किए गए दस्तावेज़ों का प्रबंधन करें। प्रत्येक दस्तावेज़ प्रकार में केवल एक फ़ाइल हो सकती है।",
+  "buttons": {
+    "refresh": "रीफ्रेश करें",
+    "view": "देखें",
+    "download": "डाउनलोड करें",
+    "replace": "दस्तावेज़ बदलें",
+    "uploadFile": "फ़ाइल अपलोड करें",
+    "importDigilocker": "DigiLocker से आयात करें",
+    "openNewTab": "नए टैब में खोलें",
+    "close": "बंद करें"
+  },
+  "documentTypes": {
+    "AADHAAR_CARD": {
+      "name": "आधार कार्ड",
+      "description": "सरकार द्वारा जारी पहचान प्रमाण"
+    },
+    "PAN_CARD": {
+      "name": "पैन कार्ड",
+      "description": "स्थायी खाता संख्या कार्ड"
+    },
+    "BIRTH_CERTIFICATE": {
+      "name": "जन्म प्रमाण पत्र",
+      "description": "आधिकारिक जन्म प्रमाण पत्र"
+    },
+    "BANK_PASSBOOK": {
+      "name": "बैंक पासबुक",
+      "description": "बैंक खाते का प्रमाण"
+    },
+    "CATEGORY_CERTIFICATE": {
+      "name": "श्रेणी प्रमाण पत्र",
+      "description": "एससी/एसटी/ओबीसी प्रमाण पत्र"
+    },
+    "INCOME_CERTIFICATE": {
+      "name": "आय प्रमाण पत्र",
+      "description": "वार्षिक आय का प्रमाण"
+    },
+    "MARRIAGE_CERTIFICATE": {
+      "name": "विवाह प्रमाण पत्र",
+      "description": "कानूनी विवाह प्रमाण"
+    }
+  },
+  "status": {
+    "PENDING": "लंबित",
+    "VERIFIED": "सत्यापित",
+    "REJECTED": "अस्वीकृत",
+    "UNDER_REVIEW": "समीक्षाधीन"
+  },
+  "upload": {
+    "uploading": "अपलोड हो रहा है...",
+    "fileInfo": "PDF, JPG, PNG • अधिकतम 10MB",
+    "replaceConfirm": "{docType} पहले से मौजूद है। क्या आप इसे बदलना चाहते हैं?"
+  },
+  "labels": {
+    "uploaded": "अपलोड किया गया",
+    "digilocker": "DigiLocker"
+  },
+  "messages": {
+    "uploadSuccess": "दस्तावेज़ सफलतापूर्वक अपलोड किया गया",
+    "uploadFailed": "दस्तावेज़ अपलोड करने में विफल",
+    "downloadSuccess": "दस्तावेज़ डाउनलोड किया गया",
+    "downloadFailed": "दस्तावेज़ डाउनलोड करने में विफल",
+    "loadFailed": "दस्तावेज़ लोड करने में विफल",
+    "viewFailed": "दस्तावेज़ लोड करने में विफल",
+    "invalidFileType": "कृपया केवल PDF, JPG, या PNG फ़ाइलें अपलोड करें",
+    "fileSizeExceeded": "फ़ाइल का आकार 10MB से कम होना चाहिए",
+    "connectingDigilocker": "DigiLocker से कनेक्ट हो रहा है...",
+    "digilockerSuccess": "DigiLocker से दस्तावेज़ सफलतापूर्वक आयात किया गया",
+    "digilockerFailed": "DigiLocker से आयात करने में विफल"
+  },
+  "viewer": {
+    "noPreview": "कोई पूर्वावलोकन उपलब्ध नहीं"
+  }
+}

@@ -1,0 +1,171 @@
+{
+  "title": "नया आवेदन",
+  "subtitle": "अपना आवेदन जमा करने के लिए सभी चरण पूरे करें",
+  "steps": {
+    "applicantInfo": "आवेदक की जानकारी",
+    "incidentDetails": "घटना का विवरण",
+    "documentChecklist": "दस्तावेज़ सूची",
+    "bankDetails": "बैंक विवरण",
+    "reviewConsent": "समीक्षा और सहमति"
+  },
+  "buttons": {
+    "prev": "पिछला",
+    "next": "अगला",
+    "submit": "आवेदन जमा करें",
+    "submitting": "जमा किया जा रहा है...",
+    "uploadFile": "फ़ाइल अपलोड करें",
+    "importDigilocker": "DigiLocker से आयात करें",
+    "view": "देखें",
+    "replace": "बदलें",
+    "openNewTab": "नए टैब में खोलें",
+    "close": "बंद करें"
+  },
+  "step1": {
+    "title": "आवेदन प्रकार",
+    "required": "आवश्यक",
+    "selectType": "आवेदन प्रकार चुनें",
+    "types": {
+      "pcrRelief": "PCR राहत",
+      "poaCompensation": "PoA मुआवजा",
+      "interCasteMarriage": "अंतर-जाति विवाह प्रोत्साहन",
+      "other": "अन्य"
+    },
+    "profileSection": {
+      "title": "आपका विवरण (प्रोफ़ाइल से स्वतः भरा गया)",
+      "fullName": "पूरा नाम",
+      "phone": "फ़ोन",
+      "email": "ईमेल",
+      "district": "जिला",
+      "address": "पता",
+      "updateNote": "अपना विवरण अपडेट करने के लिए, कृपया अपने प्रोफ़ाइल पेज पर जाएं।"
+    },
+    "errors": {
+      "typeRequired": "आवेदन प्रकार आवश्यक है",
+      "districtRequired": "आपके प्रोफ़ाइल से जिला आवश्यक है"
+    }
+  },
+  "step2": {
+    "incidentDate": "घटना की तारीख",
+    "policeStation": "पुलिस स्टेशन",
+    "firNumber": "एफआईआर संख्या",
+    "firHint": "'FIR' से शुरू होना चाहिए और कम से कम 8 वर्ण होने चाहिए (उदा., FIR12345)",
+    "incidentDescription": "घटना का विवरण",
+    "descriptionPlaceholder": "कृपया घटना का विस्तार से वर्णन करें...",
+    "firNotRequired": "अंतर-जाति विवाह आवेदनों के लिए FIR नंबर आवश्यक नहीं है",
+    "errors": {
+      "dateRequired": "घटना की तारीख आवश्यक है",
+      "policeStationRequired": "पुलिस स्टेशन आवश्यक है",
+      "firRequired": "FIR नंबर आवश्यक है",
+      "descriptionMinLength": "घटना का विवरण कम से कम 10 अक्षरों का होना चाहिए",
+      "descriptionRequired": "घटना का विवरण आवश्यक है"
+    }
+  },
+  "step3": {
+    "title": "दस्तावेज़ सूची",
+    "subtitle": "नीचे आवश्यक दस्तावेज़ अपलोड करें। जब आप आवेदन जमा करेंगे तो वे डेटाबेस में सहेजे जाएंगे।",
+    "viewSample": "नमूना दस्तावेज़ देखें",
+    "uploadStatus": "अस्थायी अपलोड: {temp} | डेटाबेस में सहेजे गए: {saved}",
+    "uploading": "अपलोड हो रहा है...",
+    "uploadProgress": "{progress}%",
+    "fileTypes": "PDF, JPG, PNG • अधिकतम 10MB",
+    "docInfo": {
+      "uploaded": "अपलोड किया गया:",
+      "status": "स्थिति:"
+    },
+    "statuses": {
+      "verified": "सत्यापित",
+      "rejected": "अस्वीकृत",
+      "pending": "लंबित"
+    },
+    "documentTypes": {
+      "AADHAAR_CARD": "आधार कार्ड",
+      "PAN_CARD": "पैन कार्ड",
+      "BIRTH_CERTIFICATE": "जन्म प्रमाण पत्र",
+      "BANK_PASSBOOK": "बैंक पासबुक",
+      "CATEGORY_CERTIFICATE": "श्रेणी प्रमाण पत्र",
+      "INCOME_CERTIFICATE": "आय प्रमाण पत्र",
+      "MARRIAGE_CERTIFICATE": "विवाह प्रमाण पत्र"
+    },
+    "errors": {
+      "documentsRequired": "कृपया सभी आवश्यक दस्तावेज़ अपलोड करें। गुम: {missing}",
+      "invalidFileType": "कृपया केवल PDF, JPG, या PNG फ़ाइलें अपलोड करें",
+      "fileSizeExceeded": "फ़ाइल का आकार 10MB से कम होना चाहिए"
+    },
+    "toasts": {
+      "uploadSuccess": "दस्तावेज़ अपलोड हो गया! जब आप आवेदन जमा करेंगे तो यह सहेजा जाएगा।",
+      "digilockerConnecting": "DigiLocker से कनेक्ट हो रहा है...",
+      "digilockerSuccess": "DigiLocker से दस्तावेज़ आयात किया गया! जब आप आवेदन जमा करेंगे तो यह सहेजा जाएगा।",
+      "uploadFailed": "{label} अपलोड करने में विफल: {error}",
+      "viewFailed": "दस्तावेज़ लोड करने में विफल। कृपया पुनः प्रयास करें।"
+    }
+  },
+  "step4": {
+    "title": "बैंक खाता विवरण",
+    "subtitle": "लाभ हस्तांतरण के लिए अपना बैंक खाता विवरण प्रदान करें। आपका विवरण {status}।",
+    "statusAutoFilled": "आपके प्रोफ़ाइल से स्वतः भर दिया गया है",
+    "statusWillBeSaved": "जब आप जमा करेंगे तो आपके प्रोफ़ाइल में सहेजा जाएगा",
+    "accountHolderName": "खाता धारक का नाम",
+    "accountHolderPlaceholder": "बैंक रिकॉर्ड के अनुसार",
+    "accountNumber": "खाता संख्या",
+    "accountNumberPlaceholder": "अपना बैंक खाता संख्या दर्ज करें",
+    "accountNumberHint": "9-18 अंक केवल संख्यात्मक",
+    "ifscCode": "IFSC कोड",
+    "ifscPlaceholder": "उदा., SBIN0001234",
+    "ifscHint": "11 वर्ण (4 अक्षर + 0 + 6 अल्फान्यूमेरिक)",
+    "bankName": "बैंक का नाम",
+    "bankNamePlaceholder": "आपके बैंक का नाम",
+    "branchName": "शाखा का नाम",
+    "branchPlaceholder": "शाखा का नाम और स्थान",
+    "errors": {
+      "accountHolderRequired": "खाताधारक का नाम आवश्यक है",
+      "accountNumberMinLength": "खाता संख्या कम से कम 9 अंकों की होनी चाहिए",
+      "accountNumberMaxLength": "खाता संख्या 18 अंकों से अधिक नहीं होनी चाहिए",
+      "accountNumberDigitsOnly": "खाता संख्या में केवल अंक होने चाहिए",
+      "accountNumberRequired": "खाता संख्या आवश्यक है",
+      "ifscLength": "IFSC कोड बिल्कुल 11 अक्षरों का होना चाहिए",
+      "ifscFormat": "IFSC कोड 4 अक्षरों से शुरू होना चाहिए, उसके बाद 0, फिर 6 अल्फान्यूमेरिक अक्षर (उदा., SBIN0001234)",
+      "ifscRequired": "IFSC कोड आवश्यक है",
+      "bankNameRequired": "बैंक का नाम आवश्यक है",
+      "branchRequired": "शाखा का नाम आवश्यक है"
+    }
+  },
+  "step5": {
+    "title": "समीक्षा और जमा करें",
+    "reviewTitle": "आवेदन सारांश",
+    "applicant": "आवेदक",
+    "email": "ईमेल",
+    "applicationType": "आवेदन प्रकार",
+    "incidentDate": "घटना की तारीख",
+    "district": "जिला",
+    "policeStation": "पुलिस स्टेशन",
+    "firNumber": "FIR नंबर",
+    "incidentDescription": "घटना का विवरण",
+    "documentsAttached": "संलग्न दस्तावेज़",
+    "requiredDocs": "{uploaded}/{required} आवश्यक",
+    "bankDetails": "बैंक विवरण",
+    "accountMasked": "****{last4}",
+    "notProvided": "—",
+    "typeNotSelected": "चयनित नहीं",
+    "declaration": {
+      "text": "मैं घोषणा करता/करती हूं कि प्रदान की गई सभी जानकारी मेरी जानकारी के अनुसार सत्य और सटीक है।",
+      "error": "आगे बढ़ने के लिए आपको घोषणा स्वीकार करनी होगी"
+    }
+  },
+  "validation": {
+    "completePreviousSteps": "जारी रखने के लिए पिछले चरण पूरे करें",
+    "fixErrors": "सत्यापन त्रुटियों को ठीक करें"
+  },
+  "messages": {
+    "uploadingDocuments": "दस्तावेज़ अपलोड हो रहे हैं...",
+    "documentsUploaded": "दस्तावेज़ सफलतापूर्वक अपलोड हो गए!",
+    "savingBankDetails": "बैंक विवरण सहेजा जा रहा है...",
+    "bankDetailsSaved": "बैंक विवरण आपके प्रोफ़ाइल में सहेजा गया!",
+    "bankSaveWarning": "चेतावनी: बैंक विवरण प्रोफ़ाइल में सहेजा नहीं जा सका",
+    "submissionSuccess": "आवेदन सफलतापूर्वक जमा किया गया!",
+    "submissionFailed": "आवेदन जमा करने में विफल"
+  },
+  "common": {
+    "loading": "लोड हो रहा है...",
+    "required": "आवश्यक"
+  }
+}

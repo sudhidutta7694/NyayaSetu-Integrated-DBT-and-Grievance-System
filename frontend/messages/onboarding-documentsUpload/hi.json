@@ -1,0 +1,58 @@
+{
+  "title": "दस्तावेज़ अपलोड",
+  "requirements": {
+    "title": "दस्तावेज़ आवश्यकताएँ",
+    "formats": "समर्थित प्रारूप: PDF, JPG, PNG",
+    "maxSize": "अधिकतम फ़ाइल आकार: 10MB",
+    "quality": "दस्तावेज़ स्पष्ट और पठनीय होने चाहिए",
+    "digilocker": "DigiLocker दस्तावेज़ पूर्व-सत्यापित हैं"
+  },
+  "documentTypes": {
+    "AADHAAR_CARD": {
+      "name": "आधार कार्ड",
+      "description": "सरकार द्वारा जारी पहचान प्रमाण"
+    },
+    "BIRTH_CERTIFICATE": {
+      "name": "जन्म प्रमाण पत्र",
+      "description": "आधिकारिक जन्म प्रमाण पत्र"
+    },
+    "INCOME_CERTIFICATE": {
+      "name": "आय प्रमाण पत्र",
+      "description": "वार्षिक आय प्रमाण"
+    },
+    "CATEGORY_CERTIFICATE": {
+      "name": "श्रेणी प्रमाण पत्र (अनु.जाति/अनु.जनजाति/अन्य पिछड़ा वर्ग)",
+      "description": "जाति/श्रेणी प्रमाण पत्र"
+    }
+  },
+  "uploadedDocuments": {
+    "title": "अपलोड किए गए दस्तावेज़",
+    "uploading": "अपलोड हो रहा है..."
+  },
+  "badges": {
+    "required": "आवश्यक",
+    "uploaded": "अपलोड किया गया",
+    "digilocker": "DigiLocker"
+  },
+  "buttons": {
+    "uploadFile": "फ़ाइल अपलोड करें",
+    "uploaded": "अपलोड किया गया",
+    "digilocker": "DigiLocker से आयात करें",
+    "previous": "पिछला",
+    "skip": "अभी के लिए छोड़ें",
+    "continue": "जारी रखें",
+    "saving": "सहेजा जा रहा है..."
+  },
+  "validation": {
+    "fileType": "कृपया केवल PDF, JPG, या PNG फ़ाइलें अपलोड करें",
+    "fileSize": "फ़ाइल का आकार 10MB से कम होना चाहिए"
+  },
+  "messages": {
+    "uploadSuccess": "दस्तावेज़ सफलतापूर्वक अपलोड किया गया",
+    "uploadFailed": "दस्तावेज़ अपलोड करने में विफल",
+    "replacing": "मौजूदा दस्तावेज़ को बदला जा रहा है...",
+    "replaceConfirm": "एक {documentName} दस्तावेज़ पहले से मौजूद है। क्या आप इसे बदलना चाहते हैं?",
+    "saveSuccess": "दस्तावेज़ सफलतापूर्वक सहेजे गए!",
+    "saveFailed": "दस्तावेज़ सहेजने में विफल"
+  }
+}

@@ -1,6 +1,7 @@
 from sqlalchemy import Column, String, Boolean, DateTime, ForeignKey, Enum, Text, UniqueConstraint, Index
 from sqlalchemy.orm import relationship
 from .base import Base
+from .application_document import application_documents
 import datetime
 import enum
 import uuid
@@ -25,7 +26,7 @@ class Document(Base):
     __tablename__ = "documents"
 
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    application_id = Column(String, ForeignKey("applications.id"), nullable=True)
+    application_id = Column(String, ForeignKey("applications.id"), nullable=True)  # Keep for backward compatibility
     user_id = Column(String, ForeignKey("users.id"), nullable=False)
     document_type = Column(Enum(DocumentType), nullable=False)
     document_name = Column(String, nullable=False)
@@ -48,4 +49,11 @@ class Document(Base):
     )
 
     user = relationship("User", back_populates="documents")
-    application = relationship("Application", back_populates="documents")
+    application = relationship("Application", back_populates="documents")  # Keep for backward compatibility
+    
+    # Many-to-many relationship with applications
+    applications = relationship(
+        "Application",
+        secondary=application_documents,
+        back_populates="linked_documents"
+    )

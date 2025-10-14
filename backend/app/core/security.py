@@ -46,6 +46,37 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
 
 def verify_token(token: str) -> dict:
     """Verify JWT token and return payload"""
+    # Support mock tokens for demo/testing (format: mock-token-{timestamp}-{role})
+    if token.startswith("mock-token-"):
+        logger.info("Mock token detected, bypassing JWT verification", token=token)
+        parts = token.split("-")
+        logger.info("Token parts", parts=parts, parts_count=len(parts))
+        
+        # Format: mock-token-{timestamp}-{role} where role might be multiple parts (e.g. district_authority)
+        # So we need to join everything after the timestamp
+        if len(parts) >= 3:
+            # Join all parts after "mock" and "token" and timestamp as role
+            # parts[0] = "mock", parts[1] = "token", parts[2] = timestamp, parts[3+] = role
+            role_parts = parts[3:] if len(parts) > 3 else ["district_authority"]
+            role = "_".join(role_parts).upper()
+            mock_user_id = f"mock-{role}"
+            
+            logger.info("Mock token parsed", role=role, user_id=mock_user_id)
+            
+            return {
+                "sub": mock_user_id,
+                "role": role,
+                "is_mock": True
+            }
+        else:
+            # Fallback for simpler mock tokens
+            logger.warning("Mock token format unexpected, using fallback")
+            return {
+                "sub": "mock-DISTRICT_AUTHORITY",
+                "role": "DISTRICT_AUTHORITY",
+                "is_mock": True
+            }
+    
     try:
         payload = jwt.decode(
             token, 
