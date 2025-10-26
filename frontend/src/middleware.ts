@@ -46,14 +46,12 @@ export async function middleware(request: NextRequest) {
           // If onboarded, send to dashboard
           return NextResponse.redirect(new URL('/dashboard', request.url))
         } else {
-          // Token is invalid, clear it
           const response = NextResponse.next()
           response.cookies.delete('access_token')
           return response
         }
       } catch (error) {
         console.error('Auth check failed:', error)
-        // On error, clear token and stay on login
         const response = NextResponse.next()
         response.cookies.delete('access_token')
         return response

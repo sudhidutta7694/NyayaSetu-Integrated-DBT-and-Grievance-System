@@ -344,7 +344,7 @@ function WizardInner(){
       }
       
       const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL
-      const response = await fetch(`${API_BASE_URL}/applications`, {
+      const response = await fetch(`${API_BASE_URL}/applications/create`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

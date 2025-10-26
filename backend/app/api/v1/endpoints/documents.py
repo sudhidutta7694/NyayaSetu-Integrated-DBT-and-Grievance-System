@@ -88,12 +88,7 @@ async def confirm_upload(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """
-    Confirm that a file was successfully uploaded to S3.
-    
-    For onboarded users: Saves document to database immediately
-    For non-onboarded users: Returns S3 metadata for later batch save
-    """
+   
     try:
         # Validate file size (10MB)
         if request.file_size > 10 * 1024 * 1024:
@@ -299,7 +294,7 @@ async def delete_document(
         )
 
 
-@router.get("/")
+@router.get("")
 async def get_documents_by_application(
     application_id: Optional[str] = None,
     current_user: User = Depends(get_current_user),

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -9,7 +9,10 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Upload, FileText, User, Phone, MapPin, Mail } from 'lucide-react'
+import { Progress } from '@/components/ui/progress'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Upload, FileText, User, Phone, MapPin, Mail, Download, Edit, Shield, AlertCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useTranslations } from 'next-intl'
 import toast from 'react-hot-toast'
@@ -29,6 +32,7 @@ type PersonalInfoForm = {
   district: string
   state: string
   pincode: string
+  _userChoiceMethod?: 'fetch' | 'manual' // Track user's choice for state preservation
 }
 
 interface PersonalInfoStepProps {
@@ -57,10 +61,27 @@ function formatDate(date: Date | string): string {
   return `${d}/${m}/${y}`
 }
 
+// Seed data for demo purposes - ONLY data from UIDAI (seed.py)
+const SEED_DATA = {
+  fullName: 'Ram Kumar Sharma',
+  fatherName: 'Rameshwar Sharma',
+  dateOfBirth: '15/06/1985',
+  age: 40,
+  gender: 'MALE' as const,
+  mobileNumber: '8637310611',
+  address: '123, Gandhi Nagar, New Delhi - 110001',
+}
+
 export default function PersonalInfoStep({ onComplete, onPrevious, initialData }: PersonalInfoStepProps) {
   const t = useTranslations('onboardingPersonalInfo')
   const [isLoading, setIsLoading] = useState(false)
-  const [dobString, setDobString] = useState(initialData?.dateOfBirth ? formatDate(initialData.dateOfBirth) : '')
+  const [isFetchingAadhaar, setIsFetchingAadhaar] = useState(false)
+  const [fetchProgress, setFetchProgress] = useState(0)
+  const [useAutofill, setUseAutofill] = useState(false)
+  const [hasChosenMethod, setHasChosenMethod] = useState(false)
+  const [showConsentModal, setShowConsentModal] = useState(false)
+  const [consentChecked, setConsentChecked] = useState(false)
+  const [dobString, setDobString] = useState('')
 
   // Create schema with translations
   const personalInfoSchema = z.object({
@@ -91,26 +112,134 @@ export default function PersonalInfoStep({ onComplete, onPrevious, initialData }
     handleSubmit,
     setValue,
     watch,
+    reset,
     formState: { errors },
   } = useForm<PersonalInfoForm>({
     resolver: zodResolver(personalInfoSchema),
     defaultValues: {
-      fullName: initialData?.fullName || '',
-      fatherName: initialData?.fatherName || '',
-      motherName: initialData?.motherName || '',
-      age: initialData?.age || 0,
-      gender: initialData?.gender || undefined,
-      category: initialData?.category || undefined,
-      mobileNumber: initialData?.mobileNumber || '',
-      email: initialData?.email || '',
-      address: initialData?.address || '',
-      district: initialData?.district || '',
-      state: initialData?.state || '',
-      pincode: initialData?.pincode || '',
+      fullName: '',
+      fatherName: '',
+      motherName: '',
+      age: 0,
+      gender: undefined,
+      category: undefined,
+      mobileNumber: '',
+      email: '',
+      address: '',
+      district: '',
+      state: '',
+      pincode: '',
     },
   })
 
   const watchedDate = watch('dateOfBirth')
+
+  // Restore state when initialData is present (returning from later steps)
+  useEffect(() => {
+    // Only restore if user has actually made a choice (completed step 1 before)
+    // Check for _userChoiceMethod to distinguish between:
+    // 1. New user with backend data (no _userChoiceMethod) - show buttons
+    // 2. Returning user who completed step 1 (_userChoiceMethod exists) - show filled form
+    if (initialData && initialData._userChoiceMethod) {
+      // User has already filled the form in this onboarding session, restore it
+      setHasChosenMethod(true)
+      
+      // Check if user chose to fetch Aadhaar or fill manually
+      const userChoice = initialData._userChoiceMethod
+      
+      if (userChoice === 'fetch') {
+        setUseAutofill(true) // Fields will be disabled (except pincode)
+      } else {
+        setUseAutofill(false) // Fields will be editable
+      }
+      
+      // Populate form with initialData
+      reset({
+        fullName: initialData.fullName,
+        fatherName: initialData.fatherName,
+        motherName: initialData.motherName,
+        age: initialData.age,
+        gender: initialData.gender,
+        category: initialData.category,
+        mobileNumber: initialData.mobileNumber,
+        email: initialData.email || '',
+        address: initialData.address,
+        district: initialData.district,
+        state: initialData.state,
+        pincode: initialData.pincode,
+      })
+      
+      const dobToUse = initialData.dateOfBirth 
+        ? formatDate(initialData.dateOfBirth) 
+        : ''
+      setDobString(dobToUse)
+      setValue('dateOfBirth', dobToUse)
+    }
+  }, [initialData])
+
+  const handleOpenConsentModal = () => {
+    setShowConsentModal(true)
+    setConsentChecked(false)
+  }
+
+  const handleContinueWithFetch = async () => {
+    setShowConsentModal(false)
+    setIsFetchingAadhaar(true)
+    setFetchProgress(0)
+    setHasChosenMethod(true)
+    
+    // Simulate progress over 2 seconds
+    const interval = setInterval(() => {
+      setFetchProgress((prev) => {
+        if (prev >= 100) {
+          clearInterval(interval)
+          return 100
+        }
+        return prev + 5
+      })
+    }, 100)
+
+    // Wait for 2 seconds
+    await new Promise(resolve => setTimeout(resolve, 2000))
+    
+    clearInterval(interval)
+    setFetchProgress(100)
+
+    // ONLY fill data from UIDAI (seed.py) - rest should be manual
+    // UIDAI provides: name, father_name, dob, gender, address, phone_number
+    const dataToFill = {
+      fullName: initialData?.fullName || SEED_DATA.fullName,
+      fatherName: initialData?.fatherName || SEED_DATA.fatherName,
+      motherName: '', // NOT from UIDAI - manual entry
+      age: initialData?.age || SEED_DATA.age,
+      gender: initialData?.gender || SEED_DATA.gender,
+      category: undefined, // NOT from UIDAI - manual entry
+      mobileNumber: initialData?.mobileNumber || SEED_DATA.mobileNumber,
+      email: '', // NOT from UIDAI - manual entry
+      address: initialData?.address || SEED_DATA.address,
+      district: '', // NOT from UIDAI - manual entry
+      state: '', // NOT from UIDAI - manual entry
+      pincode: '', // NOT from UIDAI - manual entry
+    }
+
+    const dobToUse = initialData?.dateOfBirth 
+      ? formatDate(initialData.dateOfBirth) 
+      : SEED_DATA.dateOfBirth
+
+    // Autofill with UIDAI data only
+    reset(dataToFill)
+    setDobString(dobToUse)
+    setValue('dateOfBirth', dobToUse)
+    
+    setUseAutofill(true)
+    setIsFetchingAadhaar(false)
+    toast.success(t('toast.aadhaarFetched'))
+  }
+
+  const handleManualFill = () => {
+    setUseAutofill(false)
+    setHasChosenMethod(true)
+  }
 
   const calculateAge = (birthDate: Date) => {
     const today = new Date()
@@ -143,8 +272,14 @@ export default function PersonalInfoStep({ onComplete, onPrevious, initialData }
       // Data will be submitted all at once in final step
       await new Promise(resolve => setTimeout(resolve, 500)) // Simulate processing
       
+      // Include the user's choice method for state preservation
+      const dataWithChoice: PersonalInfoForm = {
+        ...data,
+        _userChoiceMethod: (useAutofill ? 'fetch' : 'manual') as 'fetch' | 'manual'
+      }
+      
       toast.success(t('toast.success'))
-      onComplete(data)
+      onComplete(dataWithChoice)
     } catch (error: any) {
       console.error('Failed to save personal information:', error)
       toast.error(error.message || t('toast.error'))
@@ -154,14 +289,112 @@ export default function PersonalInfoStep({ onComplete, onPrevious, initialData }
   }
 
   return (
-    <Card>
+    <>
+      {/* Consent Modal */}
+      <Dialog open={showConsentModal} onOpenChange={setShowConsentModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2 text-orange-600">
+              <Shield className="h-6 w-6" />
+              <span>{t('consentModal.title')}</span>
+            </DialogTitle>
+            <DialogDescription asChild className="text-base pt-2">
+              <div className="space-y-4">
+                <div className="flex items-start space-x-3 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+                  <Checkbox
+                    id="consent"
+                    checked={consentChecked}
+                    onCheckedChange={(checked) => setConsentChecked(checked as boolean)}
+                    className="mt-0.5"
+                  />
+                  <label
+                    htmlFor="consent"
+                    className="text-sm font-medium text-gray-900 cursor-pointer leading-relaxed"
+                  >
+                    {t('consentModal.checkboxText')}
+                  </label>
+                </div>
+                
+                <div className="flex items-start space-x-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <AlertCircle className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-blue-900">
+                    {t('consentModal.demoMessage')}
+                  </p>
+                </div>
+              </div>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowConsentModal(false)}
+              className="w-full sm:w-auto"
+            >
+              {t('consentModal.cancel')}
+            </Button>
+            <Button
+              onClick={handleContinueWithFetch}
+              disabled={!consentChecked}
+              className="w-full sm:w-auto bg-orange-600 hover:bg-orange-700 disabled:opacity-50"
+            >
+              {t('consentModal.continue')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Card>
       <CardHeader>
         <CardTitle className="flex items-center space-x-2">
           <User className="h-6 w-6 text-orange-600" />
-            <span>{t('title')}</span>
+          <span>{t('title')}</span>
         </CardTitle>
       </CardHeader>
       <CardContent>
+        {/* Choice Buttons */}
+        {!hasChosenMethod && (
+          <div className="mb-6 p-6 bg-orange-50 border-2 border-orange-200 rounded-lg">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              {t('choiceTitle')}
+            </h3>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Button
+                type="button"
+                onClick={handleOpenConsentModal}
+                disabled={isFetchingAadhaar}
+                className="flex-1 bg-orange-600 hover:bg-orange-700 text-white"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                {t('buttons.fetchAadhaar')}
+              </Button>
+              <Button
+                type="button"
+                onClick={handleManualFill}
+                variant="outline"
+                disabled={isFetchingAadhaar}
+                className="flex-1 border-2 border-orange-200 hover:bg-orange-50"
+              >
+                <Edit className="h-4 w-4 mr-2" />
+                {t('buttons.fillManually')}
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Progress Bar */}
+        {isFetchingAadhaar && (
+          <div className="mb-6 p-6 bg-blue-50 border-2 border-blue-200 rounded-lg">
+            <div className="flex items-center mb-3">
+              <Download className="h-5 w-5 text-blue-600 mr-2 animate-pulse" />
+              <p className="text-sm font-medium text-blue-900">
+                {t('fetchingMessage')}
+              </p>
+            </div>
+            <Progress value={fetchProgress} className="h-2" />
+            <p className="text-xs text-blue-600 mt-2">{fetchProgress}%</p>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {/* Basic Information */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -171,8 +404,8 @@ export default function PersonalInfoStep({ onComplete, onPrevious, initialData }
                 id="fullName"
                 {...register('fullName')}
                 placeholder={t('fields.fullName.placeholder')}
-                className={errors.fullName ? 'border-red-500' : 'bg-gray-100'}
-                disabled
+                className={errors.fullName ? 'border-red-500' : useAutofill ? 'bg-gray-100' : ''}
+                disabled={useAutofill}
               />
               {errors.fullName && (
                 <p className="text-sm text-red-500">{errors.fullName.message}</p>
@@ -185,8 +418,8 @@ export default function PersonalInfoStep({ onComplete, onPrevious, initialData }
                 id="fatherName"
                 {...register('fatherName')}
                 placeholder={t('fields.fatherName.placeholder')}
-                className={errors.fatherName ? 'border-red-500' : 'bg-gray-100'}
-                disabled
+                className={errors.fatherName ? 'border-red-500' : useAutofill ? 'bg-gray-100' : ''}
+                disabled={useAutofill}
               />
               {errors.fatherName && (
                 <p className="text-sm text-red-500">{errors.fatherName.message}</p>
@@ -214,9 +447,9 @@ export default function PersonalInfoStep({ onComplete, onPrevious, initialData }
                 {...register('dateOfBirth')}
                 value={dobString}
                 onChange={handleDobChange}
-                className={errors.dateOfBirth ? 'border-red-500' : 'bg-gray-100'}
+                className={errors.dateOfBirth ? 'border-red-500' : useAutofill ? 'bg-gray-100' : ''}
                 maxLength={10}
-                disabled
+                disabled={useAutofill}
               />
               {errors.dateOfBirth && (
                 <p className="text-sm text-red-500">{errors.dateOfBirth.message}</p>
@@ -231,7 +464,7 @@ export default function PersonalInfoStep({ onComplete, onPrevious, initialData }
                 {...register('age', { valueAsNumber: true })}
                 placeholder="0"
                 readOnly
-                className="bg-gray-100"
+                className="bg-gray-100 cursor-not-allowed"
                 disabled
               />
             </div>
@@ -241,9 +474,9 @@ export default function PersonalInfoStep({ onComplete, onPrevious, initialData }
               <Select 
                 onValueChange={(value) => setValue('gender', value as any)}
                 defaultValue={initialData?.gender}
-                disabled
+                disabled={useAutofill}
               >
-                <SelectTrigger className={errors.gender ? 'border-red-500' : 'bg-gray-100'}>
+                <SelectTrigger className={errors.gender ? 'border-red-500' : useAutofill ? 'bg-gray-100' : ''}>
                   <SelectValue placeholder={t('fields.gender.placeholder')} />
                 </SelectTrigger>
                 <SelectContent>
@@ -292,8 +525,8 @@ export default function PersonalInfoStep({ onComplete, onPrevious, initialData }
                 id="mobileNumber"
                 {...register('mobileNumber')}
                 placeholder={t('fields.mobileNumber.placeholder')}
-                className={errors.mobileNumber ? 'border-red-500' : 'bg-gray-100'}
-                disabled
+                className={errors.mobileNumber ? 'border-red-500' : useAutofill ? 'bg-gray-100' : ''}
+                disabled={useAutofill}
               />
               {errors.mobileNumber && (
                 <p className="text-sm text-red-500">{errors.mobileNumber.message}</p>
@@ -344,8 +577,8 @@ export default function PersonalInfoStep({ onComplete, onPrevious, initialData }
                 id="address"
                 {...register('address')}
                 placeholder={t('fields.address.placeholder')}
-                className={errors.address ? 'border-red-500' : 'bg-gray-100'}
-                disabled
+                className={errors.address ? 'border-red-500' : useAutofill ? 'bg-gray-100' : ''}
+                disabled={useAutofill}
               />
               {errors.address && (
                 <p className="text-sm text-red-500">{errors.address.message}</p>
@@ -442,5 +675,6 @@ export default function PersonalInfoStep({ onComplete, onPrevious, initialData }
         </form>
       </CardContent>
     </Card>
+    </>
   )
 }

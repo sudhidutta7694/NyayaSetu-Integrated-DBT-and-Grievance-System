@@ -26,13 +26,12 @@ logger = structlog.get_logger()
 router = APIRouter()
 
 
-@router.post("/", response_model=Application)
+@router.post("/create", response_model=Application)
 async def create_application(
     application_data: ApplicationCreate,
     current_user: User = Depends(get_current_active_user_dependency()),
     db: Session = Depends(get_db)
 ):
-    """Create a new application"""
     try:
         application_service = ApplicationService(db)
         application = await application_service.create_application(

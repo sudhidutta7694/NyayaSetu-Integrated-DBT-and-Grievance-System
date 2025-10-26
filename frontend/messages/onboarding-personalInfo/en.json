@@ -148,11 +148,23 @@
   "buttons": {
     "previous": "Previous",
     "continue": "Continue",
-    "saving": "Saving..."
+    "saving": "Saving...",
+    "fetchAadhaar": "Fetch Aadhaar Details",
+    "fillManually": "Fill Manually"
+  },
+  "choiceTitle": "How would you like to fill your personal information?",
+  "fetchingMessage": "Fetching demo Aadhaar details...",
+  "consentModal": {
+    "title": "Aadhaar Consent",
+    "checkboxText": "I approve NyayaSetu to fetch my Aadhaar details from UIDAI",
+    "demoMessage": "The data is demo and is for development purpose only.",
+    "continue": "Continue",
+    "cancel": "Cancel"
   },
   "toast": {
     "success": "Personal information saved!",
-    "error": "Failed to save personal information"
+    "error": "Failed to save personal information",
+    "aadhaarFetched": "Aadhaar details fetched successfully!"
   },
   "validation": {
     "fullName": "Full name must be at least 2 characters",

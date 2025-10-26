@@ -47,33 +47,13 @@ export async function getPresignedUploadUrl(
       },
     }
   )
-
-  // console.log('\n' + '='.repeat(80))
-  // console.log('🔗 PRESIGNED UPLOAD URL GENERATED')
-  // console.log('='.repeat(80))
-  // console.log('📁 File:', filename)
-  // console.log('📦 Document Type:', documentType)
-  // console.log('⏰ Valid for: 5 minutes')
-  // console.log('🔗 Presigned URL:')
-  // console.log(response.data.data.url)
-  // console.log('='.repeat(80))
-  // console.log('💡 TIP: Copy the URL above and paste in a new browser tab to test!')
-  // console.log('   (You\'ll get an error because it expects a PUT request, but URL is valid)')
-  // console.log('='.repeat(80) + '\n')
-
   return response.data
 }
-
-/**
- * Step 2: Upload file directly to S3 using presigned URL
- */
 export async function uploadToS3(
   presignedUrl: string,
   file: File,
   onProgress?: (progress: number) => void
 ): Promise<void> {
-  // console.log('⬆️  Uploading file to S3...')
-  // console.log('📁 File:', file.name, `(${(file.size / 1024).toFixed(2)} KB)`)
   
   await axios.put(presignedUrl, file, {
     headers: {
@@ -83,17 +63,11 @@ export async function uploadToS3(
       if (onProgress && progressEvent.total) {
         const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total)
         onProgress(progress)
-        // console.log(`📊 Upload progress: ${progress}%`)
       }
     },
   })
   
-  // console.log('✅ File uploaded to S3 successfully!')
 }
-
-/**
- * Step 3: Confirm upload to backend and save metadata
- */
 export async function confirmUpload(
   s3Key: string,
   documentType: string,

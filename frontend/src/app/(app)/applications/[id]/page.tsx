@@ -144,13 +144,7 @@ export default function ApplicationDetailPage() {
       })
       const app: ApplicationDetail = appResponse.data
 
-      setFullApplicationData(app) // Store full application data
-      // console.log('=== APPLICATION DATA DEBUG ===')
-      // console.log('Full application data:', app)
-      // console.log('FIR Number:', app.fir_number)
-      // console.log('CCTNS Verified:', app.cctns_verified)
-      // console.log('CCTNS Verified type:', typeof app.cctns_verified)
-      // console.log('==============================')
+      setFullApplicationData(app)
       
       setTitle(app.title || app.application_type.replace(/_/g, ' '))
       setApplicationNumber(app.application_number)
@@ -163,9 +157,7 @@ export default function ApplicationDetailPage() {
         const docsResponse = await axios.get(`${API_BASE_URL}/documents?application_id=${applicationId}`, {
           headers: { Authorization: `Bearer ${token}` }
         })
-        // console.log('Documents response:', docsResponse.data)
         const docs = docsResponse.data.data || docsResponse.data || []
-        // console.log('Parsed documents:', docs)
         setDocuments(docs)
       } catch (error) {
         console.log('Documents not available:', error)
@@ -203,14 +195,6 @@ export default function ApplicationDetailPage() {
 
   const handleViewDocument = async (doc: Document) => {
     try {
-      // console.log('=== VIEW DOCUMENT DEBUG ===')
-      // console.log('Document object:', doc)
-      // console.log('Document ID:', doc.id)
-      // console.log('Document name:', doc.file_name)
-      // console.log('Document file_url:', doc.file_url)
-      // console.log('Document file_path:', doc.file_path)
-      
-      // Backend already provides file_url in the documents list response
       if (doc.file_url) {
         console.log('✅ Using file_url from document:', doc.file_url)
         console.log('Setting viewingDocument to:', doc)

@@ -7,7 +7,6 @@ from datetime import datetime, timedelta, timezone, date
 from typing import Optional, Dict, Any
 import structlog
 from sqlalchemy.orm import Session
-from sqlalchemy import or_
 
 from app.core.config import settings
 from app.core.exceptions import AuthenticationException, ValidationException
@@ -62,14 +61,22 @@ class AadhaarAuthService:
                     "is_verified": True
                 }
             else:
-                logger.warning(
-                    "Aadhaar number not found in UIDAI database",
+                # Allow any Aadhaar number - use seed data for all
+                logger.info(
+                    "Aadhaar number not in UIDAI database, using seed data",
                     aadhaar_number=cleaned_aadhaar
                 )
                 
                 return {
-                    "is_valid": False,
-                    "message": "Aadhaar number not found in UIDAI records"
+                    "is_valid": True,
+                    "aadhaar_number": cleaned_aadhaar,
+                    "name": "Ram Kumar Sharma",
+                    "father_name": "Rameshwar Sharma",
+                    "date_of_birth": "1985-06-15",
+                    "gender": "MALE",
+                    "address": "123, Gandhi Nagar, New Delhi - 110001",
+                    "phone_number": "8637310611",
+                    "is_verified": True
                 }
                 
         except ValidationException:
@@ -88,9 +95,7 @@ class AadhaarAuthService:
             # Verify Aadhaar first
             aadhaar_info = await self.verify_aadhaar_number(aadhaar_number)
             
-            if not aadhaar_info["is_valid"]:
-                raise ValidationException("No such Aadhaar number found in UIDAI records")
-            
+            # Now always valid since we allow any Aadhaar
             phone_number = aadhaar_info["phone_number"]
             
             # Generate OTP (use fixed OTP in development mode)
@@ -173,9 +178,7 @@ class AadhaarAuthService:
             # Verify Aadhaar first
             aadhaar_info = await self.verify_aadhaar_number(aadhaar_number)
             
-            if not aadhaar_info["is_valid"]:
-                raise ValidationException("Invalid Aadhaar number")
-            
+            # Now always valid since we allow any Aadhaar
             phone_number = aadhaar_info["phone_number"]
             
             # Verify OTP using Twilio Verify
@@ -208,12 +211,10 @@ class AadhaarAuthService:
                 logger.error("Failed to verify OTP via Twilio Verify", error=str(verify_error))
                 raise ValidationException("OTP verification failed")
             
-            # Check if user exists, if not create one
+            # Check if user exists by Aadhaar number only
+            # Each Aadhaar number represents a unique citizen identity
             user = self.db.query(UserModel).filter(
-                or_(
-                    UserModel.aadhaar_number == aadhaar_number,
-                    UserModel.phone_number == phone_number
-                )
+                UserModel.aadhaar_number == aadhaar_number
             ).first()
             
             if not user:

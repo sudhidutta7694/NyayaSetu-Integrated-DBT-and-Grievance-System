@@ -277,22 +277,6 @@ export default function LoginPage() {
                 </form>
               ) : (
                 <div className="space-y-6">
-                  {aadhaarInfo && (
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                      <div className="flex items-center space-x-2">
-                        <User className="h-5 w-5 text-blue-600" />
-                        <div>
-                          <p className="text-sm font-medium text-blue-800">
-                            {t('userInfo.name')} {aadhaarInfo.name}
-                          </p>
-                          <p className="text-sm text-blue-600">
-                            {t('userInfo.fatherName')} {aadhaarInfo.father_name}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
                   <form onSubmit={handleOTPSubmit(onOTPSubmit)} className="space-y-6">
                     <div>
                       <Label htmlFor="otp_code" className="text-sm font-medium text-gray-700">

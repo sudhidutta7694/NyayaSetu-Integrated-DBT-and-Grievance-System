@@ -90,19 +90,20 @@ export default function ResourcesPage() {
               </p>
             </div>
 
-            {/* Video 1 - Left Video, Right Content - Coming Soon */}
+            {/* Video 1 - Left Video, Right Content - Platform Overview */}
             <div className="mb-20">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-                {/* Coming Soon Container */}
+                {/* Video Container */}
                 <div className="order-2 lg:order-1">
-                  <div className="relative aspect-video rounded-2xl overflow-hidden shadow-2xl border-4 border-orange-200 bg-gradient-to-br from-orange-100 to-orange-50 flex items-center justify-center">
-                    <div className="text-center p-8">
-                      <div className="inline-flex items-center justify-center w-20 h-20 bg-orange-200 rounded-full mb-4">
-                        <Video className="h-10 w-10 text-orange-600" />
-                      </div>
-                      <h4 className="text-2xl font-bold text-orange-900 mb-2">{t('videos.comingSoon')}</h4>
-                      <p className="text-orange-700 text-sm">{t('videos.platformOverview.comingSoonText')}</p>
-                    </div>
+                  <div className="relative aspect-video rounded-2xl overflow-hidden shadow-2xl border-4 border-orange-200 hover:border-orange-400 transition-all duration-300 transform hover:scale-[1.02]">
+                    <iframe
+                      className="absolute inset-0 w-full h-full"
+                      src="https://www.youtube.com/embed/HReBN6n-crQ"
+                      title="NyayaSetu Platform Overview"
+                      frameBorder="0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
                   </div>
                 </div>
                 {/* Content */}
@@ -124,8 +125,8 @@ export default function ResourcesPage() {
                   </div>
                   <div className="flex items-center text-sm text-gray-500">
                     <span className="inline-flex items-center">
-                      <span className="w-2 h-2 bg-yellow-500 rounded-full mr-2 animate-pulse"></span>
-                      {t('videos.platformOverview.status')}
+                      <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                      {t('videos.platformOverview.duration')}
                     </span>
                     <span className="mx-3">•</span>
                     <span>{t('videos.platformOverview.languages')}</span>
