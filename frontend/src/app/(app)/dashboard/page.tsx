@@ -70,22 +70,21 @@ export default function DashboardPage(){
           amount: a.amount_requested || 0,
           approved: a.amount_approved
         })))
-
-        // Calculate stats from all applications
         const totalApps = allAppData.length
-        
-        // Count verified documents (applications with all documents verified)
         let verifiedDocsCount = 0
-        for (const app of allAppData) {
-          if (app.documents && app.documents.length > 0) {
-            const allVerified = app.documents.every((doc: any) => doc.status === 'VERIFIED')
-            if (allVerified) {
-              verifiedDocsCount++
+        try {
+          const { listUserDocuments } = await import('@/lib/api/documents')
+          const userDocuments = await listUserDocuments()
+          // Count documents with VERIFIED status
+          verifiedDocsCount = userDocuments.filter((doc: any) => doc.status === 'VERIFIED').length
+        } catch (err) {
+          console.error('Failed to fetch user documents for verified count:', err)
+          for (const app of allAppData) {
+            if (app.documents && app.documents.length > 0) {
+              verifiedDocsCount += app.documents.filter((doc: any) => doc.status === 'VERIFIED').length
             }
           }
         }
-        
-        // In Progress = applications not yet FUND_DISBURSED (excluding REJECTED and DRAFT)
         const inProgressCount = allAppData.filter((a: any) => 
           a.status !== 'FUND_DISBURSED' && a.status !== 'REJECTED' && a.status !== 'DRAFT'
         ).length

@@ -21,8 +21,7 @@ import { showSuccessToast, showErrorToast } from '@/lib/toasts'
 import { useTranslations } from 'next-intl'
 import { LanguageSwitcher } from '@/components/accessibility/LanguageSwitcher'
 
-// Document type configurations - Excluding MARRIAGE_CERTIFICATE and conditionally CATEGORY_CERTIFICATE
-const getDocumentTypes = (userCategory?: string, t?: any): Array<{
+const getDocumentTypes = (userCategory?: string, hasInterCasteMarriageApplication?: boolean, t?: any): Array<{
   type: DocumentType
   name: string
   description: string
@@ -64,6 +63,15 @@ const getDocumentTypes = (userCategory?: string, t?: any): Array<{
     })
   }
 
+  // Add marriage certificate if user has inter-caste marriage application
+  if (hasInterCasteMarriageApplication) {
+    baseTypes.push({
+      type: 'MARRIAGE_CERTIFICATE' as DocumentType,
+      name: t ? t('documentTypes.MARRIAGE_CERTIFICATE.name') : 'Marriage Certificate',
+      description: t ? t('documentTypes.MARRIAGE_CERTIFICATE.description') : 'Inter-caste marriage certificate',
+    })
+  }
+
   return baseTypes
 }
 
@@ -89,11 +97,37 @@ export default function ManageDocumentsPage() {
       const { usersApi } = await import('@/lib/api/users')
       const profile = await usersApi.getMyProfile()
       setUserCategory(profile.category || 'GENERAL')
-      setDocumentTypes(getDocumentTypes(profile.category || 'GENERAL', t))
+      
+      const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL
+      const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null
+      
+      const applicationsRes = await fetch(`${API_BASE_URL}/applications/my?limit=1000&skip=0`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      })
+      
+      if (applicationsRes.ok) {
+        const applications = await applicationsRes.json()
+        console.log('Applications data:', applications)
+        console.log('Checking for INTER_CASTE_MARRIAGE applications...')
+        
+        const hasInterCasteMarriage = applications.some((app: any) => {
+          console.log('Application type:', app.application_type)
+          return app.application_type === 'INTER_CASTE_MARRIAGE'
+        })
+        
+        console.log('Has inter-caste marriage application:', hasInterCasteMarriage)
+        setDocumentTypes(getDocumentTypes(profile.category || 'GENERAL', hasInterCasteMarriage, t))
+      } else {
+        console.error('Failed to fetch applications:', applicationsRes.status)
+        setDocumentTypes(getDocumentTypes(profile.category || 'GENERAL', false, t))
+      }
     } catch (error) {
       console.error('Failed to fetch user profile:', error)
       // Fallback to default
-      setDocumentTypes(getDocumentTypes('GENERAL', t))
+      setDocumentTypes(getDocumentTypes('GENERAL', false, t))
     }
   }
 

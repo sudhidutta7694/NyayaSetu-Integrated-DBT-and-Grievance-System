@@ -28,7 +28,7 @@ const DUMMY_CREDS: DummyCred[] = [
     title: 'District Authority',
     username: 'district.admin@example.com',
     password: 'District@123',
-    icon: <Building className='h-6 w-6' />,
+    icon: <Building className='h-8 w-8' />,
     color: 'from-blue-50 to-blue-100 border-blue-200',
     blurb: 'Review & approve applications, manage district level verifications.'
   },
@@ -37,7 +37,7 @@ const DUMMY_CREDS: DummyCred[] = [
     title: 'Financial Institution',
     username: 'finance.admin@example.com',
     password: 'Finance@123',
-    icon: <Landmark className='h-6 w-6' />,
+    icon: <Landmark className='h-8 w-8' />,
     color: 'from-purple-50 to-purple-100 border-purple-200',
     blurb: 'Handle fund disbursement & reconciliation workflows.'
   },
@@ -46,7 +46,7 @@ const DUMMY_CREDS: DummyCred[] = [
     title: 'Social Welfare',
     username: 'social.admin@example.com',
     password: 'Social@123',
-    icon: <Users className='h-6 w-6' />,
+    icon: <Users className='h-8 w-8' />,
     color: 'from-emerald-50 to-emerald-100 border-emerald-200',
     blurb: 'Oversee grievance redressal & beneficiary onboarding integrity.'
   }
@@ -139,13 +139,11 @@ export default function AdminLoginPage(){
             </div>
             <div>
               <h1 className='text-2xl font-bold text-gray-900 leading-tight'>Authority Login</h1>
-              <p className='text-xs text-gray-600 mt-1 max-w-sm'>Choose a role to auto-fill the demo credentials. No real authentication occurs.</p>
             </div>
           </div>
           <Card className='border-2 border-orange-200 shadow-lg'>
             <CardHeader className='bg-gradient-to-r from-orange-50 to-green-50 py-4'>
               <CardTitle className='text-left text-lg font-semibold text-gray-800'>Enter Credentials</CardTitle>
-              <CardDescription className='text-left text-gray-600 text-sm'>Use the demo credentials shown on the right</CardDescription>
             </CardHeader>
             <CardContent className='p-5'>
               <form onSubmit={handleSubmit} className='space-y-5'>
@@ -160,7 +158,6 @@ export default function AdminLoginPage(){
                 <Button type='submit' disabled={loading} className='w-full bg-orange-600 hover:bg-orange-700 text-white font-medium py-2.5 text-sm'>
                   {loading ? 'Signing in...' : 'Login'}
                 </Button>
-                <p className='text-[10px] text-gray-500 text-center leading-snug'>Demo only – mock credentials & token stored locally.</p>
               </form>
             </CardContent>
           </Card>
@@ -171,13 +168,15 @@ export default function AdminLoginPage(){
             {DUMMY_CREDS.map(c => (
               <div key={c.role}
                 className={`group relative text-left rounded-xl border-2 p-4 transition-all bg-gradient-to-br ${c.color} focus:outline-none focus:ring-4 focus:ring-orange-300 hover:border-orange-400`}>
-                <div className='flex items-start justify-between mb-2'>
-                  <span className='p-2.5 rounded-lg bg-white/70 shadow-inner text-gray-700 group-hover:scale-105 transition-transform'>
+                <div className='flex items-center gap-3 mb-3'>
+                  <span className='p-2.5 rounded-lg bg-white/70 shadow-inner text-gray-700 group-hover:scale-105 transition-transform flex-shrink-0'>
                     {c.icon}
                   </span>
+                  <div className='flex-1'>
+                    <h3 className='font-semibold text-gray-900 text-sm mb-1'>{c.title}</h3>
+                    <p className='text-[11px] text-gray-600 leading-snug'>{c.blurb}</p>
+                  </div>
                 </div>
-                <h3 className='font-semibold text-gray-900 text-sm mb-1'>{c.title}</h3>
-                <p className='text-[11px] text-gray-600 leading-snug mb-3'>{c.blurb}</p>
 
                 <div className='space-y-2'>
                   <div className='flex items-center gap-2'>
@@ -197,8 +196,6 @@ export default function AdminLoginPage(){
                     </Button>
                   </div>
                 </div>
-
-                <p className='text-[10px] italic text-gray-500 opacity-80 mt-2'>Copy and paste into the form on the left</p>
               </div>
             ))}
           </div>

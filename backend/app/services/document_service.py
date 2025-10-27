@@ -168,7 +168,7 @@ class DocumentService:
                 mime_type="application/pdf",
                 is_digilocker=True,
                 digilocker_uri=digilocker_id,
-                status=DocumentStatus.VERIFIED  # DigiLocker documents are pre-verified
+                status=DocumentStatus.PENDING  # DigiLocker documents also need verification by district authority
             )
             
             self.db.add(document)

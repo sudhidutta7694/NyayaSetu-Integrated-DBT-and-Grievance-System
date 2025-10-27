@@ -83,24 +83,19 @@ export default function DocumentUploadStep({
       documents: initialData?.documents || [],
     },
   })
-
-  // Load initial documents when component mounts or initialData changes
   useEffect(() => {
     if (initialData && Array.isArray(initialData) && initialData.length > 0) {
-      // If initialData is an array of documents, use it directly
       setDocuments(initialData)
     } else if (initialData?.documents && Array.isArray(initialData.documents)) {
-      // If initialData has a documents property, use that
       setDocuments(initialData.documents)
     }
   }, [initialData])
 
-  // Sync documents state with form value
+
   useEffect(() => {
     setValue('documents', documents)
   }, [documents, setValue])
 
-  // Document types for Step 2 - Only 4 documents (PAN_CARD and BANK_PASSBOOK moved to Step 3)
   const documentTypes = React.useMemo(() => {
     const types = [
       {
@@ -253,7 +248,7 @@ export default function DocumentUploadStep({
         name: `${type.replace('_', ' ')} - DigiLocker`,
         digilockerId: `DL_${type}_${Date.now()}`,
         isDigilocker: true,
-        status: 'VERIFIED', // DigiLocker documents are pre-verified
+        status: 'UPLOADED',
       }
 
       setDocuments(prev => [...prev, newDocument])
@@ -452,7 +447,6 @@ export default function DocumentUploadStep({
                           </div>
                         </Badge>
                         
-                        {/* View button - only show if document is uploaded and has fileUrl */}
                         {doc.fileUrl && (
                           <Button
                             type="button"

@@ -1,5 +1,3 @@
-// AuthProvider.tsx - UPDATED
-
 'use client'
 
 import { createContext, useContext, useEffect, useState } from 'react'
@@ -12,7 +10,6 @@ import { socialWelfareAuthApi } from '@/lib/api/socialWelfareAuth'
 interface AuthContextType {
   user: User | null
   loading: boolean
-  // Add the login function to the context type
   login: (user: User, token: string) => void
   logout: () => void
   refreshUser: () => Promise<void>
@@ -40,8 +37,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log('Checking auth, token:', token ? token.substring(0, 30) + '...' : 'NO TOKEN')
       
       if (token) {
-        // --- FIX FOR REFRESH WITH MOCK TOKEN ---
-        // If it's a mock token, parse it instead of making an API call
         if (token.startsWith('mock-token-')) {
           const storedUser = localStorage.getItem('user');
           if (storedUser) {
@@ -80,13 +75,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = () => {
     tokenStorage.removeToken()
-    localStorage.removeItem('user'); // Clean up mock user too
-    setUser(null)
-    router.push('/')
+    localStorage.removeItem('user')
+    localStorage.removeItem('authToken')
+    localStorage.removeItem('token')
+    window.location.href = '/'
   }
 
   const refreshUser = async () => {
-    // This function might need adjustment depending on real vs mock
     await checkAuth();
   }
 

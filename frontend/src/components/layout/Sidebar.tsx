@@ -7,6 +7,7 @@ import { FileText, FolderOpen, User, Megaphone, Menu, ChevronLeft, LogOut } from
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { cn } from '@/lib/utils'
+import { useAuth } from '@/components/providers/AuthProvider'
 
 interface NavItem { label: string; href: string; icon: React.ReactNode }
 
@@ -30,6 +31,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileCl
   const [collapsed, setCollapsed] = useState(false)
   const router = useRouter()
   const [mounted, setMounted] = useState(false)
+  const { logout } = useAuth()
   useEffect(()=> { setMounted(true) },[])
   useEffect(()=> { try { const stored = localStorage.getItem('nyaya.sidebar'); if(stored==='1') setCollapsed(true) } catch{} },[])
   useEffect(()=> { try { localStorage.setItem('nyaya.sidebar', collapsed? '1':'0') } catch{} },[collapsed])
@@ -137,14 +139,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileCl
         <div className="px-2 pb-1">
           <button
             type="button"
-            onClick={()=> {
-              try {
-                localStorage.removeItem('user')
-                localStorage.removeItem('authToken')
-                localStorage.removeItem('token')
-              } catch {}
-              router.push('/')
-            }}
+            onClick={logout}
             className={cn('w-full flex items-center gap-3 px-3 py-2 rounded-md font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 text-left', 'text-gray-700 hover:bg-red-50 hover:text-red-700')}
           >
             <span className={cn('flex items-center justify-center', collapsed && 'mx-auto')}><LogOut className='h-4 w-4' /></span>
