@@ -163,6 +163,31 @@ def get_optional_current_user(
     except:
         return None
 
+def get_current_user_optional(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(HTTPBearer(auto_error=False)),
+    db: Session = Depends(get_db)
+) -> Optional[UserModel]:
+    """
+    Get current user if token is provided, otherwise return None.
+    Used for endpoints that work with or without authentication.
+    Returns SQLAlchemy model instead of Pydantic schema.
+    """
+    if not credentials:
+        return None
+    
+    try:
+        token = credentials.credentials
+        payload = verify_token(token)
+        user_id = payload.get("sub")
+        
+        if user_id:
+            user = db.query(UserModel).filter(UserModel.id == user_id).first()
+            return user
+    except:
+        pass
+    
+    return None
+
 # Rate limiting dependencies
 from slowapi import Limiter
 from slowapi.util import get_remote_address

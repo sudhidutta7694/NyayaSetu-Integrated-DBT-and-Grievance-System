@@ -438,13 +438,11 @@ export default function DocumentUploadStep({
                       </div>
                       
                       <div className="flex items-center space-x-2">
-                        <Badge className={getStatusColor(doc.status)}>
-                          <div className="flex items-center space-x-1">
-                            {getStatusIcon(doc.status)}
-                            <span className="text-xs">
-                              {doc.status}
-                            </span>
-                          </div>
+                        <Badge className={`${getStatusColor(doc.status)} flex items-center space-x-1`}>
+                          {getStatusIcon(doc.status)}
+                          <span className="text-xs">
+                            {doc.status}
+                          </span>
                         </Badge>
                         
                         {doc.fileUrl && (
@@ -561,13 +559,11 @@ export default function DocumentUploadStep({
                   </div>
                 </div>
                 <div className="flex items-center space-x-3">
-                  <Badge className={`${getStatusColor(viewingDocument.status)} px-3 py-1`}>
-                    <div className="flex items-center space-x-1.5">
-                      {getStatusIcon(viewingDocument.status)}
-                      <span className="text-xs font-medium">
-                        {viewingDocument.status}
-                      </span>
-                    </div>
+                  <Badge className={`${getStatusColor(viewingDocument.status)} px-3 py-1 flex items-center space-x-1.5`}>
+                    {getStatusIcon(viewingDocument.status)}
+                    <span className="text-xs font-medium">
+                      {viewingDocument.status}
+                    </span>
                   </Badge>
                   <Button
                     variant="ghost"
