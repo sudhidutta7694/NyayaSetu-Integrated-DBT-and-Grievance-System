@@ -9,8 +9,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import or_
 
 from app.core.exceptions import AuthenticationException, ConflictException
-from app.models.user import UserCreate
-from models.user import User, UserRole
+from app.schema.user import User, UserRole
 from app.core.security import generate_application_number
 
 logger = structlog.get_logger()
@@ -21,54 +20,6 @@ class AuthService:
     
     def __init__(self, db: Session):
         self.db = db
-    
-    def register_user(self, user_data: UserCreate) -> User:
-        """Register a new user"""
-        try:
-            # Check if user already exists
-            existing_user = self.db.query(User).filter(
-                or_(
-                    User.email == user_data.email,
-                    User.phone_number == user_data.phone_number
-                )
-            ).first()
-            
-            if existing_user:
-                if existing_user.email == user_data.email:
-                    raise ConflictException("Email already registered")
-                if existing_user.phone_number == user_data.phone_number:
-                    raise ConflictException("Phone number already registered")
-            
-            # Create user
-            user = User(
-                email=user_data.email,
-                phone_number=user_data.phone_number,
-                full_name=user_data.full_name,
-                aadhaar_number=user_data.aadhaar_number,
-                date_of_birth=user_data.date_of_birth,
-                gender=user_data.gender,
-                category=user_data.category,
-                address=user_data.address,
-                district=user_data.district,
-                state=user_data.state,
-                pincode=user_data.pincode,
-                profile_image=user_data.profile_image,
-                role=UserRole.PUBLIC,
-                is_active=True,
-                is_verified=False
-            )
-            self.db.add(user)
-            self.db.commit()
-            self.db.refresh(user)
-            
-            logger.info("User registered successfully", user_id=user.id)
-            return user
-            
-        except ConflictException:
-            raise
-        except Exception as e:
-            logger.error("User registration failed", error=str(e))
-            raise AuthenticationException("Registration failed")
     
     def get_user_by_id(self, user_id: str) -> Optional[User]:
         """Get user by ID"""
@@ -141,12 +92,25 @@ class AuthService:
             return None
     
     def update_user(self, user_id: str, update_data: dict) -> Optional[User]:
-        """Update user information"""
         try:
+            # Protected UIDAI fields that should not be updated
+            protected_fields = {
+                'full_name', 'father_name', 'date_of_birth', 'age',
+                'gender', 'address', 'phone_number', 'aadhaar_number'
+            }
+            
             user = self.db.query(User).filter(User.id == user_id).first()
             if user:
+                # Filter out protected fields
                 for key, value in update_data.items():
-                    setattr(user, key, value)
+                    if key not in protected_fields:
+                        setattr(user, key, value)
+                    else:
+                        logger.warning(
+                            "Attempted to update protected UIDAI field",
+                            user_id=user_id,
+                            field=key
+                        )
                 self.db.commit()
                 self.db.refresh(user)
             logger.info("User updated successfully", user_id=user_id)

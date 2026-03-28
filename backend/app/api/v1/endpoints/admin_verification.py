@@ -10,7 +10,7 @@ import structlog
 from app.core.database import get_db
 from app.core.dependencies import require_role
 from app.core.exceptions import ValidationException, AuthenticationException
-from app.models.user import User, UserRole
+from app.schema.user import User, UserRole
 from app.services.document_service import DocumentService
 from sqlalchemy.orm import Session
 
@@ -27,6 +27,9 @@ async def get_pending_documents(
     db: Session = Depends(get_db)
 ):
     """Get documents pending verification based on user role"""
+    logger.info("GET /documents/pending endpoint reached", 
+                user_id=current_user.id, 
+                user_role=current_user.role.value if hasattr(current_user.role, 'value') else str(current_user.role))
     try:
         document_service = DocumentService(db)
         documents = await document_service.get_documents_for_verification(

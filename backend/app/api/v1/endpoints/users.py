@@ -6,50 +6,63 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import structlog
+from pydantic import BaseModel
 
 from app.core.database import get_db
 from sqlalchemy.orm import Session
 from app.core.exceptions import AuthenticationException, NotFoundException
-from app.core.security import verify_token
-from app.models.user import User, UserUpdate, UserProfile
+from app.core.dependencies import get_current_user  # Use the one from dependencies
+from app.schema.user import User, UserUpdate, UserProfile
 from app.services.auth_service import AuthService
+from models.onboarding import BankAccount
 
 logger = structlog.get_logger()
 router = APIRouter()
 security = HTTPBearer()
 
 
-async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
-    db: Session = Depends(get_db)
-) -> User:
-    """Get current authenticated user"""
-    try:
-        payload = verify_token(credentials.credentials)
-        user_id = payload.get("sub")
-        
-        if not user_id:
-            raise AuthenticationException("Invalid token")
-        
-        auth_service = AuthService(db)
-        user = await auth_service.get_user_by_id(user_id)
-        
-        if not user:
-            raise AuthenticationException("User not found")
-        
-        return user
-        
-    except AuthenticationException as e:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=e.message
-        )
+class BankAccountCreate(BaseModel):
+    """Schema for creating/updating bank account"""
+    account_number: str
+    ifsc_code: str
+    bank_name: str
+    branch_name: str
+    account_holder_name: str
 
+# Note: get_current_user is imported from app.core.dependencies
 
 @router.get("/me", response_model=UserProfile)
-async def get_my_profile(current_user: User = Depends(get_current_user)):
-    """Get current user's profile"""
-    return current_user
+async def get_my_profile(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get current user's profile with bank accounts"""
+    from models.onboarding import BankAccount
+    
+    # Get user's bank accounts
+    bank_accounts = db.query(BankAccount).filter(
+        BankAccount.user_id == current_user.id
+    ).all()
+    
+    # Convert user to dict and add bank accounts
+    user_dict = {
+        **current_user.__dict__,
+        "bank_accounts": [
+            {
+                "id": ba.id,
+                "account_number": ba.account_number,
+                "ifsc_code": ba.ifsc_code,
+                "bank_name": ba.bank_name,
+                "branch_name": ba.branch_name,
+                "account_holder_name": ba.account_holder_name,
+                "is_verified": ba.is_verified,
+                "created_at": ba.created_at
+            }
+            for ba in bank_accounts
+        ]
+    }
+    
+    return user_dict
 
 
 @router.put("/me", response_model=UserProfile)
@@ -65,7 +78,7 @@ async def update_my_profile(
         # Convert Pydantic model to dict, excluding None values
         update_data = user_update.dict(exclude_unset=True)
         
-        updated_user = await auth_service.update_user(current_user.id, update_data)
+        updated_user = auth_service.update_user(current_user.id, update_data)
         
         if not updated_user:
             raise HTTPException(
@@ -126,7 +139,7 @@ async def upload_profile_image(
         
         # Update user profile with image path
         auth_service = AuthService(db)
-        await auth_service.update_user(current_user.id, {"profile_image": file_path})
+        auth_service.update_user(current_user.id, {"profile_image": file_path})
         
         logger.info("Profile image uploaded", user_id=current_user.id, file_path=file_path)
         
@@ -142,6 +155,88 @@ async def upload_profile_image(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to upload profile image"
+        )
+
+
+@router.post("/me/bank-account")
+async def create_or_update_bank_account(
+    bank_data: BankAccountCreate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Create or update user's bank account"""
+    try:
+        # Check if user already has a bank account
+        existing_bank = db.query(BankAccount).filter(
+            BankAccount.user_id == current_user.id
+        ).first()
+        
+        if existing_bank:
+            # Update existing bank account
+            existing_bank.account_number = bank_data.account_number
+            existing_bank.ifsc_code = bank_data.ifsc_code
+            existing_bank.bank_name = bank_data.bank_name
+            existing_bank.branch_name = bank_data.branch_name
+            existing_bank.account_holder_name = bank_data.account_holder_name
+            existing_bank.is_verified = False  # Reset verification on update
+            existing_bank.verified_at = None
+            
+            db.commit()
+            db.refresh(existing_bank)
+            
+            logger.info("Bank account updated", user_id=current_user.id, bank_id=existing_bank.id)
+            
+            return {
+                "success": True,
+                "message": "Bank account updated successfully",
+                "data": {
+                    "id": existing_bank.id,
+                    "account_number": existing_bank.account_number,
+                    "ifsc_code": existing_bank.ifsc_code,
+                    "bank_name": existing_bank.bank_name,
+                    "branch_name": existing_bank.branch_name,
+                    "account_holder_name": existing_bank.account_holder_name,
+                    "is_verified": existing_bank.is_verified
+                }
+            }
+        else:
+            # Create new bank account
+            new_bank = BankAccount(
+                user_id=str(current_user.id),
+                account_number=bank_data.account_number,
+                ifsc_code=bank_data.ifsc_code,
+                bank_name=bank_data.bank_name,
+                branch_name=bank_data.branch_name,
+                account_holder_name=bank_data.account_holder_name,
+                is_verified=False
+            )
+            
+            db.add(new_bank)
+            db.commit()
+            db.refresh(new_bank)
+            
+            logger.info("Bank account created", user_id=current_user.id, bank_id=new_bank.id)
+            
+            return {
+                "success": True,
+                "message": "Bank account created successfully",
+                "data": {
+                    "id": new_bank.id,
+                    "account_number": new_bank.account_number,
+                    "ifsc_code": new_bank.ifsc_code,
+                    "bank_name": new_bank.bank_name,
+                    "branch_name": new_bank.branch_name,
+                    "account_holder_name": new_bank.account_holder_name,
+                    "is_verified": new_bank.is_verified
+                }
+            }
+        
+    except Exception as e:
+        db.rollback()
+        logger.error("Failed to save bank account", user_id=current_user.id, error=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to save bank account: {str(e)}"
         )
 
 
@@ -202,7 +297,7 @@ async def get_user(
             )
         
         auth_service = AuthService(db)
-        user = await auth_service.get_user_by_id(user_id)
+        user = auth_service.get_user_by_id(user_id)  # Remove await - not async
         
         if not user:
             raise HTTPException(
@@ -238,9 +333,9 @@ async def activate_user(
             )
         
         auth_service = AuthService(db)
-        success = await auth_service.update_user(user_id, {"is_active": True})
+        updated_user = auth_service.update_user(user_id, {"is_active": True})
         
-        if not success:
+        if not updated_user:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Failed to activate user"
@@ -276,7 +371,7 @@ async def deactivate_user(
             )
         
         auth_service = AuthService(db)
-        success = await auth_service.deactivate_user(user_id)
+        success = auth_service.deactivate_user(user_id)
         
         if not success:
             raise HTTPException(

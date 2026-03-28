@@ -24,6 +24,8 @@ try:
     from models.document import Document
     from models.application import Application
     from models.otp import OTP
+    from models.onboarding import OnboardingStep, BankAccount
+    from models.uidai import UIDAI 
     target_metadata = Base.metadata
 except ImportError as e:
     print(f"Warning: Could not import models: {e}")

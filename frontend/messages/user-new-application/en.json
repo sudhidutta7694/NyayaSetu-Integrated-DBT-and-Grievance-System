@@ -1,0 +1,171 @@
+{
+  "title": "New Application",
+  "subtitle": "Complete all steps to submit your application",
+  "steps": {
+    "applicantInfo": "Applicant Info",
+    "incidentDetails": "Incident Details",
+    "documentChecklist": "Document Checklist",
+    "bankDetails": "Bank Details",
+    "reviewConsent": "Review & Consent"
+  },
+  "buttons": {
+    "prev": "Prev",
+    "next": "Next",
+    "submit": "Submit Application",
+    "submitting": "Submitting...",
+    "uploadFile": "Upload File",
+    "importDigilocker": "Import from DigiLocker",
+    "view": "View",
+    "replace": "Replace",
+    "openNewTab": "Open in New Tab",
+    "close": "Close"
+  },
+  "step1": {
+    "title": "Application Type",
+    "required": "Required",
+    "selectType": "Select Application Type",
+    "types": {
+      "pcrRelief": "PCR Relief",
+      "poaCompensation": "PoA Compensation",
+      "interCasteMarriage": "Inter-Caste Marriage Incentive",
+      "other": "Other"
+    },
+    "profileSection": {
+      "title": "Your Details (Auto-filled from profile)",
+      "fullName": "Full Name",
+      "phone": "Phone",
+      "email": "Email",
+      "district": "District",
+      "address": "Address",
+      "updateNote": "To update your details, please visit your profile page."
+    },
+    "errors": {
+      "typeRequired": "Application type is required",
+      "districtRequired": "District is required from your profile"
+    }
+  },
+  "step2": {
+    "incidentDate": "Incident Date",
+    "policeStation": "Police Station",
+    "firNumber": "FIR Number",
+    "firHint": "Must start with 'FIR' and be at least 8 characters (e.g., FIR12345)",
+    "incidentDescription": "Incident Description",
+    "descriptionPlaceholder": "Please describe the incident in detail...",
+    "firNotRequired": "FIR Number not required for Inter-Caste Marriage applications",
+    "errors": {
+      "dateRequired": "Incident date is required",
+      "policeStationRequired": "Police Station is required",
+      "firRequired": "FIR Number is required",
+      "descriptionMinLength": "Incident description must be at least 10 characters",
+      "descriptionRequired": "Incident description is required"
+    }
+  },
+  "step3": {
+    "title": "Document Checklist",
+    "subtitle": "Upload required documents below. They will be saved to the database when you submit the application.",
+    "viewSample": "View Sample Document",
+    "uploadStatus": "Temporary uploads: {temp} | Saved in database: {saved}",
+    "uploading": "Uploading...",
+    "uploadProgress": "{progress}%",
+    "fileTypes": "PDF, JPG, PNG • Max 10MB",
+    "docInfo": {
+      "uploaded": "Uploaded:",
+      "status": "Status:"
+    },
+    "statuses": {
+      "verified": "VERIFIED",
+      "rejected": "REJECTED",
+      "pending": "PENDING"
+    },
+    "documentTypes": {
+      "AADHAAR_CARD": "Aadhaar Card",
+      "PAN_CARD": "PAN Card",
+      "BIRTH_CERTIFICATE": "Birth Certificate",
+      "BANK_PASSBOOK": "Bank Passbook",
+      "CATEGORY_CERTIFICATE": "Category Certificate",
+      "INCOME_CERTIFICATE": "Income Certificate",
+      "MARRIAGE_CERTIFICATE": "Marriage Certificate"
+    },
+    "errors": {
+      "documentsRequired": "Please upload all required documents. Missing: {missing}",
+      "invalidFileType": "Please upload PDF, JPG, or PNG files only",
+      "fileSizeExceeded": "File size must be less than 10MB"
+    },
+    "toasts": {
+      "uploadSuccess": "Document uploaded! It will be saved when you submit the application.",
+      "digilockerConnecting": "Connecting to DigiLocker...",
+      "digilockerSuccess": "Document imported from DigiLocker! It will be saved when you submit the application.",
+      "uploadFailed": "Failed to upload {label}: {error}",
+      "viewFailed": "Failed to load document. Please try again."
+    }
+  },
+  "step4": {
+    "title": "Bank Account Details",
+    "subtitle": "Provide your bank account details for benefit transfer. Your details {status}.",
+    "statusAutoFilled": "have been auto-filled from your profile",
+    "statusWillBeSaved": "will be saved to your profile when you submit",
+    "accountHolderName": "Account Holder Name",
+    "accountHolderPlaceholder": "Full name as per bank account",
+    "accountNumber": "Account Number",
+    "accountNumberPlaceholder": "Enter account number",
+    "accountNumberHint": "9-18 digits numeric only",
+    "ifscCode": "IFSC Code",
+    "ifscPlaceholder": "e.g., SBIN0001234",
+    "ifscHint": "11 characters (4 letters + 0 + 6 alphanumeric)",
+    "bankName": "Bank Name",
+    "bankNamePlaceholder": "Name of your bank",
+    "branchName": "Branch Name",
+    "branchPlaceholder": "Branch name and location",
+    "errors": {
+      "accountHolderRequired": "Account holder name is required",
+      "accountNumberMinLength": "Account number must be at least 9 digits",
+      "accountNumberMaxLength": "Account number must not exceed 18 digits",
+      "accountNumberDigitsOnly": "Account number must contain only digits",
+      "accountNumberRequired": "Account number is required",
+      "ifscLength": "IFSC code must be exactly 11 characters",
+      "ifscFormat": "IFSC code must start with 4 letters, followed by 0, then 6 alphanumeric characters (e.g., SBIN0001234)",
+      "ifscRequired": "IFSC code is required",
+      "bankNameRequired": "Bank name is required",
+      "branchRequired": "Branch name is required"
+    }
+  },
+  "step5": {
+    "title": "Review & Submit",
+    "reviewTitle": "Application Summary",
+    "applicant": "Applicant",
+    "email": "Email",
+    "applicationType": "Application Type",
+    "incidentDate": "Incident Date",
+    "district": "District",
+    "policeStation": "Police Station",
+    "firNumber": "FIR Number",
+    "incidentDescription": "Incident Description",
+    "documentsAttached": "Documents Attached",
+    "requiredDocs": "{uploaded}/{required} required",
+    "bankDetails": "Bank Details",
+    "accountMasked": "****{last4}",
+    "notProvided": "—",
+    "typeNotSelected": "Not selected",
+    "declaration": {
+      "text": "I declare that all the information provided is true and accurate to the best of my knowledge.",
+      "error": "You must accept the declaration to proceed"
+    }
+  },
+  "validation": {
+    "completePreviousSteps": "Complete previous steps to continue",
+    "fixErrors": "Fix validation errors"
+  },
+  "messages": {
+    "uploadingDocuments": "Uploading documents...",
+    "documentsUploaded": "Documents uploaded successfully!",
+    "savingBankDetails": "Saving bank details...",
+    "bankDetailsSaved": "Bank details saved to your profile!",
+    "bankSaveWarning": "Warning: Bank details could not be saved to profile",
+    "submissionSuccess": "Application submitted successfully!",
+    "submissionFailed": "Failed to submit application"
+  },
+  "common": {
+    "loading": "Loading...",
+    "required": "Required"
+  }
+}

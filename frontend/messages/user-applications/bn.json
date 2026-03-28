@@ -1,0 +1,332 @@
+{
+  "list": {
+    "title": "আবেদন",
+    "subtitle": "আপনার সমস্ত আবেদন ট্র্যাক এবং পরিচালনা করুন",
+    "buttons": {
+      "export": "রপ্তানি",
+      "new": "নতুন"
+    },
+    "filters": {
+      "allTypes": "সব ধরনের",
+      "compensation": "ক্ষতিপূরণ",
+      "poaCompensation": "PoA ক্ষতিপূরণ",
+      "legalAid": "আইনি সহায়তা",
+      "incentive": "প্রণোদনা"
+    },
+    "statuses": {
+      "draft": "খসড়া",
+      "submitted": "জমা দেওয়া হয়েছে",
+      "underReview": "পর্যালোচনাধীন",
+      "approved": "অনুমোদিত",
+      "rejected": "প্রত্যাখ্যাত",
+      "disbursed": "বিতরণ করা হয়েছে",
+      "documentsApproved": "নথি অনুমোদিত",
+      "documentsRejected": "নথি প্রত্যাখ্যাত",
+      "socialWelfareRejected": "সমাজকল্যাণ দ্বারা প্রত্যাখ্যাত",
+      "fiRejected": "FI দ্বারা প্রত্যাখ্যাত"
+    },
+    "search": {
+      "placeholder": "আইডি বা শিরোনাম অনুসন্ধান করুন"
+    },
+    "results": {
+      "title": "ফলাফল",
+      "empty": "কোন আবেদন নেই।",
+      "createNew": "একটি তৈরি করুন"
+    },
+    "card": {
+      "type": "ধরন:",
+      "requested": "অনুরোধ করা হয়েছে:",
+      "approved": "অনুমোদিত:",
+      "updated": "আপডেট করা হয়েছে:"
+    },
+    "pagination": {
+      "page": "পৃষ্ঠা",
+      "of": "/",
+      "total": "মোট",
+      "prev": "পূর্ববর্তী",
+      "next": "পরবর্তী"
+    }
+  },
+  "new": {
+    "title": "নতুন আবেদন",
+    "subtitle": "সুবিধার জন্য একটি নতুন আবেদন জমা দিন",
+    "steps": {
+      "applicantInfo": "আবেদনকারীর তথ্য",
+      "incidentDetails": "ঘটনার বিবরণ",
+      "documentChecklist": "নথি চেকলিস্ট",
+      "bankDetails": "ব্যাংক বিবরণ",
+      "reviewConsent": "পর্যালোচনা এবং সম্মতি"
+    },
+    "step1": {
+      "title": "আবেদনকারীর তথ্য",
+      "description": "আপনার ব্যক্তিগত বিবরণ লিখুন",
+      "fields": {
+        "fullName": {
+          "label": "পুরো নাম",
+          "placeholder": "আপনার পুরো নাম লিখুন"
+        },
+        "email": {
+          "label": "ইমেইল",
+          "placeholder": "আপনার ইমেইল ঠিকানা লিখুন"
+        },
+        "phone": {
+          "label": "ফোন নম্বর",
+          "placeholder": "10 সংখ্যার মোবাইল নম্বর লিখুন"
+        },
+        "address": {
+          "label": "ঠিকানা",
+          "placeholder": "আপনার সম্পূর্ণ ঠিকানা লিখুন"
+        },
+        "district": {
+          "label": "জেলা",
+          "placeholder": "আপনার জেলা নির্বাচন করুন"
+        }
+      }
+    },
+    "step2": {
+      "title": "ঘটনার বিবরণ",
+      "description": "ঘটনা সম্পর্কে তথ্য প্রদান করুন",
+      "fields": {
+        "actType": {
+          "label": "আবেদনের ধরন",
+          "placeholder": "আবেদনের ধরন নির্বাচন করুন",
+          "options": {
+            "pcrRelief": "PCR ত্রাণ",
+            "poaCompensation": "PoA ক্ষতিপূরণ",
+            "interCasteMarriage": "আন্তঃবর্ণ বিবাহ প্রণোদনা",
+            "other": "অন্যান্য"
+          }
+        },
+        "title": {
+          "label": "আবেদনের শিরোনাম",
+          "placeholder": "আপনার আবেদনের জন্য সংক্ষিপ্ত শিরোনাম"
+        },
+        "description": {
+          "label": "বিবরণ",
+          "placeholder": "ঘটনা বা পরিস্থিতি বিস্তারিতভাবে বর্ণনা করুন"
+        },
+        "incidentDate": {
+          "label": "ঘটনার তারিখ",
+          "placeholder": "তারিখ নির্বাচন করুন"
+        },
+        "incidentDistrict": {
+          "label": "ঘটনার জেলা",
+          "placeholder": "যে জেলায় ঘটনা ঘটেছে তা নির্বাচন করুন"
+        },
+        "policeStation": {
+          "label": "পুলিশ স্টেশন",
+          "placeholder": "পুলিশ স্টেশনের নাম লিখুন"
+        },
+        "firNumber": {
+          "label": "FIR নম্বর",
+          "placeholder": "FIR নম্বর লিখুন",
+          "hint": "আন্তঃবর্ণ বিবাহ আবেদনের জন্য প্রয়োজন নেই"
+        },
+        "requestedBenefits": {
+          "label": "অনুরোধকৃত সুবিধা",
+          "options": {
+            "compensation": "ক্ষতিপূরণ",
+            "legalAid": "আইনি সহায়তা",
+            "rehabilitation": "পুনর্বাসন",
+            "incentive": "প্রণোদনা"
+          }
+        },
+        "amountRequested": {
+          "label": "অনুরোধকৃত পরিমাণ",
+          "placeholder": "₹ এ পরিমাণ লিখুন"
+        }
+      }
+    },
+    "step3": {
+      "title": "নথি চেকলিস্ট",
+      "description": "প্রয়োজনীয় নথি আপলোড করুন বা DigiLocker থেকে লিঙ্ক করুন",
+      "notice": {
+        "title": "নথির প্রয়োজনীয়তা",
+        "points": [
+          "সমর্থিত ফরম্যাট: PDF, JPG, PNG",
+          "সর্বোচ্চ ফাইল আকার: 10MB",
+          "স্পষ্ট এবং সুপাঠ্য নথি",
+          "DigiLocker একীকরণ উপলব্ধ"
+        ]
+      },
+      "documents": {
+        "aadhaar": "আধার কার্ড",
+        "categoryProof": "বর্ণ প্রমাণপত্র",
+        "incomeProof": "আয় প্রমাণপত্র",
+        "addressProof": "ঠিকানা প্রমাণ",
+        "marriageCertificate": "বিবাহ প্রমাণপত্র",
+        "affidavit": "হলফনামা",
+        "medicalReport": "চিকিৎসা রিপোর্ট",
+        "firCopy": "FIR কপি",
+        "courtOrder": "আদালতের আদেশ",
+        "deathCertificate": "মৃত্যু প্রমাণপত্র",
+        "photos": "ছবি/প্রমাণ",
+        "other": "অন্যান্য নথি"
+      },
+      "buttons": {
+        "upload": "ফাইল আপলোড করুন",
+        "digilocker": "DigiLocker থেকে আমদানি করুন",
+        "remove": "সরান",
+        "view": "দেখুন"
+      },
+      "status": {
+        "uploading": "আপলোড হচ্ছে...",
+        "uploaded": "আপলোড করা হয়েছে",
+        "verified": "যাচাইকৃত",
+        "pending": "বিচারাধীন"
+      }
+    },
+    "step4": {
+      "title": "ব্যাংক অ্যাকাউন্ট বিবরণ",
+      "description": "তহবিল বিতরণের জন্য আপনার ব্যাংক বিবরণ লিখুন",
+      "notice": {
+        "title": "সুরক্ষিত তথ্য",
+        "description": "আপনার ব্যাংক বিবরণ এনক্রিপ্ট করা এবং শুধুমাত্র তহবিল বিতরণের উদ্দেশ্যে সুরক্ষিতভাবে সংরক্ষণ করা হয়।"
+      },
+      "fields": {
+        "accountNumber": {
+          "label": "অ্যাকাউন্ট নম্বর",
+          "placeholder": "ব্যাংক অ্যাকাউন্ট নম্বর লিখুন",
+          "hint": "শুধুমাত্র 9-18 সংখ্যার সংখ্যা"
+        },
+        "ifscCode": {
+          "label": "IFSC কোড",
+          "placeholder": "IFSC কোড লিখুন",
+          "hint": "11 অক্ষর (যেমন, SBIN0001234)"
+        },
+        "bankName": {
+          "label": "ব্যাংকের নাম",
+          "placeholder": "ব্যাংকের নাম লিখুন"
+        },
+        "bankBranch": {
+          "label": "শাখার নাম",
+          "placeholder": "শাখার নাম লিখুন"
+        },
+        "accountHolderName": {
+          "label": "অ্যাকাউন্ট হোল্ডারের নাম",
+          "placeholder": "অ্যাকাউন্ট হোল্ডারের নাম লিখুন"
+        }
+      },
+      "bankDocuments": {
+        "title": "ব্যাংক সম্পর্কিত নথি (ঐচ্ছিক)",
+        "panCard": "PAN কার্ড",
+        "passbook": "ব্যাংক পাসবুক"
+      }
+    },
+    "step5": {
+      "title": "পর্যালোচনা এবং জমা দিন",
+      "description": "জমা দেওয়ার আগে আপনার আবেদন পর্যালোচনা করুন",
+      "sections": {
+        "applicantInfo": "আবেদনকারীর তথ্য",
+        "incidentDetails": "ঘটনার বিবরণ",
+        "documents": "নথি",
+        "bankDetails": "ব্যাংক বিবরণ"
+      },
+      "declaration": {
+        "label": "আমি ঘোষণা করছি যে প্রদত্ত সমস্ত তথ্য আমার জ্ঞানমতে সত্য এবং সঠিক"
+      },
+      "summary": {
+        "documentsUploaded": "নথি আপলোড করা হয়েছে",
+        "noDocuments": "কোনো নথি আপলোড করা হয়নি",
+        "noBankDetails": "ব্যাংক বিবরণ প্রদান করা হয়নি"
+      }
+    },
+    "buttons": {
+      "previous": "পূর্ববর্তী",
+      "next": "পরবর্তী",
+      "submit": "আবেদন জমা দিন",
+      "submitting": "জমা দেওয়া হচ্ছে...",
+      "cancel": "বাতিল"
+    },
+    "validation": {
+      "required": "এই ক্ষেত্রটি আবশ্যক",
+      "email": "অবৈধ ইমেইল ঠিকানা",
+      "phone": "ফোন নম্বর 10 সংখ্যার হতে হবে",
+      "amount": "পরিমাণ একটি ধনাত্মক সংখ্যা হতে হবে",
+      "declaration": "এগিয়ে যাওয়ার জন্য আপনাকে ঘোষণা গ্রহণ করতে হবে"
+    },
+    "messages": {
+      "success": "আবেদন সফলভাবে জমা দেওয়া হয়েছে!",
+      "error": "আবেদন জমা দিতে ব্যর্থ। অনুগ্রহ করে আবার চেষ্টা করুন।",
+      "uploadSuccess": "নথি সফলভাবে আপলোড হয়েছে",
+      "uploadError": "নথি আপলোড করতে ব্যর্থ",
+      "saving": "সংরক্ষণ করা হচ্ছে...",
+      "saved": "অগ্রগতি সংরক্ষিত"
+    }
+  },
+  "detail": {
+    "title": "আবেদনের বিবরণ",
+    "buttons": {
+      "back": "আবেদনে ফিরে যান",
+      "edit": "সম্পাদনা",
+      "download": "ডাউনলোড",
+      "cancel": "আবেদন বাতিল করুন"
+    },
+    "sections": {
+      "overview": "আবেদনের সারাংশ",
+      "applicant": "আবেদনকারীর তথ্য",
+      "incident": "ঘটনার বিবরণ",
+      "documents": "নথি",
+      "bank": "ব্যাংক বিবরণ",
+      "timeline": "আবেদনের সময়রেখা",
+      "comments": "মন্তব্য এবং নোট"
+    },
+    "status": {
+      "title": "বর্তমান অবস্থা",
+      "lastUpdated": "সর্বশেষ আপডেট"
+    },
+    "fields": {
+      "applicationNumber": "আবেদন নম্বর",
+      "type": "ধরন",
+      "status": "অবস্থা",
+      "submittedAt": "জমা দেওয়া হয়েছে",
+      "fullName": "পুরো নাম",
+      "email": "ইমেইল",
+      "phone": "ফোন",
+      "address": "ঠিকানা",
+      "district": "জেলা",
+      "title": "শিরোনাম",
+      "description": "বিবরণ",
+      "incidentDate": "ঘটনার তারিখ",
+      "incidentDistrict": "ঘটনার জেলা",
+      "policeStation": "পুলিশ স্টেশন",
+      "firNumber": "FIR নম্বর",
+      "requestedBenefits": "অনুরোধকৃত সুবিধা",
+      "amountRequested": "অনুরোধকৃত পরিমাণ",
+      "amountApproved": "অনুমোদিত পরিমাণ",
+      "accountNumber": "অ্যাকাউন্ট নম্বর",
+      "ifscCode": "IFSC কোড",
+      "bankName": "ব্যাংকের নাম",
+      "branchName": "শাখার নাম",
+      "accountHolderName": "অ্যাকাউন্ট হোল্ডারের নাম"
+    },
+    "documents": {
+      "title": "সংযুক্ত নথি",
+      "empty": "কোনো নথি সংযুক্ত নেই",
+      "verified": "যাচাইকৃত",
+      "pending": "যাচাই বিচারাধীন",
+      "rejected": "প্রত্যাখ্যাত",
+      "view": "দেখুন",
+      "download": "ডাউনলোড"
+    },
+    "timeline": {
+      "submitted": "আবেদন জমা দেওয়া হয়েছে",
+      "underReview": "পর্যালোচনাধীন",
+      "documentsVerified": "নথি যাচাইকৃত",
+      "approved": "আবেদন অনুমোদিত",
+      "rejected": "আবেদন প্রত্যাখ্যাত",
+      "disbursed": "তহবিল বিতরণ করা হয়েছে"
+    }
+  },
+  "common": {
+    "loading": "লোড হচ্ছে...",
+    "error": "একটি ত্রুটি ঘটেছে",
+    "noData": "কোনও ডেটা উপলব্ধ নেই",
+    "confirmation": "আপনি কি নিশ্চিত?",
+    "yes": "হ্যাঁ",
+    "no": "না",
+    "save": "সংরক্ষণ করুন",
+    "cancel": "বাতিল",
+    "close": "বন্ধ করুন"
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "title": {
+    "aadhaar": "Login with Aadhaar",
+    "otp": "OTP Verification"
+  },
+  "subtitle": {
+    "aadhaar": "Enter your 12-digit Aadhaar number",
+    "otp": "Enter the OTP sent to your registered mobile number"
+  },
+  "testCredentials": {
+    "title": "Test Credentials",
+    "aadhaar": "Test Aadhaar:",
+    "otp": "Test OTP:"
+  },
+  "card": {
+    "title": {
+      "aadhaar": "Aadhaar Authentication",
+      "otp": "OTP Verification"
+    },
+    "description": {
+      "aadhaar": "Use your Aadhaar number for secure login",
+      "otp": "Enter your OTP"
+    }
+  },
+  "form": {
+    "aadhaarLabel": "Aadhaar Number",
+    "aadhaarPlaceholder": "1234 5678 9012",
+    "otpLabel": "OTP Code",
+    "otpPlaceholder": "123456",
+    "sendOtp": "Send OTP",
+    "processing": "Processing...",
+    "verify": "Verify",
+    "verifying": "Verifying...",
+    "goBack": "Go Back",
+    "resendOtp": "Resend OTP"
+  },
+  "validation": {
+    "aadhaarMin": "Aadhaar number must be 12 digits",
+    "aadhaarMax": "Aadhaar number must be 12 digits",
+    "aadhaarDigitsOnly": "Aadhaar number must contain only digits",
+    "otpLength": "OTP must be 6 digits"
+  },
+  "messages": {
+    "otpSent": "OTP sent to your registered mobile number",
+    "otpResent": "OTP resent successfully",
+    "loginSuccess": "Login successful!",
+    "invalidOtp": "Invalid OTP",
+    "error": "An error occurred. Please try again.",
+    "otpExpires": "OTP expires in:"
+  },
+  "userInfo": {
+    "name": "Name:",
+    "fatherName": "Father's Name:"
+  },
+  "security": {
+    "title": "Security Notice",
+    "message": "Your OTP is valid for 5 minutes. Do not share your OTP with anyone. NyayaSetu will never ask for your OTP via phone or email."
+  },
+  "backToHome": "Home"
+}

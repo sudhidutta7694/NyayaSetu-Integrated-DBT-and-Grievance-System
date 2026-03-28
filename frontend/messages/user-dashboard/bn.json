@@ -1,0 +1,15 @@
+{
+  "welcome": "স্বাগতম",
+  "subtitle": "আবেদন ট্র্যাক করুন, নথি পরিচালনা করুন এবং স্ট্যাটাস আপডেট দেখুন।",
+  "newApplication": "নতুন আবেদন",
+  "cards": {
+    "allApplications": "সমস্ত আবেদন",
+    "verifiedDocs": "যাচাইকৃত নথি",
+    "inProgress": "প্রগতিতে"
+  },
+  "recentApplications": {
+    "title": "সাম্প্রতিক আবেদন",
+    "viewAll": "সব দেখুন",
+    "noApplications": "এখনও কোন আবেদন নেই।"
+  }
+}

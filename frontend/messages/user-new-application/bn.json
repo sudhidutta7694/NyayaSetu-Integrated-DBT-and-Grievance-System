@@ -1,0 +1,171 @@
+{
+  "title": "নতুন আবেদন",
+  "subtitle": "আপনার আবেদন জমা দিতে সমস্ত ধাপ সম্পূর্ণ করুন",
+  "steps": {
+    "applicantInfo": "আবেদনকারীর তথ্য",
+    "incidentDetails": "ঘটনার বিবরণ",
+    "documentChecklist": "নথি তালিকা",
+    "bankDetails": "ব্যাংক বিবরণ",
+    "reviewConsent": "পর্যালোচনা এবং সম্মতি"
+  },
+  "buttons": {
+    "prev": "পূর্ববর্তী",
+    "next": "পরবর্তী",
+    "submit": "আবেদন জমা দিন",
+    "submitting": "জমা দেওয়া হচ্ছে...",
+    "uploadFile": "ফাইল আপলোড করুন",
+    "importDigilocker": "DigiLocker থেকে আমদানি করুন",
+    "view": "দেখুন",
+    "replace": "প্রতিস্থাপন করুন",
+    "openNewTab": "নতুন ট্যাবে খুলুন",
+    "close": "বন্ধ করুন"
+  },
+  "step1": {
+    "title": "আবেদনের ধরন",
+    "required": "প্রয়োজনীয়",
+    "selectType": "আবেদনের ধরন নির্বাচন করুন",
+    "types": {
+      "pcrRelief": "PCR ত্রাণ",
+      "poaCompensation": "PoA ক্ষতিপূরণ",
+      "interCasteMarriage": "আন্তঃজাতি বিবাহ প্রণোদনা",
+      "other": "অন্যান্য"
+    },
+    "profileSection": {
+      "title": "আপনার বিবরণ (প্রোফাইল থেকে স্বয়ংক্রিয়ভাবে পূরণ করা)",
+      "fullName": "পুরো নাম",
+      "phone": "ফোন",
+      "email": "ইমেইল",
+      "district": "জেলা",
+      "address": "ঠিকানা",
+      "updateNote": "আপনার বিবরণ আপডেট করতে, অনুগ্রহ করে আপনার প্রোফাইল পৃষ্ঠায় যান।"
+    },
+    "errors": {
+      "typeRequired": "আবেদনের ধরন প্রয়োজনীয়",
+      "districtRequired": "আপনার প্রোফাইল থেকে জেলা প্রয়োজনীয়"
+    }
+  },
+  "step2": {
+    "incidentDate": "ঘটনার তারিখ",
+    "policeStation": "পুলিশ স্টেশন",
+    "firNumber": "FIR নম্বর",
+    "firHint": "'FIR' দিয়ে শুরু হতে হবে এবং কমপক্ষে 8 অক্ষর হতে হবে (যেমন, FIR12345)",
+    "incidentDescription": "ঘটনার বিবরণ",
+    "descriptionPlaceholder": "অনুগ্রহ করে ঘটনাটি বিস্তারিতভাবে বর্ণনা করুন...",
+    "firNotRequired": "আন্তঃজাতি বিবাহ আবেদনের জন্য FIR নম্বর প্রয়োজনীয় নয়",
+    "errors": {
+      "dateRequired": "ঘটনার তারিখ প্রয়োজনীয়",
+      "policeStationRequired": "পুলিশ স্টেশন প্রয়োজনীয়",
+      "firRequired": "FIR নম্বর প্রয়োজনীয়",
+      "descriptionMinLength": "ঘটনার বিবরণ কমপক্ষে 10 অক্ষরের হতে হবে",
+      "descriptionRequired": "ঘটনার বিবরণ প্রয়োজনীয়"
+    }
+  },
+  "step3": {
+    "title": "নথি তালিকা",
+    "subtitle": "নিচে প্রয়োজনীয় নথি আপলোড করুন। আপনি আবেদন জমা দিলে সেগুলি ডাটাবেসে সংরক্ষণ করা হবে।",
+    "viewSample": "নমুনা নথি দেখুন",
+    "uploadStatus": "অস্থায়ী আপলোড: {temp} | ডাটাবেসে সংরক্ষিত: {saved}",
+    "uploading": "আপলোড হচ্ছে...",
+    "uploadProgress": "{progress}%",
+    "fileTypes": "PDF, JPG, PNG • সর্বোচ্চ 10MB",
+    "docInfo": {
+      "uploaded": "আপলোড করা হয়েছে:",
+      "status": "অবস্থা:"
+    },
+    "statuses": {
+      "verified": "যাচাইকৃত",
+      "rejected": "প্রত্যাখ্যাত",
+      "pending": "বিচারাধীন"
+    },
+    "documentTypes": {
+      "AADHAAR_CARD": "আধার কার্ড",
+      "PAN_CARD": "প্যান কার্ড",
+      "BIRTH_CERTIFICATE": "জন্ম সনদ",
+      "BANK_PASSBOOK": "ব্যাংক পাসবুক",
+      "CATEGORY_CERTIFICATE": "শ্রেণী সনদ",
+      "INCOME_CERTIFICATE": "আয় সনদ",
+      "MARRIAGE_CERTIFICATE": "বিবাহ সনদ"
+    },
+    "errors": {
+      "documentsRequired": "অনুগ্রহ করে সমস্ত প্রয়োজনীয় নথি আপলোড করুন। অনুপস্থিত: {missing}",
+      "invalidFileType": "অনুগ্রহ করে শুধুমাত্র PDF, JPG, বা PNG ফাইল আপলোড করুন",
+      "fileSizeExceeded": "ফাইলের আকার 10MB এর কম হতে হবে"
+    },
+    "toasts": {
+      "uploadSuccess": "নথি আপলোড হয়েছে! আপনি আবেদন জমা দিলে এটি সংরক্ষণ করা হবে।",
+      "digilockerConnecting": "DigiLocker এ সংযোগ করা হচ্ছে...",
+      "digilockerSuccess": "DigiLocker থেকে নথি আমদানি করা হয়েছে! আপনি আবেদন জমা দিলে এটি সংরক্ষণ করা হবে।",
+      "uploadFailed": "{label} আপলোড করতে ব্যর্থ: {error}",
+      "viewFailed": "নথি লোড করতে ব্যর্থ। অনুগ্রহ করে আবার চেষ্টা করুন।"
+    }
+  },
+  "step4": {
+    "title": "ব্যাংক অ্যাকাউন্টের বিবরণ",
+    "subtitle": "সুবিধা স্থানান্তরের জন্য আপনার ব্যাংক অ্যাকাউন্টের বিবরণ প্রদান করুন। আপনার বিবরণ {status}।",
+    "statusAutoFilled": "আপনার প্রোফাইল থেকে স্বয়ংক্রিয়ভাবে পূরণ করা হয়েছে",
+    "statusWillBeSaved": "আপনি জমা দিলে আপনার প্রোফাইলে সংরক্ষণ করা হবে",
+    "accountHolderName": "অ্যাকাউন্ট ধারকের নাম",
+    "accountHolderPlaceholder": "ব্যাংক অ্যাকাউন্ট অনুযায়ী পুরো নাম",
+    "accountNumber": "অ্যাকাউন্ট নম্বর",
+    "accountNumberPlaceholder": "অ্যাকাউন্ট নম্বর লিখুন",
+    "accountNumberHint": "9-18 সংখ্যা শুধুমাত্র সংখ্যাসূচক",
+    "ifscCode": "IFSC কোড",
+    "ifscPlaceholder": "যেমন, SBIN0001234",
+    "ifscHint": "11 অক্ষর (4 অক্ষর + 0 + 6 আলফানিউমেরিক)",
+    "bankName": "ব্যাংকের নাম",
+    "bankNamePlaceholder": "আপনার ব্যাংকের নাম",
+    "branchName": "শাখার নাম",
+    "branchPlaceholder": "শাখার নাম এবং অবস্থান",
+    "errors": {
+      "accountHolderRequired": "অ্যাকাউন্ট ধারকের নাম প্রয়োজনীয়",
+      "accountNumberMinLength": "অ্যাকাউন্ট নম্বর কমপক্ষে 9 সংখ্যার হতে হবে",
+      "accountNumberMaxLength": "অ্যাকাউন্ট নম্বর 18 সংখ্যার বেশি হতে পারবে না",
+      "accountNumberDigitsOnly": "অ্যাকাউন্ট নম্বরে শুধুমাত্র সংখ্যা থাকতে হবে",
+      "accountNumberRequired": "অ্যাকাউন্ট নম্বর প্রয়োজনীয়",
+      "ifscLength": "IFSC কোড ঠিক 11 অক্ষরের হতে হবে",
+      "ifscFormat": "IFSC কোড 4 অক্ষর দিয়ে শুরু হতে হবে, তারপর 0, তারপর 6 আলফানিউমেরিক অক্ষর (যেমন, SBIN0001234)",
+      "ifscRequired": "IFSC কোড প্রয়োজনীয়",
+      "bankNameRequired": "ব্যাংকের নাম প্রয়োজনীয়",
+      "branchRequired": "শাখার নাম প্রয়োজনীয়"
+    }
+  },
+  "step5": {
+    "title": "পর্যালোচনা এবং জমা দিন",
+    "reviewTitle": "আবেদন সংক্ষিপ্তসার",
+    "applicant": "আবেদনকারী",
+    "email": "ইমেইল",
+    "applicationType": "আবেদনের ধরন",
+    "incidentDate": "ঘটনার তারিখ",
+    "district": "জেলা",
+    "policeStation": "পুলিশ স্টেশন",
+    "firNumber": "FIR নম্বর",
+    "incidentDescription": "ঘটনার বিবরণ",
+    "documentsAttached": "সংযুক্ত নথি",
+    "requiredDocs": "{uploaded}/{required} প্রয়োজনীয়",
+    "bankDetails": "ব্যাংক বিবরণ",
+    "accountMasked": "****{last4}",
+    "notProvided": "—",
+    "typeNotSelected": "নির্বাচিত নয়",
+    "declaration": {
+      "text": "আমি ঘোষণা করছি যে প্রদত্ত সমস্ত তথ্য আমার জ্ঞান অনুযায়ী সত্য এবং নির্ভুল।",
+      "error": "এগিয়ে যেতে আপনাকে ঘোষণা স্বীকার করতে হবে"
+    }
+  },
+  "validation": {
+    "completePreviousSteps": "চালিয়ে যেতে পূর্ববর্তী ধাপগুলি সম্পূর্ণ করুন",
+    "fixErrors": "যাচাইকরণ ত্রুটি সংশোধন করুন"
+  },
+  "messages": {
+    "uploadingDocuments": "নথি আপলোড হচ্ছে...",
+    "documentsUploaded": "নথি সফলভাবে আপলোড হয়েছে!",
+    "savingBankDetails": "ব্যাংক বিবরণ সংরক্ষণ করা হচ্ছে...",
+    "bankDetailsSaved": "ব্যাংক বিবরণ আপনার প্রোফাইলে সংরক্ষণ করা হয়েছে!",
+    "bankSaveWarning": "সতর্কতা: ব্যাংক বিবরণ প্রোফাইলে সংরক্ষণ করা যায়নি",
+    "submissionSuccess": "আবেদন সফলভাবে জমা দেওয়া হয়েছে!",
+    "submissionFailed": "আবেদন জমা দিতে ব্যর্থ"
+  },
+  "common": {
+    "loading": "লোড হচ্ছে...",
+    "required": "প্রয়োজনীয়"
+  }
+}

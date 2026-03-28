@@ -2,19 +2,22 @@
 Application service for managing applications
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional, Dict, Any
 from decimal import Decimal
 import structlog
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.core.exceptions import NotFoundException, ValidationException, ConflictException
 from app.core.security import generate_application_number
-from app.models.application import (
+from app.schema.application import (
     Application, ApplicationCreate, ApplicationUpdate, ApplicationStatus,
     ApplicationType, ApplicationReview, ApplicationDisbursement,
     ApplicationFilter, ApplicationStats
 )
+from models.application import Application as ApplicationModel
+from models.user import User as UserModel
+from models.document import Document as DocumentModel
 
 logger = structlog.get_logger()
 
@@ -32,41 +35,78 @@ class ApplicationService:
     ) -> Application:
         """Create a new application"""
         try:
-            # Check if user has any pending applications
-            existing_applications = await self.db.application.find_many(
-                where={
-                    "user_id": user_id,
-                    "status": {
-                        "in": ["DRAFT", "SUBMITTED", "UNDER_REVIEW", "DOCUMENT_VERIFICATION_PENDING"]
-                    }
-                }
-            )
+            # Check if user has any incomplete/active applications
+            from models.application import Application as ApplicationModel, ApplicationStatus as ModelApplicationStatus
             
-            if existing_applications:
-                raise ConflictException("You already have pending applications")
+            # Define terminal/final states where user can apply again
+            terminal_statuses = [
+                ModelApplicationStatus.COMPLETED,
+                ModelApplicationStatus.REJECTED,
+                ModelApplicationStatus.DISTRICT_AUTHORITY_REJECTED,
+                ModelApplicationStatus.DOCUMENTS_REJECTED,
+                ModelApplicationStatus.SOCIAL_WELFARE_REJECTED,
+                ModelApplicationStatus.FI_REJECTED,
+                ModelApplicationStatus.FUND_DISBURSED
+            ]
+            
+            # Check if user has any application of the SAME TYPE that is NOT in a terminal state
+            # Users can have multiple applications of different types simultaneously
+            existing_active_applications = self.db.query(ApplicationModel).filter(
+                ApplicationModel.user_id == user_id,
+                ApplicationModel.application_type == application_data.application_type,
+                ~ApplicationModel.status.in_(terminal_statuses)
+            ).all()
+            
+            if existing_active_applications:
+                app_type_name = application_data.application_type.value.replace('_', ' ').title()
+                raise ConflictException(f"You already have an active {app_type_name} application in progress. Please wait until it is completed or rejected before submitting another {app_type_name} application.")
             
             # Generate application number
             application_number = generate_application_number()
             
             # Create application
-            application = await self.db.application.create(
-                data={
-                    "application_number": application_number,
-                    "user_id": user_id,
-                    "title": application_data.title,
-                    "description": application_data.description,
-                    "application_type": application_data.application_type.value,
-                    "amount_requested": application_data.amount_requested,
-                    "bank_account_number": application_data.bank_account_number,
-                    "bank_ifsc_code": application_data.bank_ifsc_code,
-                    "bank_name": application_data.bank_name,
-                    "bank_branch": application_data.bank_branch,
-                    "account_holder_name": application_data.account_holder_name,
-                    "status": ApplicationStatus.DRAFT.value
-                }
+            application = ApplicationModel(
+                application_number=application_number,
+                user_id=user_id,
+                title=application_data.title,
+                description=application_data.description,
+                application_type=application_data.application_type,
+                incident_date=application_data.incident_date,
+                incident_description=application_data.incident_description,
+                incident_district=application_data.incident_district,
+                police_station=application_data.police_station,
+                fir_number=application_data.fir_number,
+                bank_account_number=application_data.bank_account_number,
+                bank_ifsc_code=application_data.bank_ifsc_code,
+                bank_name=application_data.bank_name,
+                bank_branch=application_data.bank_branch,
+                account_holder_name=application_data.account_holder_name,
+                status=ModelApplicationStatus.SUBMITTED,
+                submitted_at=datetime.now(timezone.utc)
             )
             
-            logger.info("Application created", application_id=application.id, user_id=user_id)
+            self.db.add(application)
+            self.db.flush()  # Flush to get the application ID
+            
+            # Link all user documents to this application using many-to-many relationship
+            user_documents = self.db.query(DocumentModel).filter(
+                DocumentModel.user_id == user_id
+            ).all()
+            
+            # Add documents to the many-to-many relationship
+            for doc in user_documents:
+                application.linked_documents.append(doc)
+                # Also set application_id for backward compatibility
+                if not doc.application_id:
+                    doc.application_id = application.id
+            
+            self.db.commit()
+            self.db.refresh(application)
+            
+            logger.info("Application created and documents linked", 
+                       application_id=application.id, 
+                       user_id=user_id, 
+                       documents_linked=len(user_documents))
             return application
             
         except ConflictException:
@@ -78,15 +118,10 @@ class ApplicationService:
     async def get_application(self, application_id: str) -> Optional[Application]:
         """Get application by ID"""
         try:
-            application = await self.db.application.find_unique(
-                where={"id": application_id},
-                include={
-                    "user": True,
-                    "documents": True,
-                    "case": True,
-                    "disbursements": True
-                }
-            )
+            from models.application import Application as ApplicationModel
+            application = self.db.query(ApplicationModel).filter(
+                ApplicationModel.id == application_id
+            ).first()
             return application
         except Exception as e:
             logger.error("Failed to get application", application_id=application_id, error=str(e))
@@ -95,40 +130,33 @@ class ApplicationService:
     async def get_application_by_number(self, application_number: str) -> Optional[Application]:
         """Get application by application number"""
         try:
-            application = await self.db.application.find_unique(
-                where={"application_number": application_number},
-                include={
-                    "user": True,
-                    "documents": True,
-                    "case": True,
-                    "disbursements": True
-                }
-            )
+            from models.application import Application as ApplicationModel
+            application = self.db.query(ApplicationModel).filter(
+                ApplicationModel.application_number == application_number
+            ).first()
             return application
         except Exception as e:
             logger.error("Failed to get application by number", application_number=application_number, error=str(e))
             return None
     
-    async def get_user_applications(
+    def get_user_applications(
         self, 
         user_id: str, 
         skip: int = 0, 
         limit: int = 100
-    ) -> List[Application]:
+    ) -> List[ApplicationModel]:
         """Get applications for a specific user"""
         try:
-            applications = await self.db.application.find_many(
-                where={"user_id": user_id},
-                skip=skip,
-                take=limit,
-                order_by={"created_at": "desc"},
-                include={
-                    "user": True,
-                    "documents": True,
-                    "case": True,
-                    "disbursements": True
-                }
-            )
+            applications = self.db.query(ApplicationModel)\
+                .options(
+                    joinedload(ApplicationModel.user),
+                    joinedload(ApplicationModel.documents)
+                )\
+                .filter(ApplicationModel.user_id == user_id)\
+                .order_by(ApplicationModel.created_at.desc())\
+                .offset(skip)\
+                .limit(limit)\
+                .all()
             return applications
         except Exception as e:
             logger.error("Failed to get user applications", user_id=user_id, error=str(e))
@@ -158,13 +186,6 @@ class ApplicationService:
                         where_conditions["created_at"]["lte"] = filters.date_to
                     else:
                         where_conditions["created_at"] = {"lte": filters.date_to}
-                if filters.amount_min:
-                    where_conditions["amount_requested"] = {"gte": filters.amount_min}
-                if filters.amount_max:
-                    if "amount_requested" in where_conditions:
-                        where_conditions["amount_requested"]["lte"] = filters.amount_max
-                    else:
-                        where_conditions["amount_requested"] = {"lte": filters.amount_max}
                 
                 # Handle district and state filters through user relation
                 if filters.district or filters.state:
@@ -407,13 +428,11 @@ class ApplicationService:
             applications = await self.db.application.find_many(
                 where=where_conditions,
                 select={
-                    "amount_requested": True,
                     "amount_approved": True,
                     "amount_disbursed": True
                 }
             )
             
-            total_amount_requested = sum(app.amount_requested or 0 for app in applications)
             total_amount_approved = sum(app.amount_approved or 0 for app in applications)
             total_amount_disbursed = sum(app.amount_disbursed or 0 for app in applications)
             
@@ -423,7 +442,6 @@ class ApplicationService:
                 approved_applications=approved_applications,
                 rejected_applications=rejected_applications,
                 disbursed_applications=disbursed_applications,
-                total_amount_requested=total_amount_requested,
                 total_amount_approved=total_amount_approved,
                 total_amount_disbursed=total_amount_disbursed
             )

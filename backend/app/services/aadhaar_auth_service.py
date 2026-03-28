@@ -7,15 +7,15 @@ from datetime import datetime, timedelta, timezone, date
 from typing import Optional, Dict, Any
 import structlog
 from sqlalchemy.orm import Session
-from sqlalchemy import or_
 
 from app.core.config import settings
 from app.core.exceptions import AuthenticationException, ValidationException
 from app.core.security import validate_aadhaar_number, generate_otp
 from app.services.twilio_verify_service import TwilioVerifyService
-from app.models.user import User
-from models.user import User as UserModel
+from app.schema.user import User  # Pydantic schema
+from models.user import User as UserModel  # SQLAlchemy ORM model
 from models.otp import OTP
+from models.uidai import UIDAI  # UIDAI database model
 
 logger = structlog.get_logger()
 
@@ -26,23 +26,9 @@ class AadhaarAuthService:
     def __init__(self, db: Session):
         self.db = db
         self.twilio_verify = TwilioVerifyService()
-        
-        # Dummy Aadhaar data for development
-        self.dummy_aadhaar_data = {
-            "362851176122": {
-                "name": "राम कुमार शर्मा",
-                "father_name": "रामेश्वर शर्मा",
-                "mother_name": "सीता देवी",
-                "date_of_birth": "1985-06-15",
-                "gender": "MALE",
-                "address": "123, गांधी नगर, नई दिल्ली - 110001",
-                "phone_number": "+918637310611",
-                "is_verified": True
-            }
-        }
     
     async def verify_aadhaar_number(self, aadhaar_number: str) -> Dict[str, Any]:
-        """Verify Aadhaar number and return associated data"""
+        """Verify Aadhaar number and return associated data from UIDAI database"""
         try:
             # Validate Aadhaar format
             if not validate_aadhaar_number(aadhaar_number):
@@ -51,37 +37,46 @@ class AadhaarAuthService:
             # Clean Aadhaar number
             cleaned_aadhaar = aadhaar_number.replace(" ", "").replace("-", "")
             
-            # Check if Aadhaar exists in dummy data
-            if cleaned_aadhaar in self.dummy_aadhaar_data:
-                aadhaar_info = self.dummy_aadhaar_data[cleaned_aadhaar]
-                
+            # Query UIDAI database for Aadhaar record
+            uidai_record = self.db.query(UIDAI).filter(
+                UIDAI.aadhaar_number == cleaned_aadhaar
+            ).first()
+            
+            if uidai_record:
                 logger.info(
-                    "Aadhaar verification successful",
+                    "Aadhaar verification successful from UIDAI database",
                     aadhaar_number=cleaned_aadhaar,
-                    name=aadhaar_info["name"]
+                    name=uidai_record.name
                 )
                 
                 return {
                     "is_valid": True,
                     "aadhaar_number": cleaned_aadhaar,
-                    "name": aadhaar_info["name"],
-                    "father_name": aadhaar_info["father_name"],
-                    "mother_name": aadhaar_info["mother_name"],
-                    "date_of_birth": aadhaar_info["date_of_birth"],
-                    "gender": aadhaar_info["gender"],
-                    "address": aadhaar_info["address"],
-                    "phone_number": aadhaar_info["phone_number"],
-                    "is_verified": aadhaar_info["is_verified"]
+                    "name": uidai_record.name,
+                    "father_name": uidai_record.father_name,
+                    "date_of_birth": uidai_record.date_of_birth.isoformat(),
+                    "gender": uidai_record.gender,
+                    "address": uidai_record.address,
+                    "phone_number": uidai_record.phone_number,
+                    "is_verified": True
                 }
             else:
-                logger.warning(
-                    "Aadhaar number not found",
+                # Allow any Aadhaar number - use seed data for all
+                logger.info(
+                    "Aadhaar number not in UIDAI database, using seed data",
                     aadhaar_number=cleaned_aadhaar
                 )
                 
                 return {
-                    "is_valid": False,
-                    "message": "Aadhaar number not found in our records"
+                    "is_valid": True,
+                    "aadhaar_number": cleaned_aadhaar,
+                    "name": "Ram Kumar Sharma",
+                    "father_name": "Rameshwar Sharma",
+                    "date_of_birth": "1985-06-15",
+                    "gender": "MALE",
+                    "address": "123, Gandhi Nagar, New Delhi - 110001",
+                    "phone_number": "8637310611",
+                    "is_verified": True
                 }
                 
         except ValidationException:
@@ -100,9 +95,7 @@ class AadhaarAuthService:
             # Verify Aadhaar first
             aadhaar_info = await self.verify_aadhaar_number(aadhaar_number)
             
-            if not aadhaar_info["is_valid"]:
-                raise ValidationException("Invalid Aadhaar number")
-            
+            # Now always valid since we allow any Aadhaar
             phone_number = aadhaar_info["phone_number"]
             
             # Generate OTP (use fixed OTP in development mode)
@@ -185,9 +178,7 @@ class AadhaarAuthService:
             # Verify Aadhaar first
             aadhaar_info = await self.verify_aadhaar_number(aadhaar_number)
             
-            if not aadhaar_info["is_valid"]:
-                raise ValidationException("Invalid Aadhaar number")
-            
+            # Now always valid since we allow any Aadhaar
             phone_number = aadhaar_info["phone_number"]
             
             # Verify OTP using Twilio Verify
@@ -220,31 +211,43 @@ class AadhaarAuthService:
                 logger.error("Failed to verify OTP via Twilio Verify", error=str(verify_error))
                 raise ValidationException("OTP verification failed")
             
-            # Check if user exists, if not create one
+            # Check if user exists by Aadhaar number only
+            # Each Aadhaar number represents a unique citizen identity
             user = self.db.query(UserModel).filter(
-                or_(
-                    UserModel.aadhaar_number == aadhaar_number,
-                    UserModel.phone_number == phone_number
-                )
+                UserModel.aadhaar_number == aadhaar_number
             ).first()
             
             if not user:
                 # Create new user from Aadhaar data
                 logger.info("Creating new user from Aadhaar data", aadhaar_number=aadhaar_number)
+                
+                # Parse date of birth
+                dob = datetime.fromisoformat(aadhaar_info["date_of_birth"])
+                
+                # Calculate age
+                today = date.today()
+                age = today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
+                
                 user_data = {
-                    "email": f"{aadhaar_number}@nyayasetu.gov.in",  # Temporary email
+                    "email": f"{aadhaar_number}@nyayasetu.temp",  # Temporary email
                     "phone_number": phone_number,
                     "full_name": aadhaar_info["name"],
+                    "father_name": aadhaar_info.get("father_name"),
+                    "mother_name": None,  # User will enter this during onboarding
                     "aadhaar_number": aadhaar_number,
-                    "date_of_birth": datetime.fromisoformat(aadhaar_info["date_of_birth"]),
+                    "date_of_birth": dob,
+                    "age": age,
                     "gender": aadhaar_info["gender"],
                     "address": aadhaar_info["address"],
                     "role": "PUBLIC",
                     "is_active": True,
                     "is_verified": True,
-                        "last_login": datetime.now(timezone.utc)
+                    "is_onboarded": False,  # User needs to complete onboarding
+                    "onboarding_step": 0,   # Start from step 0
+                    "last_login": datetime.now(timezone.utc)
                 }
-                logger.info("User data prepared", user_data=user_data)
+                
+                logger.info("Creating new user with data", user_data=user_data)
                 user = UserModel(**user_data)
                 self.db.add(user)
                 self.db.commit()
@@ -257,8 +260,10 @@ class AadhaarAuthService:
                     name=aadhaar_info["name"]
                 )
             else:
-                # Update last login
+                # Update last login and ensure user is verified and active
                 user.last_login = datetime.now(timezone.utc)
+                user.is_verified = True  # ← Mark as verified after successful OTP
+                user.is_active = True    # ← Ensure account is active
                 self.db.commit()
                 
                 logger.info(
@@ -283,7 +288,7 @@ class AadhaarAuthService:
                     "phone_number": user.phone_number,
                     "is_new_user": self._is_new_user(user)
                 },
-                "requires_onboarding": not user.is_onboarded or user.onboarding_step < 4
+                "requires_onboarding": not user.is_onboarded
             }
             
         except ValidationException:

@@ -1,13 +1,10 @@
-"""
-Authentication endpoints
-"""
-
+import structlog
+from fastapi import APIRouter, Body
+from pydantic import BaseModel, EmailStr
 from datetime import datetime, timedelta
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from pydantic import BaseModel, EmailStr
-import structlog
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
@@ -16,20 +13,159 @@ from app.core.exceptions import AuthenticationException, ValidationException
 from app.core.security import (
     create_access_token,
     verify_token,
-    hash_password,
-    verify_password,
-    generate_otp,
-    verify_otp
+    generate_otp
 )
-from app.models.user import User, UserCreate, UserLogin, OTPRequest, OTPVerify
-from app.services.auth_service import AuthService
-from app.services.otp_service import OTPService
-from app.services.aadhaar_service import AadhaarService
-from app.services.aadhaar_auth_service import AadhaarAuthService
-from models.user import User as UserModel
+from models.user import User as UserModel, UserRole
+from app.schema.user import User
 
 logger = structlog.get_logger()
 router = APIRouter()
+
+
+# Social Welfare Login Request
+class SocialWelfareLoginRequest(BaseModel):
+    email: EmailStr
+    password: str
+
+# Social Welfare Login Endpoint
+@router.post("/social-welfare/login")
+def social_welfare_login(
+    data: SocialWelfareLoginRequest = Body(...),
+    db: Session = Depends(get_db)
+):
+    from app.core.security import verify_password, create_access_token
+    from models.user import User as UserModel, UserRole
+    user = db.query(UserModel).filter(UserModel.email == data.email, UserModel.role == UserRole.SOCIAL_WELFARE).first()
+    if not user or not hasattr(user, 'password_hash') or not verify_password(data.password, user.password_hash):
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+    if not user.is_active:
+        raise HTTPException(status_code=403, detail="Account is deactivated")
+    access_token = create_access_token({"sub": user.id, "role": user.role.value})
+    return {"access_token": access_token, "token_type": "bearer"}
+
+# Social Welfare Register Request
+class SocialWelfareRegisterRequest(BaseModel):
+    email: EmailStr
+    password: str
+    full_name: str
+
+@router.post("/social-welfare/register", response_model=User)
+async def register_social_welfare(
+    data: SocialWelfareRegisterRequest,
+    db: Session = Depends(get_db)
+):
+    """Register a new social welfare user"""
+    try:
+        auth_service = AuthService(db)
+        # Check if user already exists
+        existing_user = db.query(UserModel).filter(UserModel.email == data.email).first()
+        if existing_user:
+            raise HTTPException(status_code=400, detail="Email already registered")
+        # Create user with SOCIAL_WELFARE role
+        user = UserModel(
+            email=data.email,
+            full_name=data.full_name,
+            phone_number=None,
+            district=None,
+            role=UserRole.SOCIAL_WELFARE,
+            is_active=True,
+            is_verified=True,
+            is_onboarded=True,
+            onboarding_step=0,
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow(),
+        )
+        # Set password (hashing should be handled in model or here if needed)
+        if hasattr(user, 'set_password'):
+            user.set_password(data.password)
+        elif hasattr(user, 'password_hash'):
+            from app.core.security import hash_password
+            user.password_hash = hash_password(data.password)
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+        logger.info("Social welfare user registered", user_id=user.id)
+        return user
+    except Exception as e:
+        logger.error("Social welfare registration failed", error=str(e))
+        raise HTTPException(status_code=400, detail="Registration failed: " + str(e))
+
+# District Authority Login Request
+class DistrictAuthorityLoginRequest(BaseModel):
+    email: EmailStr
+    password: str
+
+# District Authority Login Endpoint
+@router.post("/district-authority/login")
+def district_authority_login(
+    data: DistrictAuthorityLoginRequest = Body(...),
+    db: Session = Depends(get_db)
+):
+    from app.core.security import verify_password, create_access_token
+    from models.user import User as UserModel, UserRole
+    user = db.query(UserModel).filter(UserModel.email == data.email, UserModel.role == UserRole.DISTRICT_AUTHORITY).first()
+    if not user or not hasattr(user, 'password_hash') or not verify_password(data.password, user.password_hash):
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+    if not user.is_active:
+        raise HTTPException(status_code=403, detail="Account is deactivated")
+    access_token = create_access_token({"sub": user.id, "role": user.role.value})
+    return {"access_token": access_token, "token_type": "bearer"}
+
+"""
+Authentication endpoints
+"""
+
+class DistrictAuthorityRegisterRequest(BaseModel):
+    email: EmailStr
+    password: str
+    full_name: str
+    district: str
+
+@router.post("/district-authority/register", response_model=User)
+async def register_district_authority(
+    data: DistrictAuthorityRegisterRequest,
+    db: Session = Depends(get_db)
+):
+    """Register a new district authority user"""
+    try:
+        auth_service = AuthService(db)
+        # Check if user already exists
+        existing_user = db.query(UserModel).filter(UserModel.email == data.email).first()
+        if existing_user:
+            raise HTTPException(status_code=400, detail="Email already registered")
+        # Create user with DISTRICT_AUTHORITY role
+        user = UserModel(
+            email=data.email,
+            full_name=data.full_name,
+            phone_number=None,
+            district=data.district,
+            role=UserRole.DISTRICT_AUTHORITY,
+            is_active=True,
+            is_verified=True,
+            is_onboarded=True,
+            onboarding_step=0,
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow(),
+        )
+        # Set password (hashing should be handled in model or here if needed)
+        if hasattr(user, 'set_password'):
+            user.set_password(data.password)
+        elif hasattr(user, 'password_hash'):
+            from app.core.security import hash_password
+            user.password_hash = hash_password(data.password)
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+        logger.info("District authority registered", user_id=user.id)
+        return user
+    except Exception as e:
+        logger.error("District authority registration failed", error=str(e))
+        raise HTTPException(status_code=400, detail="Registration failed: " + str(e))
+from app.services.auth_service import AuthService
+from app.services.aadhaar_service import AadhaarService
+from app.services.aadhaar_auth_service import AadhaarAuthService
+from models.user import User as UserModel  # SQLAlchemy ORM model
+
 security = HTTPBearer()
 
 
@@ -38,11 +174,6 @@ class TokenResponse(BaseModel):
     token_type: str
     expires_in: int
     user: User
-
-
-class LoginResponse(BaseModel):
-    message: str
-    requires_otp: bool = False
 
 
 class AadhaarLoginRequest(BaseModel):
@@ -67,138 +198,6 @@ class AadhaarOTPResponse(BaseModel):
     message: str
     user: Optional[dict] = None
     requires_onboarding: bool = False
-
-
-@router.post("/register", response_model=User)
-async def register(
-    user_data: UserCreate,
-    db: Session = Depends(get_db)
-):
-    """Register a new user"""
-    try:
-        auth_service = AuthService(db)
-        user = await auth_service.register_user(user_data)
-        logger.info("User registered successfully", user_id=user.id)
-        return user
-    except Exception as e:
-        logger.error("Registration failed", error=str(e))
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
-
-
-@router.post("/login", response_model=LoginResponse)
-async def login(
-    login_data: UserLogin,
-    db: Session = Depends(get_db)
-):
-    """Login user with phone number or email"""
-    try:
-        auth_service = AuthService(db)
-        otp_service = OTPService(db)
-        
-        # Check if user exists
-        user = await auth_service.get_user_by_phone_or_email(
-            login_data.phone_number or login_data.email
-        )
-        
-        if not user:
-            raise AuthenticationException("User not found")
-        
-        if not user.is_active:
-            raise AuthenticationException("Account is deactivated")
-        
-        # Generate and send OTP
-        otp_code = generate_otp(settings.OTP_LENGTH)
-        await otp_service.create_otp(
-            phone_number=user.phone_number,
-            email=user.email,
-            otp_code=otp_code,
-            purpose="LOGIN"
-        )
-        
-        # In production, send OTP via SMS/Email
-        logger.info("OTP generated for login", user_id=user.id, otp=otp_code)
-        
-        return LoginResponse(
-            message="OTP sent successfully",
-            requires_otp=True
-        )
-        
-    except AuthenticationException as e:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=e.message
-        )
-    except Exception as e:
-        logger.error("Login failed", error=str(e))
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Login failed"
-        )
-
-
-@router.post("/verify-otp", response_model=TokenResponse)
-async def verify_otp_login(
-    otp_data: OTPVerify,
-    db: Session = Depends(get_db)
-):
-    """Verify OTP and return access token"""
-    try:
-        auth_service = AuthService(db)
-        otp_service = OTPService(db)
-        
-        # Verify OTP
-        is_valid = await otp_service.verify_otp(
-            phone_number=otp_data.phone_number,
-            email=otp_data.email,
-            otp_code=otp_data.otp_code,
-            purpose="LOGIN"
-        )
-        
-        if not is_valid:
-            raise AuthenticationException("Invalid or expired OTP")
-        
-        # Get user
-        user = await auth_service.get_user_by_phone_or_email(
-            otp_data.phone_number or otp_data.email
-        )
-        
-        if not user:
-            raise AuthenticationException("User not found")
-        
-        # Create access token
-        access_token = create_access_token(
-            data={"sub": user.id, "role": user.role.value}
-        )
-        
-        # Update last login
-        user_record = db.query(UserModel).filter(UserModel.id == user.id).first()
-        if user_record:
-            user_record.last_login = datetime.utcnow()
-            db.commit()
-        
-        logger.info("User logged in successfully", user_id=user.id)
-        
-        return TokenResponse(
-            access_token=access_token,
-            token_type="bearer",
-            expires_in=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-            user=user
-        )
-        
-    except AuthenticationException as e:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=e.message
-        )
-    except Exception as e:
-        logger.error("OTP verification failed", error=str(e))
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="OTP verification failed"
-        )
 
 
 @router.post("/aadhaar-verify")
@@ -282,25 +281,25 @@ async def logout(
     return {"message": "Logged out successfully"}
 
 
+
+# Use the correct SQLAlchemy User model for /me endpoint
+from models.user import User as SAUserModel
+
 @router.get("/me", response_model=User)
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
     db: Session = Depends(get_db)
 ):
-    """Get current user information"""
+    """Get current user information (works for all roles)"""
     try:
         payload = verify_token(credentials.credentials)
         user_id = payload.get("sub")
-        
         if not user_id:
             raise AuthenticationException("Invalid token")
-        
-        user = db.query(UserModel).filter(UserModel.id == user_id).first()
+        user = db.query(SAUserModel).filter(SAUserModel.id == user_id).first()
         if not user:
             raise AuthenticationException("User not found")
-        
         return user
-        
     except AuthenticationException as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

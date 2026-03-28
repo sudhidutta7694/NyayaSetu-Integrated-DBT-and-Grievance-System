@@ -1,0 +1,95 @@
+{
+  "title": "Profile",
+  "editButton": "Edit Profile",
+  "loading": "Loading...",
+  "retry": "Retry",
+  "failedToLoad": "Failed to load profile",
+  "accountDetails": {
+    "title": "Account Details",
+    "uidaiNote": "Fields marked with 🔒 are verified from UIDAI/Aadhaar and cannot be edited.",
+    "fromUidai": "From UIDAI/Aadhaar",
+    "calculatedFromDob": "Calculated from DOB",
+    "fields": {
+      "fullName": "Full Name",
+      "email": "Email",
+      "phone": "Phone",
+      "aadhaar": "Aadhaar",
+      "fatherName": "Father's Name",
+      "motherName": "Mother's Name",
+      "dateOfBirth": "Date of Birth",
+      "age": "Age",
+      "ageYears": "{age} years",
+      "gender": "Gender",
+      "category": "Category",
+      "address": "Address",
+      "district": "District",
+      "state": "State",
+      "pincode": "Pincode",
+      "role": "Role",
+      "verification": "Verification"
+    },
+    "genderOptions": {
+      "select": "Select Gender",
+      "male": "Male",
+      "female": "Female",
+      "other": "Other",
+      "preferNotToSay": "Prefer not to say"
+    },
+    "categoryOptions": {
+      "select": "Select Category",
+      "sc": "SC",
+      "st": "ST",
+      "obc": "OBC",
+      "general": "General",
+      "other": "Other"
+    },
+    "verificationStatus": {
+      "verified": "Verified",
+      "pending": "Pending"
+    }
+  },
+  "bankDetails": {
+    "title": "Bank Details",
+    "editButton": "Edit",
+    "addButton": "Add",
+    "bankDetailsText": "Bank Details",
+    "accountNumber": "{index}",
+    "noBankAccount": "No bank account added yet. Click \"Add Bank Details\" to add your bank information for benefit transfers.",
+    "fields": {
+      "accountHolderName": "Account Holder Name",
+      "accountHolderPlaceholder": "Full name as per bank",
+      "accountNumber": "Account Number",
+      "accountNumberPlaceholder": "9-18 digits",
+      "ifscCode": "IFSC Code",
+      "ifscPlaceholder": "XXXX0XXXXXX",
+      "bankName": "Bank Name",
+      "bankNamePlaceholder": "e.g., State Bank of India",
+      "branchName": "Branch Name",
+      "branchPlaceholder": "e.g., Mumbai Main Branch",
+      "status": "Status"
+    },
+    "verificationStatus": {
+      "verified": "Verified",
+      "pending": "Pending Verification"
+    }
+  },
+  "buttons": {
+    "saveChanges": "Save Changes",
+    "saving": "Saving...",
+    "cancel": "Cancel",
+    "saveBankDetails": "Save Bank Details"
+  },
+  "toasts": {
+    "profileUpdated": "Profile updated successfully",
+    "profileUpdateFailed": "Failed to update profile",
+    "bankSaved": "Bank details saved successfully",
+    "bankSaveFailed": "Failed to save bank details",
+    "fillAllFields": "Please fill all bank details fields",
+    "invalidIfsc": "Invalid IFSC code format",
+    "invalidAccountNumber": "Account number must be between 9-18 digits",
+    "loadFailed": "Failed to load profile"
+  },
+  "notProvided": "Not provided",
+  "maskedAccount": "****{last4}",
+  "maskedAadhaar": "****{last4}"
+}

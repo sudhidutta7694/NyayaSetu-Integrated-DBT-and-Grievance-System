@@ -1,0 +1,74 @@
+{
+  "title": "Bank Details",
+  "securityNotice": {
+    "title": "Security Notice",
+    "description": "Your bank account information is encrypted and stored securely. We will only use this information for legitimate government benefit disbursements. You can skip this step and add bank details later from your dashboard."
+  },
+  "sections": {
+    "bankInfo": {
+      "title": "Bank Account Information",
+      "description": "Please provide your bank account details for fund disbursement. You can validate your details now or skip and add them later from your dashboard."
+    },
+    "documents": {
+      "title": "Upload Supporting Documents",
+      "description": "Upload your PAN card and bank passbook for verification (optional)"
+    }
+  },
+  "fields": {
+    "accountNumber": {
+      "label": "Account Number",
+      "placeholder": "Enter account number",
+      "hint": "9-18 digits numeric only"
+    },
+    "ifscCode": {
+      "label": "IFSC Code",
+      "placeholder": "e.g., SBIN0001234",
+      "hint": "11 characters: 4 letters + 0 + 6 alphanumeric (e.g., SBIN0001234)"
+    },
+    "bankName": {
+      "label": "Bank Name",
+      "placeholder": "Enter bank name"
+    },
+    "branchName": {
+      "label": "Branch Name",
+      "placeholder": "Enter branch name"
+    },
+    "accountHolderName": {
+      "label": "Account Holder Name",
+      "placeholder": "Enter account holder name"
+    }
+  },
+  "documentTypes": {
+    "PAN_CARD": "PAN Card",
+    "BANK_PASSBOOK": "Bank Passbook"
+  },
+  "uploadedDocuments": {
+    "title": "Uploaded Documents",
+    "uploading": "Uploading..."
+  },
+  "badges": {
+    "optional": "Optional"
+  },
+  "buttons": {
+    "uploadFile": "Upload File",
+    "uploaded": "Uploaded",
+    "previous": "Previous",
+    "skip": "Skip for Now",
+    "complete": "Complete Onboarding",
+    "saving": "Saving..."
+  },
+  "validation": {
+    "fileType": "Please upload PDF, JPG, or PNG files only",
+    "fileSize": "File size must be less than 10MB"
+  },
+  "messages": {
+    "uploadSuccess": "{documentName} uploaded successfully",
+    "uploadFailed": "Failed to upload document",
+    "documentRemoved": "Document removed",
+    "replacing": "Replacing {documentName}...",
+    "replaceConfirm": "A {documentName} document already exists. Do you want to replace it?",
+    "skipNotice": "You can add bank details later from your dashboard",
+    "saveSuccess": "Bank details saved successfully!",
+    "saveFailed": "Failed to save bank details"
+  }
+}

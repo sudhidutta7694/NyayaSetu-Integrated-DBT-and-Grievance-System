@@ -2,13 +2,15 @@
 
 import React, { useState, useRef, useEffect } from 'react'
 import { Shield, Menu, X, ChevronDown, Eye } from 'lucide-react'
-import { useLanguage } from '@/contexts/LanguageContext'
-import { LanguageSelector } from '@/components/accessibility/LanguageSelector'
+import { LanguageSwitcher } from '@/components/accessibility/LanguageSwitcher'
+import { useAuth } from '@/components/providers/AuthProvider'
+import { useTranslations } from 'next-intl'
+
 export function GovernmentHeader() {
+  const t = useTranslations('header')
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [loginDropdownOpen, setLoginDropdownOpen] = useState(false)
   const loginDropdownRef = useRef<HTMLDivElement>(null)
-  const { t } = useLanguage()
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -35,11 +37,20 @@ export function GovernmentHeader() {
             <div className="h-8 w-8 rounded-lg bg-orange-600 flex items-center justify-center">
               <Shield className="h-5 w-5 text-white" />
             </div>
-            <span className="text-xl font-bold text-gray-900">{t('home.title', 'NyayaSetu')}</span>
+            <span className="text-xl font-bold text-gray-900">{t('title')}</span>
           </a>
         </div>
-        {/* Language, Login, and Menu */}
+        {/* Language, Login/Logout, and Menu */}
         <div className="flex items-center gap-x-4">
+          {/* Notifications & Status Legend removed */}
+          {/* Resources Button - hidden on mobile */}
+          <a
+            href="/resources"
+            className="hidden md:flex border border-orange-200 bg-white hover:border-orange-400 px-4 py-2 rounded-lg shadow transition-colors items-center"
+            aria-label={t('resources')}
+          >
+            {t('resources')}
+          </a>
           {/* Login Dropdown - hidden on mobile */}
           <div className="relative hidden md:block" ref={loginDropdownRef}>
             <button
@@ -47,61 +58,41 @@ export function GovernmentHeader() {
               onClick={() => setLoginDropdownOpen((open) => !open)}
               aria-haspopup="true"
               aria-expanded={loginDropdownOpen}
-              aria-label="Login options"
+              aria-label={t('login')}
             >
-              {t('header.login', 'Login')}
+              {t('login')}
               <ChevronDown className="ml-2 h-4 w-4" />
             </button>
             {loginDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-50 animate-fade-in" role="menu" aria-label="Login options">
+              <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-50 animate-fade-in" role="menu" aria-label={t('login')}>
                 <ul className="py-2">
                   <li>
                     <a
                       href="/login"
-                      className="block px-6 py-3 text-gray-800 hover:bg-orange-50 hover:text-orange-700 transition-colors text-left w-full font-semibold"
+                      className="block px-5 py-3 text-gray-800 hover:bg-orange-50 hover:text-orange-700 transition-colors text-left w-full font-semibold"
                       onClick={() => setLoginDropdownOpen(false)}
                       role="menuitem"
                     >
-                      {t('header.loginIndividual', 'Common Individual')}
+                      {t('loginCitizen')}
                     </a>
                   </li>
                   <li>
                     <a
-                      href="/login/district-authority"
-                      className="block px-6 py-3 text-gray-800 hover:bg-orange-50 hover:text-orange-700 transition-colors text-left w-full font-semibold"
+                      href="/admin/login"
+                      className="block px-5 py-3 text-gray-800 hover:bg-orange-50 hover:text-orange-700 transition-colors text-left w-full font-semibold"
                       onClick={() => setLoginDropdownOpen(false)}
                       role="menuitem"
                     >
-                      {t('header.loginDistrict', 'District Authorities')}
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="/login/social-welfare"
-                      className="block px-6 py-3 text-gray-800 hover:bg-orange-50 hover:text-orange-700 transition-colors text-left w-full font-semibold"
-                      onClick={() => setLoginDropdownOpen(false)}
-                      role="menuitem"
-                    >
-                      {t('header.loginSocialWelfare', 'Social Welfare')}
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="/login/financial-institution"
-                      className="block px-6 py-3 text-gray-800 hover:bg-orange-50 hover:text-orange-700 transition-colors text-left w-full font-semibold"
-                      onClick={() => setLoginDropdownOpen(false)}
-                      role="menuitem"
-                    >
-                      {t('header.loginFinancial', 'Financial Institutions')}
+                      {t('loginAuthority')}
                     </a>
                   </li>
                 </ul>
               </div>
             )}
           </div>
-          {/* LanguageSelector - hidden on mobile */}
+          {/* LanguageSwitcher - hidden on mobile */}
           <div className="hidden md:block">
-            <LanguageSelector />
+            <LanguageSwitcher />
           </div>
           {/* Accessibility Icon Button - always visible on desktop, hidden on mobile */}
           <button
@@ -113,15 +104,15 @@ export function GovernmentHeader() {
                 (screenReader as HTMLElement).scrollIntoView({ behavior: 'smooth' })
               }
             }}
-            className="hidden md:inline hover:bg-orange-50 focus:outline-none text-gray-700 font-medium px-2 py-1 rounded transition-colors"
-            aria-label="Screen Reader Accessibility"
+            className="hidden md:inline hover:bg-orange-50 focus:outline-none text-gray-700 font-medium px-2 py-1 rounded transition-colors cursor-pointer"
+            aria-label={t('accessibility')}
             role="button"
           >
             <Eye className="h-5 w-5" />
           </button>
           {/* Mobile menu button - only visible on mobile */}
           <button
-            className="md:hidden p-2 rounded-md text-gray-700 hover:text-orange-600"
+            className="md:hidden p-2 rounded-md text-gray-700 hover:text-orange-600 cursor-pointer"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             aria-label="Toggle menu"
           >
@@ -138,11 +129,11 @@ export function GovernmentHeader() {
                   <div className="h-8 w-8 rounded-lg bg-orange-600 flex items-center justify-center">
                     <Shield className="h-5 w-5 text-white" />
                   </div>
-                  <span className="text-xl font-bold text-gray-900">{t('home.title', 'NyayaSetu')}</span>
+                  <span className="text-xl font-bold text-gray-900">{t('title')}</span>
                 </a>
                 <button
                   type="button"
-                  className="-m-2.5 rounded-md p-2.5 text-gray-700"
+                  className="-m-2.5 rounded-md p-2.5 text-gray-700 cursor-pointer"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   <span className="sr-only">Close menu</span>
@@ -150,20 +141,29 @@ export function GovernmentHeader() {
                 </button>
               </div>
               <div className="mt-6 flex flex-col gap-4">
+                {/* Resources Link (mobile) */}
+                <a
+                  href="/resources"
+                  className="border border-orange-200 bg-white hover:border-orange-400 px-4 py-2 rounded-lg shadow transition-colors text-center font-medium text-gray-700 hover:text-orange-600"
+                  onClick={() => setIsMenuOpen(false)}
+                  aria-label={t('resources')}
+                >
+                  {t('resources')}
+                </a>
                 {/* Login Dropdown (mobile) */}
                 <div className="relative" ref={loginDropdownRef}>
                   <button
-                    className="border border-orange-200 bg-white hover:border-orange-400 px-4 py-2 rounded-lg shadow transition-colors flex items-center w-full justify-between"
+                    className="border border-orange-200 bg-white hover:border-orange-400 px-4 py-2 rounded-lg shadow transition-colors flex items-center w-full justify-between cursor-pointer"
                     onClick={() => setLoginDropdownOpen((open) => !open)}
                     aria-haspopup="true"
                     aria-expanded={loginDropdownOpen}
-                    aria-label="Login options"
+                    aria-label={t('login')}
                   >
-                    {t('header.login', 'Login')}
+                  {t('login')}
                     <ChevronDown className="ml-2 h-4 w-4" />
                   </button>
                   {loginDropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-50 animate-fade-in" role="menu" aria-label="Login options">
+                    <div className="absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-50 animate-fade-in" role="menu" aria-label={t('login')}>
                       <ul className="py-2">
                         <li>
                           <a
@@ -172,45 +172,25 @@ export function GovernmentHeader() {
                             onClick={() => setLoginDropdownOpen(false)}
                             role="menuitem"
                           >
-                            {t('header.loginIndividual', 'Common Individual')}
+                            {t('loginCitizen')}
                           </a>
                         </li>
                         <li>
                           <a
-                            href="/login/district-authority"
+                            href="/admin/login"
                             className="block px-6 py-3 text-gray-800 hover:bg-orange-50 hover:text-orange-700 transition-colors text-left w-full font-semibold"
                             onClick={() => setLoginDropdownOpen(false)}
                             role="menuitem"
                           >
-                            {t('header.loginDistrict', 'District Authorities')}
-                          </a>
-                        </li>
-                        <li>
-                          <a
-                            href="/login/social-welfare"
-                            className="block px-6 py-3 text-gray-800 hover:bg-orange-50 hover:text-orange-700 transition-colors text-left w-full font-semibold"
-                            onClick={() => setLoginDropdownOpen(false)}
-                            role="menuitem"
-                          >
-                            {t('header.loginSocialWelfare', 'Social Welfare')}
-                          </a>
-                        </li>
-                        <li>
-                          <a
-                            href="/login/financial-institution"
-                            className="block px-6 py-3 text-gray-800 hover:bg-orange-50 hover:text-orange-700 transition-colors text-left w-full font-semibold"
-                            onClick={() => setLoginDropdownOpen(false)}
-                            role="menuitem"
-                          >
-                            {t('header.loginFinancial', 'Financial Institutions')}
+                          {t('loginAuthority')}
                           </a>
                         </li>
                       </ul>
                     </div>
                   )}
                 </div>
-                {/* Language Selector (mobile) */}
-                <LanguageSelector />
+                {/* Language Switcher (mobile) */}
+                <LanguageSwitcher />
                 {/* Accessibility Icon Button (mobile) */}
                 <button
                   onClick={() => {
@@ -221,11 +201,11 @@ export function GovernmentHeader() {
                       (screenReader as HTMLElement).scrollIntoView({ behavior: 'smooth' })
                     }
                   }}
-                  className="flex items-center justify-center border border-orange-200 bg-white hover:border-orange-400 px-4 py-2 rounded-lg shadow w-full"
-                  aria-label="Screen Reader Accessibility"
+                  className="flex items-center justify-center border border-orange-200 bg-white hover:border-orange-400 px-4 py-2 rounded-lg shadow w-full cursor-pointer"
+                  aria-label={t('accessibility')}
                   role="button"
                 >
-                  Accessibility
+                  {t('accessibility')}
                 </button>
               </div>
             </div>
@@ -235,3 +215,4 @@ export function GovernmentHeader() {
     </header>
   )
 }
+

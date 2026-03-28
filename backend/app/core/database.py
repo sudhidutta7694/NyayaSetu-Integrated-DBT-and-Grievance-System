@@ -10,7 +10,13 @@ import logging
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-from models.base import Base
+try:
+    from app.models.base import Base
+except ImportError:
+    try:
+        from backend.models.base import Base
+    except ImportError:
+        from models.base import Base
 
 DATABASE_URL = settings.DATABASE_URL
 engine = create_engine(DATABASE_URL, echo=True, future=True)

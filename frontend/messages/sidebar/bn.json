@@ -1,0 +1,21 @@
+{
+  "nav": {
+    "dashboard": "ড্যাশবোর্ড",
+    "applications": "আবেদন",
+    "documents": "নথি",
+    "announcements": "ঘোষণা",
+    "beneficiaries": "সুবিধাভোগী",
+    "disbursements": "বিতরণ",
+    "reports": "প্রতিবেদন",
+    "grievances": "অভিযোগ",
+    "profile": "প্রোফাইল",
+    "logout": "লগআউট"
+  },
+  "copyright": "© {year} ন্যায়সেতু",
+  "aria": {
+    "closeSidebar": "মেনু বন্ধ করুন",
+    "expandSidebar": "সাইডবার প্রসারিত করুন",
+    "collapseSidebar": "সাইডবার সংকুচিত করুন",
+    "openMenu": "মেনু খুলুন"
+  }
+}

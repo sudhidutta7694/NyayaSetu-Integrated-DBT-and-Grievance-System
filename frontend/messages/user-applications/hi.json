@@ -1,0 +1,332 @@
+{
+  "list": {
+    "title": "आवेदन",
+    "subtitle": "अपने सभी आवेदनों को ट्रैक और प्रबंधित करें",
+    "buttons": {
+      "export": "निर्यात करें",
+      "new": "नया"
+    },
+    "filters": {
+      "allTypes": "सभी प्रकार",
+      "compensation": "मुआवजा",
+      "poaCompensation": "पीओए मुआवजा",
+      "legalAid": "कानूनी सहायता",
+      "incentive": "प्रोत्साहन"
+    },
+    "statuses": {
+      "draft": "ड्राफ्ट",
+      "submitted": "जमा किया गया",
+      "underReview": "समीक्षाधीन",
+      "approved": "स्वीकृत",
+      "rejected": "अस्वीकृत",
+      "disbursed": "वितरित",
+      "documentsApproved": "दस्तावेज स्वीकृत",
+      "documentsRejected": "दस्तावेज अस्वीकृत",
+      "socialWelfareRejected": "समाज कल्याण द्वारा अस्वीकृत",
+      "fiRejected": "एफआई द्वारा अस्वीकृत"
+    },
+    "search": {
+      "placeholder": "आईडी या शीर्षक खोजें"
+    },
+    "results": {
+      "title": "परिणाम",
+      "empty": "कोई आवेदन नहीं।",
+      "createNew": "एक बनाएं"
+    },
+    "card": {
+      "type": "प्रकार:",
+      "requested": "अनुरोधित:",
+      "approved": "स्वीकृत:",
+      "updated": "अपडेट किया गया:"
+    },
+    "pagination": {
+      "page": "पृष्ठ",
+      "of": "/",
+      "total": "कुल",
+      "prev": "पिछला",
+      "next": "अगला"
+    }
+  },
+  "new": {
+    "title": "नया आवेदन",
+    "subtitle": "लाभ के लिए एक नया आवेदन जमा करें",
+    "steps": {
+      "applicantInfo": "आवेदक जानकारी",
+      "incidentDetails": "घटना विवरण",
+      "documentChecklist": "दस्तावेज चेकलिस्ट",
+      "bankDetails": "बैंक विवरण",
+      "reviewConsent": "समीक्षा और सहमति"
+    },
+    "step1": {
+      "title": "आवेदक जानकारी",
+      "description": "अपना व्यक्तिगत विवरण दर्ज करें",
+      "fields": {
+        "fullName": {
+          "label": "पूरा नाम",
+          "placeholder": "अपना पूरा नाम दर्ज करें"
+        },
+        "email": {
+          "label": "ईमेल",
+          "placeholder": "अपना ईमेल पता दर्ज करें"
+        },
+        "phone": {
+          "label": "फोन नंबर",
+          "placeholder": "10 अंकों का मोबाइल नंबर दर्ज करें"
+        },
+        "address": {
+          "label": "पता",
+          "placeholder": "अपना पूरा पता दर्ज करें"
+        },
+        "district": {
+          "label": "जिला",
+          "placeholder": "अपना जिला चुनें"
+        }
+      }
+    },
+    "step2": {
+      "title": "घटना विवरण",
+      "description": "घटना के बारे में जानकारी प्रदान करें",
+      "fields": {
+        "actType": {
+          "label": "आवेदन प्रकार",
+          "placeholder": "आवेदन प्रकार चुनें",
+          "options": {
+            "pcrRelief": "पीसीआर राहत",
+            "poaCompensation": "पीओए मुआवजा",
+            "interCasteMarriage": "अंतरजातीय विवाह प्रोत्साहन",
+            "other": "अन्य"
+          }
+        },
+        "title": {
+          "label": "आवेदन शीर्षक",
+          "placeholder": "अपने आवेदन के लिए संक्षिप्त शीर्षक"
+        },
+        "description": {
+          "label": "विवरण",
+          "placeholder": "घटना या स्थिति का विस्तार से वर्णन करें"
+        },
+        "incidentDate": {
+          "label": "घटना की तिथि",
+          "placeholder": "तिथि चुनें"
+        },
+        "incidentDistrict": {
+          "label": "घटना का जिला",
+          "placeholder": "वह जिला चुनें जहां घटना हुई"
+        },
+        "policeStation": {
+          "label": "पुलिस स्टेशन",
+          "placeholder": "पुलिस स्टेशन का नाम दर्ज करें"
+        },
+        "firNumber": {
+          "label": "एफआईआर नंबर",
+          "placeholder": "एफआईआर नंबर दर्ज करें",
+          "hint": "अंतरजातीय विवाह आवेदनों के लिए आवश्यक नहीं"
+        },
+        "requestedBenefits": {
+          "label": "अनुरोधित लाभ",
+          "options": {
+            "compensation": "मुआवजा",
+            "legalAid": "कानूनी सहायता",
+            "rehabilitation": "पुनर्वास",
+            "incentive": "प्रोत्साहन"
+          }
+        },
+        "amountRequested": {
+          "label": "अनुरोधित राशि",
+          "placeholder": "राशि ₹ में दर्ज करें"
+        }
+      }
+    },
+    "step3": {
+      "title": "दस्तावेज चेकलिस्ट",
+      "description": "आवश्यक दस्तावेज अपलोड करें या DigiLocker से लिंक करें",
+      "notice": {
+        "title": "दस्तावेज आवश्यकताएं",
+        "points": [
+          "समर्थित प्रारूप: PDF, JPG, PNG",
+          "अधिकतम फ़ाइल आकार: 10MB",
+          "स्पष्ट और सुपाठ्य दस्तावेज",
+          "DigiLocker एकीकरण उपलब्ध"
+        ]
+      },
+      "documents": {
+        "aadhaar": "आधार कार्ड",
+        "categoryProof": "जाति प्रमाण पत्र",
+        "incomeProof": "आय प्रमाण पत्र",
+        "addressProof": "पता प्रमाण",
+        "marriageCertificate": "विवाह प्रमाण पत्र",
+        "affidavit": "शपथ पत्र",
+        "medicalReport": "चिकित्सा रिपोर्ट",
+        "firCopy": "एफआईआर कॉपी",
+        "courtOrder": "न्यायालय आदेश",
+        "deathCertificate": "मृत्यु प्रमाण पत्र",
+        "photos": "फोटो/साक्ष्य",
+        "other": "अन्य दस्तावेज"
+      },
+      "buttons": {
+        "upload": "फाइल अपलोड करें",
+        "digilocker": "DigiLocker से आयात करें",
+        "remove": "हटाएं",
+        "view": "देखें"
+      },
+      "status": {
+        "uploading": "अपलोड हो रहा है...",
+        "uploaded": "अपलोड किया गया",
+        "verified": "सत्यापित",
+        "pending": "लंबित"
+      }
+    },
+    "step4": {
+      "title": "बैंक खाता विवरण",
+      "description": "धन वितरण के लिए अपने बैंक विवरण दर्ज करें",
+      "notice": {
+        "title": "सुरक्षित जानकारी",
+        "description": "आपके बैंक विवरण एन्क्रिप्टेड हैं और केवल धन वितरण के उद्देश्य से सुरक्षित रूप से संग्रहीत किए जाते हैं।"
+      },
+      "fields": {
+        "accountNumber": {
+          "label": "खाता संख्या",
+          "placeholder": "बैंक खाता संख्या दर्ज करें",
+          "hint": "केवल 9-18 अंकों की संख्या"
+        },
+        "ifscCode": {
+          "label": "आईएफएससी कोड",
+          "placeholder": "आईएफएससी कोड दर्ज करें",
+          "hint": "11 वर्ण (उदा., SBIN0001234)"
+        },
+        "bankName": {
+          "label": "बैंक का नाम",
+          "placeholder": "बैंक का नाम दर्ज करें"
+        },
+        "bankBranch": {
+          "label": "शाखा का नाम",
+          "placeholder": "शाखा का नाम दर्ज करें"
+        },
+        "accountHolderName": {
+          "label": "खाताधारक का नाम",
+          "placeholder": "खाताधारक का नाम दर्ज करें"
+        }
+      },
+      "bankDocuments": {
+        "title": "बैंक संबंधित दस्तावेज (वैकल्पिक)",
+        "panCard": "पैन कार्ड",
+        "passbook": "बैंक पासबुक"
+      }
+    },
+    "step5": {
+      "title": "समीक्षा और जमा करें",
+      "description": "सबमिशन से पहले अपने आवेदन की समीक्षा करें",
+      "sections": {
+        "applicantInfo": "आवेदक जानकारी",
+        "incidentDetails": "घटना विवरण",
+        "documents": "दस्तावेज",
+        "bankDetails": "बैंक विवरण"
+      },
+      "declaration": {
+        "label": "मैं घोषणा करता/करती हूं कि प्रदान की गई सभी जानकारी मेरी जानकारी के अनुसार सत्य और सही है"
+      },
+      "summary": {
+        "documentsUploaded": "दस्तावेज अपलोड किए गए",
+        "noDocuments": "कोई दस्तावेज अपलोड नहीं किया गया",
+        "noBankDetails": "बैंक विवरण प्रदान नहीं किया गया"
+      }
+    },
+    "buttons": {
+      "previous": "पिछला",
+      "next": "अगला",
+      "submit": "आवेदन जमा करें",
+      "submitting": "जमा हो रहा है...",
+      "cancel": "रद्द करें"
+    },
+    "validation": {
+      "required": "यह फ़ील्ड आवश्यक है",
+      "email": "अमान्य ईमेल पता",
+      "phone": "फोन नंबर 10 अंकों का होना चाहिए",
+      "amount": "राशि सकारात्मक संख्या होनी चाहिए",
+      "declaration": "आगे बढ़ने के लिए आपको घोषणा स्वीकार करनी होगी"
+    },
+    "messages": {
+      "success": "आवेदन सफलतापूर्वक जमा किया गया!",
+      "error": "आवेदन जमा करने में विफल। कृपया पुनः प्रयास करें।",
+      "uploadSuccess": "दस्तावेज सफलतापूर्वक अपलोड किया गया",
+      "uploadError": "दस्तावेज अपलोड करने में विफल",
+      "saving": "सहेजा जा रहा है...",
+      "saved": "प्रगति सहेजी गई"
+    }
+  },
+  "detail": {
+    "title": "आवेदन विवरण",
+    "buttons": {
+      "back": "आवेदनों पर वापस जाएं",
+      "edit": "संपादित करें",
+      "download": "डाउनलोड",
+      "cancel": "आवेदन रद्द करें"
+    },
+    "sections": {
+      "overview": "आवेदन सारांश",
+      "applicant": "आवेदक जानकारी",
+      "incident": "घटना विवरण",
+      "documents": "दस्तावेज",
+      "bank": "बैंक विवरण",
+      "timeline": "आवेदन समयरेखा",
+      "comments": "टिप्पणियां और नोट्स"
+    },
+    "status": {
+      "title": "वर्तमान स्थिति",
+      "lastUpdated": "अंतिम अपडेट"
+    },
+    "fields": {
+      "applicationNumber": "आवेदन संख्या",
+      "type": "प्रकार",
+      "status": "स्थिति",
+      "submittedAt": "जमा किया गया",
+      "fullName": "पूरा नाम",
+      "email": "ईमेल",
+      "phone": "फोन",
+      "address": "पता",
+      "district": "जिला",
+      "title": "शीर्षक",
+      "description": "विवरण",
+      "incidentDate": "घटना की तिथि",
+      "incidentDistrict": "घटना का जिला",
+      "policeStation": "पुलिस स्टेशन",
+      "firNumber": "एफआईआर नंबर",
+      "requestedBenefits": "अनुरोधित लाभ",
+      "amountRequested": "अनुरोधित राशि",
+      "amountApproved": "स्वीकृत राशि",
+      "accountNumber": "खाता संख्या",
+      "ifscCode": "आईएफएससी कोड",
+      "bankName": "बैंक का नाम",
+      "branchName": "शाखा का नाम",
+      "accountHolderName": "खाताधारक का नाम"
+    },
+    "documents": {
+      "title": "संलग्न दस्तावेज",
+      "empty": "कोई दस्तावेज संलग्न नहीं",
+      "verified": "सत्यापित",
+      "pending": "सत्यापन लंबित",
+      "rejected": "अस्वीकृत",
+      "view": "देखें",
+      "download": "डाउनलोड"
+    },
+    "timeline": {
+      "submitted": "आवेदन जमा किया गया",
+      "underReview": "समीक्षाधीन",
+      "documentsVerified": "दस्तावेज सत्यापित",
+      "approved": "आवेदन स्वीकृत",
+      "rejected": "आवेदन अस्वीकृत",
+      "disbursed": "धन वितरित"
+    }
+  },
+  "common": {
+    "loading": "लोड हो रहा है...",
+    "error": "एक त्रुटि हुई",
+    "noData": "कोई डेटा उपलब्ध नहीं",
+    "confirmation": "क्या आप सुनिश्चित हैं?",
+    "yes": "हां",
+    "no": "नहीं",
+    "save": "सहेजें",
+    "cancel": "रद्द करें",
+    "close": "बंद करें"
+  }
+}

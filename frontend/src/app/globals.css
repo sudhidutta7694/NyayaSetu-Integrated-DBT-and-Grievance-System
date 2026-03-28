@@ -24,6 +24,26 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 221.2 83.2% 53.3%;
     --radius: 0.5rem;
+    /* Status semantic tokens */
+    --status-draft-bg: 0 0% 96%; /* gray-100 */
+    --status-draft-fg: 215 16% 25%;
+    --status-submitted-bg: 214 95% 93%; /* blue-100 */
+    --status-submitted-fg: 217 91% 60%;
+    --status-under-review-bg: 45 100% 94%; /* amber-100 */
+    --status-under-review-fg: 31 97% 45%;
+    --status-approved-bg: 142 71% 94%; /* green-100 */
+    --status-approved-fg: 142 72% 29%;
+    --status-rejected-bg: 0 93% 94%; /* red-100 */
+    --status-rejected-fg: 0 72% 41%;
+    --status-disbursed-bg: 180 56% 93%; /* teal-100 */
+    --status-disbursed-fg: 180 80% 25%;
+    --status-pending-bg: 49 100% 95%;
+    --status-pending-fg: 40 97% 33%;
+      /* Timeline tokens */
+      --timeline-complete-bg: var(--status-approved-fg);
+      --timeline-active-border: var(--status-under-review-fg);
+      --timeline-upcoming-border: 215 16% 82%;
+      --timeline-progress: var(--status-under-review-fg);
   }
 
   .dark {
@@ -48,6 +68,38 @@
     --ring: 224.3 76.3% 94.1%;
   }
 }
+
+/* Status badge utility classes */
+.status-badge {
+  @apply inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium border uppercase;
+}
+
+/* Blue - Submitted/In Progress states */
+.status-draft { background: hsl(214 95% 93%); color: hsl(217 91% 60%); border-color: hsl(214 95% 85%); }
+.status-submitted { background: hsl(214 95% 93%); color: hsl(217 91% 60%); border-color: hsl(214 95% 85%); }
+.status-under-review { background: hsl(214 95% 93%); color: hsl(217 91% 60%); border-color: hsl(214 95% 85%); }
+.status-document-verification-pending { background: hsl(214 95% 93%); color: hsl(217 91% 60%); border-color: hsl(214 95% 85%); }
+.status-pending { background: hsl(214 95% 93%); color: hsl(217 91% 60%); border-color: hsl(214 95% 85%); }
+
+/* Green - All approval states */
+.status-approved { background: hsl(142 71% 94%); color: hsl(142 72% 29%); border-color: hsl(142 71% 85%); }
+.status-documents-approved { background: hsl(142 71% 94%); color: hsl(142 72% 29%); border-color: hsl(142 71% 85%); }
+.status-social-welfare-approved { background: hsl(142 71% 94%); color: hsl(142 72% 29%); border-color: hsl(142 71% 85%); }
+.status-fund-disbursed { background: hsl(142 71% 94%); color: hsl(142 72% 29%); border-color: hsl(142 71% 85%); }
+.status-disbursed { background: hsl(142 71% 94%); color: hsl(142 72% 29%); border-color: hsl(142 71% 85%); }
+.status-completed { background: hsl(142 71% 94%); color: hsl(142 72% 29%); border-color: hsl(142 71% 85%); }
+.status-verified { background: hsl(142 71% 94%); color: hsl(142 72% 29%); border-color: hsl(142 71% 85%); }
+
+/* Red - All rejection states */
+.status-rejected { background: hsl(0 93% 94%); color: hsl(0 72% 41%); border-color: hsl(0 93% 85%); }
+.status-documents-rejected { background: hsl(0 93% 94%); color: hsl(0 72% 41%); border-color: hsl(0 93% 85%); }
+.status-district-authority-rejected { background: hsl(0 93% 94%); color: hsl(0 72% 41%); border-color: hsl(0 93% 85%); }
+.status-social-welfare-rejected { background: hsl(0 93% 94%); color: hsl(0 72% 41%); border-color: hsl(0 93% 85%); }
+.status-fi-rejected { background: hsl(0 93% 94%); color: hsl(0 72% 41%); border-color: hsl(0 93% 85%); }
+
+/* Timeline animations */
+@keyframes timelinePop { 0% { opacity:0; transform:scale(.85) translateY(6px);} 60% { opacity:1; transform:scale(1.04);} 100% { opacity:1; transform:scale(1);} }
+.timeline-node-anim { animation: timelinePop .6s ease forwards; opacity:0; }
 
 @layer base {
   * {
@@ -189,31 +241,122 @@
 
 /* High Contrast Mode */
 .high-contrast {
-  filter: contrast(150%) brightness(120%);
+  /* Remove global filter as it was too aggressive */
+  /* This class is used as a trigger for high contrast styles below */
 }
 
-.high-contrast * {
+/* High Contrast - Main Backgrounds */
+.high-contrast body,
+.high-contrast main,
+.high-contrast section {
   background-color: #000000 !important;
   color: #ffffff !important;
-  border-color: #ffffff !important;
 }
 
+/* High Contrast - Card and Content Backgrounds */
+.high-contrast .bg-white,
+.high-contrast .bg-gray-50,
+.high-contrast .bg-gray-100,
+.high-contrast [class*="bg-orange-"],
+.high-contrast [class*="bg-green-"],
+.high-contrast [class*="bg-blue-"],
+.high-contrast [class*="bg-purple-"],
+.high-contrast [class*="bg-red-"],
+.high-contrast [class*="bg-yellow-"] {
+  background-color: #1a1a1a !important;
+  color: #ffffff !important;
+}
+
+/* High Contrast - Text Colors */
+.high-contrast .text-gray-600,
+.high-contrast .text-gray-700,
+.high-contrast .text-gray-800,
+.high-contrast .text-gray-900,
+.high-contrast [class*="text-orange-"],
+.high-contrast [class*="text-green-"],
+.high-contrast [class*="text-blue-"],
+.high-contrast [class*="text-purple-"],
+.high-contrast [class*="text-red-"],
+.high-contrast [class*="text-yellow-"] {
+  color: #ffffff !important;
+}
+
+/* High Contrast - Primary Buttons */
+.high-contrast button,
 .high-contrast .bg-orange-600,
 .high-contrast .bg-green-600,
 .high-contrast .bg-blue-600 {
   background-color: #ffffff !important;
   color: #000000 !important;
+  border: 2px solid #ffffff !important;
 }
 
-.high-contrast .text-gray-600,
-.high-contrast .text-gray-700,
-.high-contrast .text-gray-900 {
+/* High Contrast - Secondary Buttons and Inputs */
+.high-contrast button[class*="outline"],
+.high-contrast input,
+.high-contrast textarea,
+.high-contrast select {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+  border: 2px solid #ffffff !important;
+}
+
+/* High Contrast - Borders */
+.high-contrast .border,
+.high-contrast .border-gray-200,
+.high-contrast .border-gray-300,
+.high-contrast [class*="border-orange-"],
+.high-contrast [class*="border-green-"],
+.high-contrast [class*="border-blue-"],
+.high-contrast [class*="border-purple-"],
+.high-contrast [class*="border-red-"],
+.high-contrast [class*="border-yellow-"] {
+  border-color: #ffffff !important;
+}
+
+/* High Contrast - Cards and Containers */
+.high-contrast .shadow,
+.high-contrast .shadow-lg,
+.high-contrast .shadow-md,
+.high-contrast .shadow-sm {
+  box-shadow: 0 4px 6px rgba(255, 255, 255, 0.1) !important;
+}
+
+/* High Contrast - Links */
+.high-contrast a {
+  color: #ffffff !important;
+  text-decoration: underline !important;
+}
+
+/* High Contrast - Focus States */
+.high-contrast *:focus {
+  outline: 3px solid #ffffff !important;
+  outline-offset: 2px !important;
+}
+
+/* High Contrast - Icons */
+.high-contrast svg {
   color: #ffffff !important;
 }
 
-.high-contrast .border-gray-200,
-.high-contrast .border-gray-300 {
-  border-color: #ffffff !important;
+/* High Contrast - Special Cases for Readability */
+.high-contrast .bg-gradient-to-r,
+.high-contrast .bg-gradient-to-b,
+.high-contrast [class*="gradient"] {
+  background: #000000 !important;
+}
+
+/* High Contrast - Form Elements */
+.high-contrast input::placeholder,
+.high-contrast textarea::placeholder {
+  color: #cccccc !important;
+}
+
+/* High Contrast - Hover States */
+.high-contrast button:hover,
+.high-contrast a:hover {
+  background-color: #333333 !important;
+  color: #ffffff !important;
 }
 
 /* Print styles */

@@ -1,0 +1,104 @@
+{
+  "header": {
+    "backButton": "वापस",
+    "requested": "अनुरोधित",
+    "approved": "स्वीकृत",
+    "notAllocated": "अभी तक आवंटित नहीं",
+    "downloadPdf": "PDF डाउनलोड करें",
+    "print": "प्रिंट करें"
+  },
+  "toast": {
+    "officialDownloaded": "आधिकारिक स्वीकृति आदेश डाउनलोड हो गया!",
+    "mockDownloaded": "मॉक PDF सफलतापूर्वक डाउनलोड हो गया!",
+    "loadFailed": "आवेदन विवरण लोड करने में विफल",
+    "documentLoadFailed": "दस्तावेज़ लोड करने में विफल",
+    "messagingComingSoon": "संदेश सुविधा जल्द आ रही है"
+  },
+  "status": {
+    "documentsApproved": "दस्तावेज़ स्वीकृत",
+    "documentsRejected": "दस्तावेज़ अस्वीकृत",
+    "socialWelfareRejected": "समाज कल्याण द्वारा अस्वीकृत",
+    "fiRejected": "वित्तीय संस्थान द्वारा अस्वीकृत",
+    "applicationRejected": "आवेदन अस्वीकृत"
+  },
+  "accordion": {
+    "title": "संपूर्ण आवेदन विवरण",
+    "basicInformation": {
+      "title": "बुनियादी जानकारी",
+      "applicationNumber": "आवेदन संख्या",
+      "titleLabel": "शीर्षक",
+      "description": "विवरण",
+      "applicationType": "आवेदन प्रकार",
+      "firNumber": "FIR नंबर",
+      "cctnsVerified": "CCTNS से सत्यापित",
+      "cctnsNotVerified": "सत्यापित नहीं",
+      "amountApproved": "स्वीकृत राशि"
+    },
+    "applicantInformation": {
+      "title": "आवेदक की जानकारी",
+      "fullName": "पूरा नाम",
+      "email": "ईमेल",
+      "phone": "फ़ोन",
+      "aadhaar": "आधार नंबर",
+      "dateOfBirth": "जन्म तिथि",
+      "gender": "लिंग",
+      "address": "पता"
+    },
+    "reviewComments": {
+      "title": "समीक्षा टिप्पणियां",
+      "districtComments": "जिला प्राधिकरण टिप्पणियां",
+      "socialWelfareComments": "समाज कल्याण टिप्पणियां"
+    }
+  },
+  "timeline": {
+    "title": "आवेदन समयरेखा",
+    "stages": {
+      "submitted": "प्रस्तुत",
+      "districtReview": "जिला समीक्षा",
+      "socialWelfareReview": "समाज कल्याण समीक्षा",
+      "financialInstitution": "वित्तीय संस्थान",
+      "completed": "पूर्ण"
+    },
+    "statusLabels": {
+      "completed": "पूर्ण",
+      "rejected": "अस्वीकृत",
+      "inProgress": "प्रगति में",
+      "pending": "लंबित"
+    },
+    "ariaLabels": {
+      "on": "को"
+    },
+    "inProgress": "प्रगति में…",
+    "pendingLabel": "लंबित",
+    "legend": {
+      "completed": "पूर्ण",
+      "rejected": "अस्वीकृत",
+      "current": "वर्तमान",
+      "upcoming": "आगामी"
+    }
+  },
+  "documents": {
+    "title": "आवेदन दस्तावेज़",
+    "count": "{count}",
+    "status": {
+      "verified": "सत्यापित",
+      "pending": "लंबित",
+      "rejected": "अस्वीकृत"
+    },
+    "viewButton": "देखें",
+    "noDocuments": "अभी तक कोई दस्तावेज़ अपलोड नहीं किया गया",
+    "modal": {
+      "close": "बंद करें",
+      "openInNewTab": "नए टैब में खोलें",
+      "noPreview": "कोई पूर्वावलोकन उपलब्ध नहीं"
+    }
+  },
+  "messages": {
+    "title": "संदेश / समीक्षक टिप्पणियां",
+    "placeholder": "एक संदेश टाइप करें",
+    "sendButton": "भेजें",
+    "noComments": "अभी तक कोई टिप्पणी नहीं"
+  },
+  "loading": "लोड हो रहा है...",
+  "notAvailable": "-"
+}

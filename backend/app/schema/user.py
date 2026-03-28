@@ -1,0 +1,184 @@
+"""
+User models and schemas
+"""
+
+from datetime import datetime
+from typing import Optional
+from pydantic import BaseModel, EmailStr, validator
+from enum import Enum
+
+from app.core.security import validate_aadhaar_number, validate_phone_number, validate_pincode
+
+
+class UserRole(str, Enum):
+    PUBLIC = "PUBLIC"
+    DISTRICT_AUTHORITY = "DISTRICT_AUTHORITY"
+    SOCIAL_WELFARE = "SOCIAL_WELFARE"
+    FINANCIAL_INSTITUTION = "FINANCIAL_INSTITUTION"
+    ADMIN = "ADMIN"
+
+
+class Gender(str, Enum):
+    MALE = "MALE"
+    FEMALE = "FEMALE"
+    OTHER = "OTHER"
+    PREFER_NOT_TO_SAY = "PREFER_NOT_TO_SAY"
+
+
+class Category(str, Enum):
+    SC = "SC"
+    ST = "ST"
+    OBC = "OBC"
+    GENERAL = "GENERAL"
+    OTHER = "OTHER"
+
+
+class UserBase(BaseModel):
+    """Base user model"""
+    email: EmailStr
+    phone_number: str
+    full_name: str
+    father_name: Optional[str] = None
+    mother_name: Optional[str] = None
+    aadhaar_number: Optional[str] = None
+    date_of_birth: Optional[datetime] = None
+    age: Optional[int] = None
+    gender: Optional[Gender] = None
+    category: Optional[Category] = None
+    address: Optional[str] = None
+    district: Optional[str] = None
+    state: Optional[str] = None
+    pincode: Optional[str] = None
+    profile_image: Optional[str] = None
+
+    @validator('aadhaar_number')
+    def validate_aadhaar(cls, v):
+        if v and not validate_aadhaar_number(v):
+            raise ValueError('Invalid Aadhaar number format')
+        return v
+
+    @validator('phone_number')
+    def validate_phone(cls, v):
+        if not validate_phone_number(v):
+            raise ValueError('Invalid phone number format')
+        return v
+
+    @validator('pincode')
+    def validate_pincode(cls, v):
+        if v and not validate_pincode(v):
+            raise ValueError('Invalid pincode format')
+        return v
+
+
+class UserUpdate(BaseModel):
+    """User update model - only allows editing non-UIDAI fields"""
+    # UIDAI fields (cannot be updated): full_name, father_name, date_of_birth, age, gender, address, phone_number
+    # Note: age is calculated from date_of_birth and both come from UIDAI
+    
+    # Editable fields
+    mother_name: Optional[str] = None
+    category: Optional[Category] = None
+    district: Optional[str] = None
+    state: Optional[str] = None
+    pincode: Optional[str] = None
+    profile_image: Optional[str] = None
+
+    @validator('pincode')
+    def validate_pincode(cls, v):
+        if v and not validate_pincode(v):
+            raise ValueError('Invalid pincode format')
+        return v
+
+
+class User(UserBase):
+    """User response model"""
+    id: str
+    role: UserRole
+    is_active: bool
+    is_verified: bool
+    is_onboarded: bool
+    onboarding_step: Optional[int] = None
+    created_at: datetime
+    updated_at: datetime
+    last_login: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
+class BankAccountResponse(BaseModel):
+    """Bank account response model"""
+    id: str
+    account_number: str
+    ifsc_code: str
+    bank_name: str
+    branch_name: str
+    account_holder_name: str
+    is_verified: bool
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class UserProfile(BaseModel):
+    """User profile model"""
+    id: str
+    full_name: str
+    father_name: Optional[str] = None
+    mother_name: Optional[str] = None
+    email: str
+    phone_number: str
+    aadhaar_number: Optional[str] = None
+    date_of_birth: Optional[datetime] = None
+    age: Optional[int] = None
+    gender: Optional[Gender] = None
+    category: Optional[Category] = None
+    address: Optional[str] = None
+    district: Optional[str] = None
+    state: Optional[str] = None
+    pincode: Optional[str] = None
+    profile_image: Optional[str] = None
+    role: UserRole
+    is_active: bool
+    is_verified: bool
+    is_onboarded: bool
+    onboarding_step: Optional[int] = None
+    created_at: datetime
+    updated_at: datetime
+    bank_accounts: Optional[list] = []
+
+    class Config:
+        from_attributes = True
+
+
+class AadhaarVerification(BaseModel):
+    """Aadhaar verification model"""
+    aadhaar_number: str
+    otp: str
+
+    @validator('aadhaar_number')
+    def validate_aadhaar(cls, v):
+        if not validate_aadhaar_number(v):
+            raise ValueError('Invalid Aadhaar number format')
+        return v
+
+
+class PasswordReset(BaseModel):
+    """Password reset model"""
+    phone_number: Optional[str] = None
+    email: Optional[EmailStr] = None
+    otp: str
+    new_password: str
+
+    @validator('phone_number')
+    def validate_phone(cls, v):
+        if v and not validate_phone_number(v):
+            raise ValueError('Invalid phone number format')
+        return v
+
+    @validator('new_password')
+    def validate_password(cls, v):
+        if len(v) < 8:
+            raise ValueError('Password must be at least 8 characters long')
+        return v

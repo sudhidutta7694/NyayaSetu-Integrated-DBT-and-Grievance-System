@@ -5,34 +5,40 @@ import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { ArrowLeft, Shield, Clock, User, Phone } from 'lucide-react'
+import Link from 'next/link'
 import toast from 'react-hot-toast'
-
-const aadhaarSchema = z.object({
-  aadhaar_number: z.string()
-    .min(12, 'Aadhaar number must be 12 digits')
-    .max(12, 'Aadhaar number must be 12 digits')
-    .regex(/^\d{12}$/, 'Aadhaar number must contain only digits'),
-})
-
-const otpSchema = z.object({
-  otp_code: z.string().length(6, 'OTP must be 6 digits'),
-})
-
-type AadhaarForm = z.infer<typeof aadhaarSchema>
-type OTPForm = z.infer<typeof otpSchema>
+import { tokenStorage } from '@/lib/tokenStorage'
+import { LanguageSwitcher } from '@/components/accessibility/LanguageSwitcher'
 
 export default function LoginPage() {
+  const t = useTranslations('login')
   const [step, setStep] = useState<'aadhaar' | 'otp'>('aadhaar')
   const [aadhaarNumber, setAadhaarNumber] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [otpTimer, setOtpTimer] = useState(0)
   const [aadhaarInfo, setAadhaarInfo] = useState<any>(null)
   const router = useRouter()
+
+  // Schema with translated validation messages
+  const aadhaarSchema = z.object({
+    aadhaar_number: z.string()
+      .min(12, t('validation.aadhaarMin'))
+      .max(12, t('validation.aadhaarMax'))
+      .regex(/^\d{12}$/, t('validation.aadhaarDigitsOnly')),
+  })
+
+  const otpSchema = z.object({
+    otp_code: z.string().length(6, t('validation.otpLength')),
+  })
+
+  type AadhaarForm = z.infer<typeof aadhaarSchema>
+  type OTPForm = z.infer<typeof otpSchema>
 
   const {
     register: registerAadhaar,
@@ -72,7 +78,8 @@ export default function LoginPage() {
   const onAadhaarSubmit = async (data: AadhaarForm) => {
     setIsLoading(true)
     try {
-      const response = await fetch('http://localhost:8000/api/v1/auth/aadhaar-login', {
+      const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL
+      const response = await fetch(`${API_BASE_URL}/auth/aadhaar-login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -82,18 +89,20 @@ export default function LoginPage() {
 
       const result = await response.json()
 
-      if (result.success) {
+      if (response.ok && result.success) {
         setAadhaarNumber(data.aadhaar_number)
         setAadhaarInfo(result.aadhaar_info)
         setStep('otp')
         startOTPTimer()
-        toast.success('OTP sent to your registered mobile number')
+        toast.success(t('messages.otpSent'))
       } else {
-        toast.error(result.message || 'Failed to send OTP')
+        // Handle error response from backend
+        const errorMessage = result.detail || result.message || 'Failed to send OTP'
+        toast.error(errorMessage)
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Aadhaar login error:', error)
-      toast.error('An error occurred. Please try again.')
+      toast.error(t('messages.error'))
     } finally {
       setIsLoading(false)
     }
@@ -102,7 +111,8 @@ export default function LoginPage() {
   const onOTPSubmit = async (data: OTPForm) => {
     setIsLoading(true)
     try {
-      const response = await fetch('http://localhost:8000/api/v1/auth/aadhaar-verify-otp', {
+      const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL
+      const response = await fetch(`${API_BASE_URL}/auth/aadhaar-verify-otp`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -117,22 +127,31 @@ export default function LoginPage() {
 
       if (result.success) {
         // Store user data and token
+        // IMPORTANT: Store token using tokenStorage (stores in both localStorage and cookies)
+        // console.log('Login result:', result)
+        // console.log('Access token:', result.user?.access_token)
+        
         localStorage.setItem('user', JSON.stringify(result.user))
-        localStorage.setItem('token', result.user.access_token)
+        tokenStorage.setToken(result.user.access_token)
         
-        toast.success('Login successful!')
+        // console.log('Token stored:', tokenStorage.getToken())
         
-        if (result.requires_onboarding) {
+        toast.success(t('messages.loginSuccess'))
+        // Role-based redirect: if FI, go to FI dashboard directly
+        const role = result.user?.role
+        if (role === 'FINANCIAL_INSTITUTION') {
+          router.push('/fi/dashboard')
+        } else if (result.requires_onboarding) {
           router.push('/onboarding')
         } else {
           router.push('/dashboard')
         }
       } else {
-        toast.error(result.message || 'Invalid OTP')
+        toast.error(result.message || t('messages.invalidOtp'))
       }
     } catch (error) {
       console.error('OTP verification error:', error)
-      toast.error('An error occurred. Please try again.')
+      toast.error(t('messages.error'))
     } finally {
       setIsLoading(false)
     }
@@ -141,7 +160,8 @@ export default function LoginPage() {
   const resendOTP = async () => {
     setIsLoading(true)
     try {
-      const response = await fetch('http://localhost:8000/api/v1/auth/aadhaar-login', {
+      const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL
+      const response = await fetch(`${API_BASE_URL}/auth/aadhaar-login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -153,13 +173,13 @@ export default function LoginPage() {
 
       if (result.success) {
         startOTPTimer()
-        toast.success('OTP resent successfully')
+        toast.success(t('messages.otpResent'))
       } else {
         toast.error(result.message || 'Failed to resend OTP')
       }
     } catch (error) {
       console.error('Resend OTP error:', error)
-      toast.error('An error occurred. Please try again.')
+      toast.error(t('messages.error'))
     } finally {
       setIsLoading(false)
     }
@@ -167,6 +187,18 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-green-50">
+      {/* Back to Home Button */}
+      <Link href='/' aria-label='Back to Home'
+        className='fixed top-4 left-4 z-50 inline-flex items-center gap-2 bg-white/90 backdrop-blur border border-orange-300 text-orange-700 hover:bg-orange-50 px-3 py-2 rounded-full shadow-md transition-colors'>
+        <ArrowLeft className='h-4 w-4' />
+        <span className='hidden sm:inline text-sm font-medium'>{t('backToHome')}</span>
+      </Link>
+      
+      {/* Language Switcher */}
+      <div className='fixed top-4 right-4 z-50'>
+        <LanguageSwitcher />
+      </div>
+      
       <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-8">
           <div className="text-center">
@@ -174,26 +206,41 @@ export default function LoginPage() {
               <Shield className="h-8 w-8 text-white" />
             </div>
             <h2 className="mt-6 text-3xl font-bold text-gray-900">
-              {step === 'aadhaar' ? 'Login with Aadhaar' : 'OTP Verification'}
+              {step === 'aadhaar' ? t('title.aadhaar') : t('title.otp')}
             </h2>
             <p className="mt-2 text-sm text-gray-600">
-              {step === 'aadhaar' 
-                ? 'Enter your 12-digit Aadhaar number' 
-                : 'Enter the OTP sent to your registered mobile number'
-              }
+              {step === 'aadhaar' ? t('subtitle.aadhaar') : t('subtitle.otp')}
             </p>
           </div>
+
+          {/* Test Credentials Card */}
+          <Card className="shadow-lg border-2 border-blue-200 bg-blue-50">
+            <CardContent className="p-4">
+              <div className="flex items-start space-x-3">
+                <Shield className="h-5 w-5 text-blue-600 mt-0.5" />
+                <div className="flex-1">
+                  <h3 className="text-sm font-semibold text-blue-900 mb-2">{t('testCredentials.title')}</h3>
+                  {step === 'aadhaar' ? (
+                    <p className="text-sm text-blue-800">
+                      <span className="font-medium">{t('testCredentials.aadhaar')}</span> <code className="bg-white px-2 py-0.5 rounded border border-blue-200">362851176122</code>
+                    </p>
+                  ) : (
+                    <p className="text-sm text-blue-800">
+                      <span className="font-medium">{t('testCredentials.otp')}</span> <code className="bg-white px-2 py-0.5 rounded border border-blue-200">123456</code>
+                    </p>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
           <Card className="shadow-lg border-2 border-orange-200">
             <CardHeader className="bg-gradient-to-r from-orange-50 to-green-50">
               <CardTitle className="text-center text-xl font-semibold text-gray-800">
-                {step === 'aadhaar' ? 'Aadhaar Authentication' : 'OTP Verification'}
+                {step === 'aadhaar' ? t('card.title.aadhaar') : t('card.title.otp')}
               </CardTitle>
               <CardDescription className="text-center text-gray-600">
-                {step === 'aadhaar' 
-                  ? 'Use your Aadhaar number for secure login'
-                  : 'Enter your OTP'
-                }
+                {step === 'aadhaar' ? t('card.description.aadhaar') : t('card.description.otp')}
               </CardDescription>
             </CardHeader>
             <CardContent className="p-6">
@@ -201,14 +248,14 @@ export default function LoginPage() {
                 <form onSubmit={handleAadhaarSubmit(onAadhaarSubmit)} className="space-y-6">
                   <div>
                     <Label htmlFor="aadhaar_number" className="text-sm font-medium text-gray-700">
-                      Aadhaar Number
+                      {t('form.aadhaarLabel')}
                     </Label>
                     <div className="relative mt-1">
                       <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                       <Input
                         id="aadhaar_number"
                         type="text"
-                        placeholder="1234 5678 9012"
+                        placeholder={t('form.aadhaarPlaceholder')}
                         className="pl-10 border-2 border-gray-300 focus:border-orange-500"
                         {...registerAadhaar('aadhaar_number')}
                       />
@@ -225,38 +272,22 @@ export default function LoginPage() {
                     disabled={isLoading}
                     className="w-full bg-orange-600 hover:bg-orange-700 text-white font-medium py-3"
                   >
-                    {isLoading ? 'Processing...' : 'Send OTP'}
+                    {isLoading ? t('form.processing') : t('form.sendOtp')}
                   </Button>
                 </form>
               ) : (
                 <div className="space-y-6">
-                  {aadhaarInfo && (
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                      <div className="flex items-center space-x-2">
-                        <User className="h-5 w-5 text-blue-600" />
-                        <div>
-                          <p className="text-sm font-medium text-blue-800">
-                            Name: {aadhaarInfo.name}
-                          </p>
-                          <p className="text-sm text-blue-600">
-                            Father's Name: {aadhaarInfo.father_name}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
                   <form onSubmit={handleOTPSubmit(onOTPSubmit)} className="space-y-6">
                     <div>
                       <Label htmlFor="otp_code" className="text-sm font-medium text-gray-700">
-                        OTP Code
+                        {t('form.otpLabel')}
                       </Label>
                       <div className="relative mt-1">
                         <Phone className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                         <Input
                           id="otp_code"
                           type="text"
-                          placeholder="123456"
+                          placeholder={t('form.otpPlaceholder')}
                           className="pl-10 border-2 border-gray-300 focus:border-orange-500"
                           {...registerOTP('otp_code')}
                         />
@@ -271,7 +302,7 @@ export default function LoginPage() {
                     {otpTimer > 0 && (
                       <div className="flex items-center justify-center space-x-2 text-sm text-gray-600">
                         <Clock className="h-4 w-4" />
-                        <span>OTP expires in: {formatTime(otpTimer)}</span>
+                        <span>{t('messages.otpExpires')} {formatTime(otpTimer)}</span>
                       </div>
                     )}
 
@@ -281,7 +312,7 @@ export default function LoginPage() {
                         disabled={isLoading}
                         className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3"
                       >
-                        {isLoading ? 'Verifying...' : 'Verify'}
+                        {isLoading ? t('form.verifying') : t('form.verify')}
                       </Button>
 
                       <Button
@@ -291,7 +322,7 @@ export default function LoginPage() {
                         className="w-full border-orange-300 text-orange-700 hover:bg-orange-50"
                       >
                         <ArrowLeft className="h-4 w-4 mr-2" />
-                        Go Back
+                        {t('form.goBack')}
                       </Button>
 
                       {otpTimer === 0 && (
@@ -302,7 +333,7 @@ export default function LoginPage() {
                           disabled={isLoading}
                           className="w-full border-blue-300 text-blue-700 hover:bg-blue-50"
                         >
-                          Resend OTP
+                          {t('form.resendOtp')}
                         </Button>
                       )}
                     </div>
@@ -317,9 +348,9 @@ export default function LoginPage() {
             <div className="flex items-start space-x-3">
               <Shield className="h-5 w-5 text-yellow-600 mt-0.5" />
               <div>
-                <h3 className="text-sm font-medium text-yellow-800">Security Notice</h3>
+                <h3 className="text-sm font-medium text-yellow-800">{t('security.title')}</h3>
                 <p className="text-sm text-yellow-700 mt-1">
-                  Your OTP is valid for 5 minutes. Do not share your OTP with anyone. NyayaSetu will never ask for your OTP via phone or email.
+                  {t('security.message')}
                 </p>
               </div>
             </div>

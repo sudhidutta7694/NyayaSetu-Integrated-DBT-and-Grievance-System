@@ -1,6 +1,13 @@
+"use client";
+import { useEffect } from "react";
+import { useAuth } from '@/components/providers/AuthProvider';
+import { useTranslations } from 'next-intl';
+
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { GovernmentHeader } from '@/components/layout/GovernmentHeader'
+import { GovernmentFooter } from '@/components/layout/GovernmentFooter'
 import { 
   Shield, 
   Users, 
@@ -21,10 +28,23 @@ import {
 import FAQSection from '@/components/landing/FAQSection'
 
 export default function HomePage() {
+  const { user, logout } = useAuth();
+  const t = useTranslations('home');
+  
+  useEffect(() => {
+    if (user) {
+      logout();
+    }
+    // eslint-disable-next-line
+  }, [user]);
+  
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white flex flex-col">
+      {/* Skip Link for Accessibility */}
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 bg-orange-600 text-white px-4 py-2 rounded z-50">{t('accessibility.skipToMain')}</a>
+      <GovernmentHeader />
       {/* Main Content Area */}
-      <main className="flex-1">
+      <main id="main-content" className="flex-1">
         {/* Hero Section */}
         <section className="relative bg-gradient-to-r from-orange-600 to-green-600 text-white py-24 overflow-hidden">
           {/* Soft blurred gradient background shape */}
@@ -34,21 +54,21 @@ export default function HomePage() {
           </div>
           <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center">
             <span className="inline-block bg-white/20 text-white text-xs md:text-sm font-semibold px-4 py-1 rounded-full mb-6 tracking-widest uppercase shadow-sm backdrop-blur-sm">
-              Empowering Justice & Dignity
+              {t('hero.badge')}
             </span>
             <h1 className="text-5xl md:text-7xl font-extrabold mb-6 drop-shadow-lg text-center">
-              NyayaSetu
+              {t('hero.title')}
             </h1>
             <h2 className="text-xl md:text-2xl font-medium mb-6 text-white/90 text-center max-w-2xl">
-              Integrated DBT & Grievance System for Social Justice
+              {t('hero.subtitle')}
             </h2>
             <p className="text-lg md:text-xl mb-10 max-w-2xl mx-auto leading-relaxed text-white/90 text-center">
-              A unified platform for Direct Benefit Transfer and Grievance Redressal, ensuring effective implementation of PCR Act and PoA Act. Technology-driven, transparent, and accessible for all citizens.
+              {t('hero.description')}
             </p>
             <div className="flex justify-center w-full">
               <Link href="/login">
                 <Button size="lg" className="bg-white text-orange-600 hover:bg-gray-100 px-8 py-3 text-lg">
-                  Apply Now
+                  {t('hero.cta')}
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </Link>
@@ -61,10 +81,10 @@ export default function HomePage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                About Us
+                {t('about.title')}
               </h2>
               <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-                NyayaSetu is a dedicated platform built to ensure the efficient implementation and seamless delivery of benefits under two key legislations.
+                {t('about.description')}
               </p>
             </div>
             
@@ -76,14 +96,14 @@ export default function HomePage() {
                       <Gavel className="h-6 w-6 text-blue-600" />
                     </div>
                     <div>
-                      <CardTitle className="text-xl text-gray-900">PCR Act, 1955</CardTitle>
-                      <CardDescription className="text-gray-600">Protection of Civil Rights Act</CardDescription>
+                      <CardTitle className="text-xl text-gray-900">{t('about.pcrAct.title')}</CardTitle>
+                      <CardDescription className="text-gray-600">{t('about.pcrAct.subtitle')}</CardDescription>
                     </div>
                   </div>
                 </CardHeader>
                 <CardContent>
                   <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-                    The Protection of Civil Rights Act, 1955 aims to abolish untouchability and ensure equal civil rights for all citizens.
+                    {t('about.pcrAct.description')}
                   </p>
                 </CardContent>
               </Card>
@@ -95,14 +115,14 @@ export default function HomePage() {
                       <Shield className="h-6 w-6 text-purple-600" />
                     </div>
                     <div>
-                      <CardTitle className="text-xl text-gray-900">PoA Act, 1989</CardTitle>
-                      <CardDescription className="text-gray-600">Prevention of Atrocities Act</CardDescription>
+                      <CardTitle className="text-xl text-gray-900">{t('about.poaAct.title')}</CardTitle>
+                      <CardDescription className="text-gray-600">{t('about.poaAct.subtitle')}</CardDescription>
                     </div>
                   </div>
                 </CardHeader>
                 <CardContent>
                   <p className="text-gray-600 leading-relaxed">
-                    Prevention of Atrocities Act, 1989 aims to prevent atrocities and ensure justice for Scheduled Castes and Scheduled Tribes.
+                    {t('about.poaAct.description')}
                   </p>
                 </CardContent>
               </Card>
@@ -115,10 +135,10 @@ export default function HomePage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-14">
               <h2 className="text-4xl font-extrabold text-orange-600 mb-3 tracking-tight drop-shadow-sm">
-                Key Features
+                {t('features.title')}
               </h2>
               <p className="text-lg text-gray-700 max-w-2xl mx-auto">
-                NyayaSetu is a comprehensive platform designed for effective implementation of the PCR Act and PoA Act.
+                {t('features.description')}
               </p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
@@ -131,10 +151,10 @@ export default function HomePage() {
                   <Shield className="h-8 w-8 text-orange-700" />
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-3 group-hover:text-orange-700 transition-colors">
-                  Secure & Transparent
+                  {t('features.secure.title')}
                 </h3>
                 <p className="text-gray-600 leading-relaxed text-base">
-                  End-to-end encryption and blockchain-ready architecture for maximum security and transparency in all transactions.
+                  {t('features.secure.description')}
                 </p>
               </div>
               {/* Feature 2 */}
@@ -146,10 +166,10 @@ export default function HomePage() {
                   <Users className="h-8 w-8 text-blue-700" />
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-3 group-hover:text-blue-700 transition-colors">
-                  Multi-Role Support
+                  {t('features.multiRole.title')}
                 </h3>
                 <p className="text-gray-600 leading-relaxed text-base">
-                  Designed for citizens, district authorities, social welfare departments, and financial institutions.
+                  {t('features.multiRole.description')}
                 </p>
               </div>
               {/* Feature 3 */}
@@ -161,10 +181,10 @@ export default function HomePage() {
                   <Clock className="h-8 w-8 text-green-700" />
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-3 group-hover:text-green-700 transition-colors">
-                  Real-time Processing
+                  {t('features.realTime.title')}
                 </h3>
                 <p className="text-gray-600 leading-relaxed text-base">
-                  Instant verification, tracking, and disbursement with real-time notifications and updates.
+                  {t('features.realTime.description')}
                 </p>
               </div>
             </div>
@@ -176,7 +196,7 @@ export default function HomePage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                Main Services
+                {t('services.title')}
               </h2>
             </div>
             
@@ -187,13 +207,11 @@ export default function HomePage() {
                   <div className="mx-auto w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mb-4">
                     <FileText className="h-8 w-8 text-orange-600" />
                   </div>
-                  {/* Removed Hindi title */}
-                  <CardTitle className="text-xl text-gray-700">Application Submission</CardTitle>
+                  <CardTitle className="text-xl text-gray-700">{t('services.applicationSubmission.title')}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {/* Removed Hindi description */}
                   <p className="text-gray-600 leading-relaxed mb-6">
-                    Submit new applications under the PCR Act and PoA Act through a fast, secure, and hassle-free process.
+                    {t('services.applicationSubmission.description')}
                   </p>
                 </CardContent>
               </Card>
@@ -204,11 +222,11 @@ export default function HomePage() {
                   <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
                     <Eye className="h-8 w-8 text-blue-600" />
                   </div>
-                  <CardTitle className="text-xl text-gray-700">Application Tracking</CardTitle>
+                  <CardTitle className="text-xl text-gray-700">{t('services.applicationTracking.title')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-gray-600 leading-relaxed mb-6">
-                    Effortlessly track your application’s real-time status with complete transparency, ensuring you stay informed at every step.
+                    {t('services.applicationTracking.description')}
                   </p>
                 </CardContent>
               </Card>
@@ -219,11 +237,11 @@ export default function HomePage() {
                   <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
                     <FileCheck className="h-8 w-8 text-green-600" />
                   </div>
-                  <CardTitle className="text-xl text-gray-700">Document Verification</CardTitle>
+                  <CardTitle className="text-xl text-gray-700">{t('services.documentVerification.title')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-gray-600 leading-relaxed mb-6">
-                    Upload and verify your documents seamlessly through DigiLocker, ensuring a secure and hassle-free process.
+                    {t('services.documentVerification.description')}
                   </p>
                 </CardContent>
               </Card>
@@ -234,11 +252,11 @@ export default function HomePage() {
                   <div className="mx-auto w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mb-4">
                     <DollarSign className="h-8 w-8 text-purple-600" />
                   </div>
-                  <CardTitle className="text-xl text-gray-700">Fund Disbursement</CardTitle>
+                  <CardTitle className="text-xl text-gray-700">{t('services.fundDisbursement.title')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-gray-600 leading-relaxed mb-6">
-                    Receive funds directly in your bank account, ensuring a fast, transparent, and highly secure disbursement process.
+                    {t('services.fundDisbursement.description')}
                   </p>
                 </CardContent>
               </Card>
@@ -249,12 +267,11 @@ export default function HomePage() {
                   <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
                     <AlertCircle className="h-8 w-8 text-red-600" />
                   </div>
-                  <CardTitle className="text-xl text-gray-700">Grievance Redressal</CardTitle>
+                  <CardTitle className="text-xl text-gray-700">{t('services.grievanceRedressal.title')}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {/* Removed Hindi description */}
                   <p className="text-gray-600 leading-relaxed mb-6">
-                    Easily register your grievances and receive prompt redressal with dedicated 24×7 support to assist you at every step.
+                    {t('services.grievanceRedressal.description')}
                   </p>
                 </CardContent>
               </Card>
@@ -265,13 +282,11 @@ export default function HomePage() {
                   <div className="mx-auto w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mb-4">
                     <MessageSquare className="h-8 w-8 text-yellow-600" />
                   </div>
-                  {/* Removed Hindi title */}
-                  <CardTitle className="text-xl text-gray-700">Support Services</CardTitle>
+                  <CardTitle className="text-xl text-gray-700">{t('services.supportServices.title')}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {/* Removed Hindi description */}
                   <p className="text-gray-600 leading-relaxed mb-6">
-                    Access support through chatbot, helpline, and email, with multilingual assistance to ensure smooth communication.
+                    {t('services.supportServices.description')}
                   </p>
                 </CardContent>
               </Card>
@@ -289,10 +304,10 @@ export default function HomePage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                Contact Information
+                {t('contact.title')}
               </h2>
               <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-                Reach out to us through various channels. We are here to assist you.
+                {t('contact.description')}
               </p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -301,45 +316,46 @@ export default function HomePage() {
                 <div className="mx-auto w-14 h-14 bg-orange-100 rounded-full flex items-center justify-center mb-4">
                   <Phone className="h-8 w-8 text-orange-500" />
                 </div>
-                <h3 className="text-base font-semibold text-gray-900 mb-2">Helpline</h3>
-                <p className="text-gray-700 mb-1">+91-11-2338-1234</p>
-                <p className="text-gray-700 mb-1">+91-11-2338-5678</p>
-                <p className="text-xs text-gray-500 mt-2">24x7 Support</p>
+                <h3 className="text-base font-semibold text-gray-900 mb-2">{t('contact.helpline.title')}</h3>
+                <p className="text-gray-700 mb-1">{t('contact.helpline.phone1')}</p>
+                <p className="text-gray-700 mb-1">{t('contact.helpline.phone2')}</p>
+                <p className="text-xs text-gray-500 mt-2">{t('contact.helpline.note')}</p>
               </div>
               {/* Email Card */}
               <div className="text-center bg-gray-50 rounded-xl p-8 shadow-sm hover:shadow-md transition-shadow duration-200">
                 <div className="mx-auto w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center mb-4">
                   <Mail className="h-8 w-8 text-blue-500" />
                 </div>
-                <h3 className="text-base font-semibold text-gray-900 mb-2">Email</h3>
-                <p className="text-gray-700 mb-1">info@nyayasetu.gov.in</p>
-                <p className="text-gray-700 mb-1">support@nyayasetu.gov.in</p>
-                <p className="text-xs text-gray-500 mt-2">Response within 24 hours</p>
+                <h3 className="text-base font-semibold text-gray-900 mb-2">{t('contact.email.title')}</h3>
+                <p className="text-gray-700 mb-1">{t('contact.email.email1')}</p>
+                <p className="text-gray-700 mb-1">{t('contact.email.email2')}</p>
+                <p className="text-xs text-gray-500 mt-2">{t('contact.email.note')}</p>
               </div>
               {/* Address Card */}
               <div className="text-center bg-gray-50 rounded-xl p-8 shadow-sm hover:shadow-md transition-shadow duration-200">
                 <div className="mx-auto w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mb-4">
                   <MapPin className="h-8 w-8 text-green-500" />
                 </div>
-                <h3 className="text-base font-semibold text-gray-900 mb-2">Address</h3>
-                <p className="text-gray-700 mb-1">Ministry of Social Justice & Empowerment</p>
-                <p className="text-gray-700 mb-1">Shastri Bhawan</p>
-                <p className="text-gray-700 mb-1">New Delhi - 110001</p>
+                <h3 className="text-base font-semibold text-gray-900 mb-2">{t('contact.address.title')}</h3>
+                <p className="text-gray-700 mb-1">{t('contact.address.line1')}</p>
+                <p className="text-gray-700 mb-1">{t('contact.address.line2')}</p>
+                <p className="text-gray-700 mb-1">{t('contact.address.line3')}</p>
               </div>
               {/* Working Hours Card */}
               <div className="text-center bg-gray-50 rounded-xl p-8 shadow-sm hover:shadow-md transition-shadow duration-200">
                 <div className="mx-auto w-14 h-14 bg-purple-100 rounded-full flex items-center justify-center mb-4">
                   <Clock className="h-8 w-8 text-purple-500" />
                 </div>
-                <h3 className="text-base font-semibold text-gray-900 mb-2">Working Hours</h3>
-                <p className="text-gray-700 mb-1">Mon - Fri</p>
-                <p className="text-gray-700 mb-1">9:00 AM - 6:00 PM</p>
-                <p className="text-xs text-gray-500 mt-2">Helpline 24x7</p>
+                <h3 className="text-base font-semibold text-gray-900 mb-2">{t('contact.hours.title')}</h3>
+                <p className="text-gray-700 mb-1">{t('contact.hours.days')}</p>
+                <p className="text-gray-700 mb-1">{t('contact.hours.time')}</p>
+                <p className="text-xs text-gray-500 mt-2">{t('contact.hours.note')}</p>
               </div>
             </div>
           </div>
         </section>
       </main>
+      <GovernmentFooter />
     </div>
   )
 }

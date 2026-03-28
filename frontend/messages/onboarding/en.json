@@ -1,0 +1,23 @@
+{
+  "title": "Complete Your Profile",
+  "subtitle": "Please complete all steps to access government services",
+  "loading": "Loading onboarding data...",
+  "progress": "Progress",
+  "step": "Step {current} of {total}",
+  "alreadyOnboarded": "You have already completed onboarding!",
+  "loadError": "Failed to load onboarding data. Please try again.",
+  "steps": {
+    "personalInfo": {
+      "title": "Personal Information",
+      "description": "Basic personal details"
+    },
+    "documents": {
+      "title": "Document Upload",
+      "description": "Upload required documents"
+    },
+    "bankDetails": {
+      "title": "Bank Details",
+      "description": "Bank account information"
+    }
+  }
+}

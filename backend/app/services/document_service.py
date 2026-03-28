@@ -14,7 +14,7 @@ from fastapi import UploadFile
 
 from app.core.config import settings
 from app.core.exceptions import ValidationException, DatabaseException
-from app.models.onboarding import DocumentType, DocumentUploadData
+from app.schema.onboarding import DocumentType, DocumentUploadData
 
 logger = structlog.get_logger()
 
@@ -62,20 +62,24 @@ class DocumentService:
                 ocr_data = await self._process_ocr(file_path)
 
             # Save document record
-            document = await self.db.document.create(
-                data={
-                    "user_id": user_id,
-                    "document_type": document_type.value,
-                    "document_name": file.filename,
-                    "file_path": file_path,
-                    "file_size": len(content),
-                    "mime_type": file.content_type,
-                    "is_digilocker": is_digilocker,
-                    "digilocker_id": digilocker_id,
-                    "ocr_data": json.dumps(ocr_data) if ocr_data else None,
-                    "status": "PENDING"
-                }
+            from models.document import Document, DocumentStatus, DocumentType as DBDocumentType
+            
+            document = Document(
+                id=str(uuid.uuid4()),
+                user_id=user_id,
+                document_type=DBDocumentType[document_type.value],
+                document_name=file.filename,
+                file_path=file_path,
+                file_size=str(len(content)),
+                mime_type=file.content_type,
+                is_digilocker=is_digilocker,
+                digilocker_uri=digilocker_id,
+                status=DocumentStatus.PENDING
             )
+            
+            self.db.add(document)
+            self.db.commit()
+            self.db.refresh(document)
 
             logger.info(
                 "Document uploaded successfully",
@@ -86,16 +90,16 @@ class DocumentService:
 
             return {
                 "id": document.id,
-                "document_type": document.document_type,
+                "document_type": document.document_type.value,
                 "document_name": document.document_name,
                 "file_path": document.file_path,
                 "file_size": document.file_size,
                 "mime_type": document.mime_type,
-                "status": document.status,
+                "status": document.status.value,
                 "is_digilocker": document.is_digilocker,
-                "digilocker_id": document.digilocker_id,
+                "digilocker_id": document.digilocker_uri,
                 "ocr_data": ocr_data,
-                "created_at": document.created_at
+                "created_at": document.created_at.isoformat() if document.created_at else None
             }
 
         except Exception as e:
@@ -150,21 +154,26 @@ class DocumentService:
     ) -> Dict[str, Any]:
         """Import a document from DigiLocker"""
         try:
+            from models.document import Document, DocumentStatus, DocumentType as DBDocumentType
+            
             # This would fetch the actual document from DigiLocker
             # For now, create a mock document record
-            document = await self.db.document.create(
-                data={
-                    "user_id": user_id,
-                    "document_type": document_type.value,
-                    "document_name": f"DigiLocker {document_type.value}",
-                    "file_path": f"digilocker://{digilocker_id}",
-                    "file_size": 0,
-                    "mime_type": "application/pdf",
-                    "is_digilocker": True,
-                    "digilocker_id": digilocker_id,
-                    "status": "VERIFIED"  # DigiLocker documents are pre-verified
-                }
+            document = Document(
+                id=str(uuid.uuid4()),
+                user_id=user_id,
+                document_type=DBDocumentType[document_type.value],
+                document_name=f"DigiLocker {document_type.value}",
+                file_path=f"digilocker://{digilocker_id}",
+                file_size="0",
+                mime_type="application/pdf",
+                is_digilocker=True,
+                digilocker_uri=digilocker_id,
+                status=DocumentStatus.PENDING  # DigiLocker documents also need verification by district authority
             )
+            
+            self.db.add(document)
+            self.db.commit()
+            self.db.refresh(document)
 
             logger.info(
                 "DigiLocker document imported",
@@ -175,13 +184,13 @@ class DocumentService:
 
             return {
                 "id": document.id,
-                "document_type": document.document_type,
+                "document_type": document.document_type.value,
                 "document_name": document.document_name,
                 "file_path": document.file_path,
-                "status": document.status,
+                "status": document.status.value,
                 "is_digilocker": document.is_digilocker,
-                "digilocker_id": document.digilocker_id,
-                "created_at": document.created_at
+                "digilocker_id": document.digilocker_uri,
+                "created_at": document.created_at.isoformat() if document.created_at else None
             }
 
         except Exception as e:
@@ -202,15 +211,24 @@ class DocumentService:
     ) -> Dict[str, Any]:
         """Verify a document"""
         try:
-            document = await self.db.document.update(
-                where={"id": document_id},
-                data={
-                    "status": status,
-                    "verified_by": verified_by,
-                    "verified_at": datetime.utcnow(),
-                    "rejection_reason": comments if status == "REJECTED" else None
-                }
-            )
+            from models.document import Document, DocumentStatus
+            
+            # Get the document
+            document = self.db.query(Document).filter(Document.id == document_id).first()
+            
+            if not document:
+                raise DatabaseException(f"Document not found: {document_id}")
+            
+            # Update document
+            document.status = DocumentStatus[status] if isinstance(status, str) else status
+            document.verified_by = verified_by
+            document.verified_at = datetime.utcnow()
+            
+            if status == "REJECTED" and comments:
+                document.verification_notes = comments
+            
+            self.db.commit()
+            self.db.refresh(document)
 
             logger.info(
                 "Document verification completed",
@@ -221,13 +239,14 @@ class DocumentService:
 
             return {
                 "id": document.id,
-                "status": document.status,
+                "status": document.status.value,
                 "verified_by": document.verified_by,
-                "verified_at": document.verified_at,
-                "rejection_reason": document.rejection_reason
+                "verified_at": document.verified_at.isoformat() if document.verified_at else None,
+                "verification_notes": document.verification_notes
             }
 
         except Exception as e:
+            self.db.rollback()
             logger.error(
                 "Failed to verify document",
                 document_id=document_id,
@@ -243,44 +262,58 @@ class DocumentService:
     ) -> List[Dict[str, Any]]:
         """Get documents pending verification based on user role"""
         try:
-            # Filter documents based on role and status
-            where_clause = {"status": "PENDING"}
+            from models.document import Document, DocumentStatus, DocumentType
+            from models.user import User as DBUser
+            from models.application import Application
             
-            # District authorities can verify caste certificates
-            if user_role == "DISTRICT_AUTHORITY":
-                where_clause["document_type"] = "CASTE_CERTIFICATE"
-            # Financial institutions can verify bank documents
-            elif user_role == "FINANCIAL_INSTITUTION":
-                where_clause["document_type"] = "BANK_PASSBOOK"
-
-            documents = await self.db.document.find_many(
-                where=where_clause,
-                include={"user": True},
-                order_by={"created_at": "desc"},
-                take=limit,
-                skip=offset
-            )
+            # Build query - join with User and Application
+            query = self.db.query(Document).join(DBUser).outerjoin(Application)
+            
+            # Filter by status
+            query = query.filter(Document.status == DocumentStatus.PENDING)
+            
+            # District Authority verifies ALL document types
+            # Financial Institution only verifies bank documents
+            if user_role == "FINANCIAL_INSTITUTION":
+                query = query.filter(Document.document_type == DocumentType.BANK_PASSBOOK)
+            
+            # Order and paginate
+            query = query.order_by(Document.created_at.desc())
+            query = query.limit(limit).offset(offset)
+            
+            documents = query.all()
 
             return [
                 {
                     "id": doc.id,
-                    "document_type": doc.document_type,
+                    "document_type": doc.document_type.value,
                     "document_name": doc.document_name,
                     "file_path": doc.file_path,
+                    "file_url": f"/api/v1/documents/{doc.id}/file" if doc.file_path else None,
                     "file_size": doc.file_size,
                     "mime_type": doc.mime_type,
-                    "status": doc.status,
+                    "status": doc.status.value,
+                    "comments": doc.verification_notes,
                     "is_digilocker": doc.is_digilocker,
-                    "digilocker_id": doc.digilocker_id,
-                    "ocr_data": json.loads(doc.ocr_data) if doc.ocr_data else None,
+                    "digilocker_uri": doc.digilocker_uri,
+                    "application_id": doc.application_id,
                     "user": {
                         "id": doc.user.id,
                         "full_name": doc.user.full_name,
                         "email": doc.user.email,
-                        "phone_number": doc.user.phone_number
+                        "phone_number": doc.user.phone_number,
+                        "address": doc.user.address if hasattr(doc.user, 'address') else None
                     },
-                    "created_at": doc.created_at,
-                    "updated_at": doc.updated_at
+                    "application": {
+                        "id": doc.application.id,
+                        "application_number": doc.application.application_number,
+                        "title": doc.application.title,
+                        "application_type": doc.application.application_type.value,
+                        "status": doc.application.status.value,
+                        "submitted_at": doc.application.submitted_at.isoformat() if doc.application.submitted_at else None
+                    } if doc.application else None,
+                    "created_at": doc.created_at.isoformat() if doc.created_at else None,
+                    "updated_at": doc.updated_at.isoformat() if doc.updated_at else None
                 }
                 for doc in documents
             ]
@@ -331,10 +364,10 @@ class DocumentService:
     async def delete_document(self, document_id: str, user_id: str) -> bool:
         """Delete a document"""
         try:
+            from models.document import Document
+            
             # Get document details
-            document = await self.db.document.find_unique(
-                where={"id": document_id}
-            )
+            document = self.db.query(Document).filter(Document.id == document_id).first()
 
             if not document or document.user_id != user_id:
                 raise ValidationException("Document not found or access denied")
@@ -344,12 +377,14 @@ class DocumentService:
                 os.remove(document.file_path)
 
             # Delete document record
-            await self.db.document.delete(where={"id": document_id})
+            self.db.delete(document)
+            self.db.commit()
 
             logger.info("Document deleted", document_id=document_id, user_id=user_id)
             return True
 
         except Exception as e:
+            self.db.rollback()
             logger.error("Failed to delete document", document_id=document_id, error=str(e))
             raise DatabaseException(f"Failed to delete document: {str(e)}")
 

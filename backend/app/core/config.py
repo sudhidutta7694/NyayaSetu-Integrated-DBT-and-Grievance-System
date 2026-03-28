@@ -16,82 +16,81 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "NyayaSetu DBT System"
     VERSION: str = "1.0.0"
     API_V1_STR: str = "/api/v1"
-    SECRET_KEY: str = config("SECRET_KEY", default="your-super-secret-key-change-this-in-production")
+    SECRET_KEY: str = config("SECRET_KEY")
     DEBUG: bool = config("DEBUG", default=True, cast=bool)
     ENVIRONMENT: str = config("ENVIRONMENT", default="development")
     
     # Database
-    DATABASE_URL: str = config(
-        "DATABASE_URL", 
-        default="postgresql://nyayasetu:password@postgres:5432/nyayasetu_db"
-    )
+    DATABASE_URL: str = config("DATABASE_URL")
     
     # JWT
-    JWT_SECRET_KEY: str = config("JWT_SECRET_KEY", default="your-super-secret-jwt-key")
-    JWT_ALGORITHM: str = config("JWT_ALGORITHM", default="HS256")
-    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = config("JWT_ACCESS_TOKEN_EXPIRE_MINUTES", default=30, cast=int)
+    JWT_SECRET_KEY: str = config("JWT_SECRET_KEY")
+    JWT_ALGORITHM: str = config("JWT_ALGORITHM")
+    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = config("JWT_ACCESS_TOKEN_EXPIRE_MINUTES", cast=int)
     
     # CORS
     BACKEND_CORS_ORIGINS: List[str] = config(
         "BACKEND_CORS_ORIGINS",
-        default="http://localhost:3000,http://localhost:8000,https://nyaya-setu-integrated-dbt-and-griev.vercel.app",
         cast=lambda v: [s.strip() for s in v.split(",")]
     )
     
     # Allowed hosts
     ALLOWED_HOSTS: List[str] = config(
         "ALLOWED_HOSTS",
-        default="localhost,127.0.0.1,0.0.0.0",
         cast=lambda v: [s.strip() for s in v.split(",")]
     )
     
     # Aadhaar API (Simulated)
-    AADHAAR_API_URL: str = config("AADHAAR_API_URL", default="https://api.uidai.gov.in/otp")
-    AADHAAR_API_KEY: str = config("AADHAAR_API_KEY", default="your-aadhaar-api-key")
+    AADHAAR_API_URL: str = config("AADHAAR_API_URL")
+    AADHAAR_API_KEY: str = config("AADHAAR_API_KEY")
     
     # OTP
     OTP_EXPIRE_MINUTES: int = config("OTP_EXPIRE_MINUTES", default=5, cast=int)
     OTP_LENGTH: int = config("OTP_LENGTH", default=6, cast=int)
     
     # Twilio Settings
-    TWILIO_ACCOUNT_SID: str = config("TWILIO_ACCOUNT_SID", default="ACad6c04f93879628a6a1dd83e62e64428")
-    TWILIO_AUTH_TOKEN: str = config("TWILIO_AUTH_TOKEN", default="2464c08b1381736d819ed5e7ae7b13e7")
-    TWILIO_PHONE_NUMBER: str = config("TWILIO_PHONE_NUMBER", default="+1234567890")
-    TWILIO_VERIFY_SERVICE_SID: str = config("TWILIO_VERIFY_SERVICE_SID", default="VA351caddc6a704c64c85b2b88f2dda889")
+    TWILIO_ACCOUNT_SID: str = config("TWILIO_ACCOUNT_SID")
+    TWILIO_AUTH_TOKEN: str = config("TWILIO_AUTH_TOKEN")
+    TWILIO_PHONE_NUMBER: str = config("TWILIO_PHONE_NUMBER")
+    TWILIO_VERIFY_SERVICE_SID: str = config("TWILIO_VERIFY_SERVICE_SID")
     
     # DigiLocker (Simulated)
-    DIGILOCKER_API_URL: str = config("DIGILOCKER_API_URL", default="https://api.digilocker.gov.in")
-    DIGILOCKER_CLIENT_ID: str = config("DIGILOCKER_CLIENT_ID", default="your-digilocker-client-id")
-    DIGILOCKER_CLIENT_SECRET: str = config("DIGILOCKER_CLIENT_SECRET", default="your-digilocker-client-secret")
+    DIGILOCKER_API_URL: str = config("DIGILOCKER_API_URL")
+    DIGILOCKER_CLIENT_ID: str = config("DIGILOCKER_CLIENT_ID")
+    DIGILOCKER_CLIENT_SECRET: str = config("DIGILOCKER_CLIENT_SECRET")
     
     # Gemini AI
-    GEMINI_API_KEY: str = config("GEMINI_API_KEY", default="AIzaSyCzxQGmrgHa_v1tFJdfzdth2PCdZALFCfE")
-    GEMINI_MODEL: str = config("GEMINI_MODEL", default="gemini-pro")
+    GEMINI_API_KEY: str = config("GEMINI_API_KEY")
+    GEMINI_MODEL: str = config("GEMINI_MODEL")
     
     # File upload
-    MAX_FILE_SIZE: int = config("MAX_FILE_SIZE", default=10485760, cast=int)  # 10MB
+    MAX_FILE_SIZE: int = config("MAX_FILE_SIZE", cast=int)
     ALLOWED_FILE_TYPES: List[str] = config(
         "ALLOWED_FILE_TYPES",
-        default="pdf,jpg,jpeg,png,doc,docx",
         cast=lambda v: [s.strip() for s in v.split(",")]
     )
     UPLOAD_DIR: str = "uploads"
     
+    # AWS S3
+    AWS_ACCESS_KEY_ID: str = config("AWS_ACCESS_KEY_ID")
+    AWS_SECRET_ACCESS_KEY: str = config("AWS_SECRET_ACCESS_KEY")
+    AWS_REGION: str = config("AWS_REGION")
+    S3_BUCKET_NAME: str = config("S3_BUCKET_NAME")
     
     # Email
-    SMTP_HOST: str = config("SMTP_HOST", default="smtp.gmail.com")
-    SMTP_PORT: int = config("SMTP_PORT", default=587, cast=int)
-    SMTP_USERNAME: str = config("SMTP_USERNAME", default="")
-    SMTP_PASSWORD: str = config("SMTP_PASSWORD", default="")
-    SMTP_FROM_EMAIL: str = config("SMTP_FROM_EMAIL", default="noreply@nyayasetu.gov.in")
+    SMTP_HOST: str = config("SMTP_HOST")
+    SMTP_PORT: int = config("SMTP_PORT", cast=int)
+    SMTP_USERNAME: str = config("SMTP_USERNAME")
+    SMTP_PASSWORD: str = config("SMTP_PASSWORD")
+    SMTP_FROM_EMAIL: str = config("SMTP_FROM_EMAIL")
     
     # Push notifications
-    FCM_SERVER_KEY: str = config("FCM_SERVER_KEY", default="")
-    FCM_PROJECT_ID: str = config("FCM_PROJECT_ID", default="")
+    FCM_SERVER_KEY: str = config("FCM_SERVER_KEY")
+    FCM_PROJECT_ID: str = config("FCM_PROJECT_ID")
     
     # Rate limiting
-    RATE_LIMIT_PER_MINUTE: int = config("RATE_LIMIT_PER_MINUTE", default=60, cast=int)
-    RATE_LIMIT_BURST: int = config("RATE_LIMIT_BURST", default=100, cast=int)
+    RATE_LIMIT_PER_MINUTE: int = config("RATE_LIMIT_PER_MINUTE", cast=int)
+    RATE_LIMIT_BURST: int = config("RATE_LIMIT_BURST", cast=int)
     
     @validator("BACKEND_CORS_ORIGINS", pre=True)
     def assemble_cors_origins(cls, v):

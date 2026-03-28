@@ -1,0 +1,104 @@
+{
+  "header": {
+    "backButton": "ফিরে যান",
+    "requested": "অনুরোধিত",
+    "approved": "অনুমোদিত",
+    "notAllocated": "এখনও বরাদ্দ করা হয়নি",
+    "downloadPdf": "PDF ডাউনলোড করুন",
+    "print": "প্রিন্ট করুন"
+  },
+  "toast": {
+    "officialDownloaded": "অফিসিয়াল অনুমোদন আদেশ ডাউনলোড হয়েছে!",
+    "mockDownloaded": "মক PDF সফলভাবে ডাউনলোড হয়েছে!",
+    "loadFailed": "আবেদন বিবরণ লোড করতে ব্যর্থ",
+    "documentLoadFailed": "নথি লোড করতে ব্যর্থ",
+    "messagingComingSoon": "মেসেজিং বৈশিষ্ট্য শীঘ্রই আসছে"
+  },
+  "status": {
+    "documentsApproved": "নথি অনুমোদিত",
+    "documentsRejected": "নথি প্রত্যাখ্যাত",
+    "socialWelfareRejected": "সমাজকল্যাণ দ্বারা প্রত্যাখ্যাত",
+    "fiRejected": "আর্থিক প্রতিষ্ঠান দ্বারা প্রত্যাখ্যাত",
+    "applicationRejected": "আবেদন প্রত্যাখ্যাত"
+  },
+  "accordion": {
+    "title": "সম্পূর্ণ আবেদন বিবরণ",
+    "basicInformation": {
+      "title": "মৌলিক তথ্য",
+      "applicationNumber": "আবেদন নম্বর",
+      "titleLabel": "শিরোনাম",
+      "description": "বিবরণ",
+      "applicationType": "আবেদনের ধরন",
+      "firNumber": "FIR নম্বর",
+      "cctnsVerified": "CCTNS দ্বারা যাচাইকৃত",
+      "cctnsNotVerified": "যাচাই করা হয়নি",
+      "amountApproved": "অনুমোদিত পরিমাণ"
+    },
+    "applicantInformation": {
+      "title": "আবেদনকারীর তথ্য",
+      "fullName": "সম্পূর্ণ নাম",
+      "email": "ইমেইল",
+      "phone": "ফোন",
+      "aadhaar": "আধার নম্বর",
+      "dateOfBirth": "জন্ম তারিখ",
+      "gender": "লিঙ্গ",
+      "address": "ঠিকানা"
+    },
+    "reviewComments": {
+      "title": "পর্যালোচনা মন্তব্য",
+      "districtComments": "জেলা কর্তৃপক্ষের মন্তব্য",
+      "socialWelfareComments": "সমাজকল্যাণ মন্তব্য"
+    }
+  },
+  "timeline": {
+    "title": "আবেদন টাইমলাইন",
+    "stages": {
+      "submitted": "জমা দেওয়া",
+      "districtReview": "জেলা পর্যালোচনা",
+      "socialWelfareReview": "সমাজকল্যাণ পর্যালোচনা",
+      "financialInstitution": "আর্থিক প্রতিষ্ঠান",
+      "completed": "সম্পূর্ণ"
+    },
+    "statusLabels": {
+      "completed": "সম্পূর্ণ",
+      "rejected": "প্রত্যাখ্যাত",
+      "inProgress": "প্রক্রিয়াধীন",
+      "pending": "মুলতুবি"
+    },
+    "ariaLabels": {
+      "on": "তে"
+    },
+    "inProgress": "প্রক্রিয়াধীন…",
+    "pendingLabel": "মুলতুবি",
+    "legend": {
+      "completed": "সম্পূর্ণ",
+      "rejected": "প্রত্যাখ্যাত",
+      "current": "বর্তমান",
+      "upcoming": "আসন্ন"
+    }
+  },
+  "documents": {
+    "title": "আবেদন নথি",
+    "count": "{count}",
+    "status": {
+      "verified": "যাচাইকৃত",
+      "pending": "মুলতুবি",
+      "rejected": "প্রত্যাখ্যাত"
+    },
+    "viewButton": "দেখুন",
+    "noDocuments": "এখনও কোনো নথি আপলোড করা হয়নি",
+    "modal": {
+      "close": "বন্ধ করুন",
+      "openInNewTab": "নতুন ট্যাবে খুলুন",
+      "noPreview": "কোনো প্রিভিউ উপলব্ধ নেই"
+    }
+  },
+  "messages": {
+    "title": "বার্তা / পর্যালোচক মন্তব্য",
+    "placeholder": "একটি বার্তা টাইপ করুন",
+    "sendButton": "পাঠান",
+    "noComments": "এখনও কোনো মন্তব্য নেই"
+  },
+  "loading": "লোড হচ্ছে...",
+  "notAvailable": "-"
+}

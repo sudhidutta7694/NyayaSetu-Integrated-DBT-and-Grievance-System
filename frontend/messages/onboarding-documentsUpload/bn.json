@@ -1,0 +1,58 @@
+{
+  "title": "নথি আপলোড",
+  "requirements": {
+    "title": "নথি প্রয়োজনীয়তা",
+    "formats": "সমর্থিত ফরম্যাট: PDF, JPG, PNG",
+    "maxSize": "সর্বাধিক ফাইল আকার: 10MB",
+    "quality": "নথিগুলি স্পষ্ট এবং পাঠযোগ্য হওয়া উচিত",
+    "digilocker": "DigiLocker নথিগুলি পূর্ব-যাচাইকৃত"
+  },
+  "documentTypes": {
+    "AADHAAR_CARD": {
+      "name": "আধার কার্ড",
+      "description": "সরকার জারিকৃত পরিচয় প্রমাণ"
+    },
+    "BIRTH_CERTIFICATE": {
+      "name": "জন্ম শংসাপত্র",
+      "description": "সরকারী জন্ম শংসাপত্র"
+    },
+    "INCOME_CERTIFICATE": {
+      "name": "আয় শংসাপত্র",
+      "description": "বার্ষিক আয়ের প্রমাণ"
+    },
+    "CATEGORY_CERTIFICATE": {
+      "name": "শ্রেণী শংসাপত্র (তফসিলি জাতি/তফসিলি উপজাতি/অন্যান্য পিছিয়ে শ্রেণী)",
+      "description": "জাতি/শ্রেণী শংসাপত্র"
+    }
+  },
+  "uploadedDocuments": {
+    "title": "আপলোড করা নথি",
+    "uploading": "আপলোড হচ্ছে..."
+  },
+  "badges": {
+    "required": "প্রয়োজনীয়",
+    "uploaded": "আপলোড করা হয়েছে",
+    "digilocker": "DigiLocker"
+  },
+  "buttons": {
+    "uploadFile": "ফাইল আপলোড করুন",
+    "uploaded": "আপলোড করা হয়েছে",
+    "digilocker": "DigiLocker থেকে আমদানি করুন",
+    "previous": "পূর্ববর্তী",
+    "skip": "আপাতত এড়িয়ে যান",
+    "continue": "চালিয়ে যান",
+    "saving": "সংরক্ষণ করা হচ্ছে..."
+  },
+  "validation": {
+    "fileType": "অনুগ্রহ করে শুধুমাত্র PDF, JPG, বা PNG ফাইল আপলোড করুন",
+    "fileSize": "ফাইলের আকার 10MB এর কম হতে হবে"
+  },
+  "messages": {
+    "uploadSuccess": "নথি সফলভাবে আপলোড করা হয়েছে",
+    "uploadFailed": "নথি আপলোড করতে ব্যর্থ",
+    "replacing": "বিদ্যমান নথি প্রতিস্থাপন করা হচ্ছে...",
+    "replaceConfirm": "একটি {documentName} নথি ইতিমধ্যে বিদ্যমান। আপনি কি এটি প্রতিস্থাপন করতে চান?",
+    "saveSuccess": "নথি সফলভাবে সংরক্ষিত হয়েছে!",
+    "saveFailed": "নথি সংরক্ষণ করতে ব্যর্থ"
+  }
+}

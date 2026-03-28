@@ -1,0 +1,15 @@
+{
+  "welcome": "स्वागत है",
+  "subtitle": "आवेदनों को ट्रैक करें, दस्तावेज़ प्रबंधित करें, और स्थिति अपडेट देखें।",
+  "newApplication": "नया आवेदन",
+  "cards": {
+    "allApplications": "सभी आवेदन",
+    "verifiedDocs": "सत्यापित दस्तावेज़",
+    "inProgress": "प्रगति में"
+  },
+  "recentApplications": {
+    "title": "हाल के आवेदन",
+    "viewAll": "सभी देखें",
+    "noApplications": "अभी तक कोई आवेदन नहीं।"
+  }
+}

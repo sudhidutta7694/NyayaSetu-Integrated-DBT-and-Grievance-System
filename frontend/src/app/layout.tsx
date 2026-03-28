@@ -4,11 +4,10 @@ import './globals.css'
 import { Toaster } from 'react-hot-toast'
 import { AuthProvider } from '@/components/providers/AuthProvider'
 import { QueryProvider } from '@/components/providers/QueryProvider'
-import { LanguageProvider } from '@/contexts/LanguageContext'
-import { GovernmentHeader } from '@/components/layout/GovernmentHeader'
-import { GovernmentFooter } from '@/components/layout/GovernmentFooter'
 import { ScreenReader } from '@/components/accessibility/ScreenReader'
 import ChatbotGlobal from '@/components/chatbot/ChatbotGlobal'
+import { NextIntlClientProvider } from 'next-intl'
+import { getMessages } from 'next-intl/server'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -17,8 +16,14 @@ export const metadata: Metadata = {
   description: 'A comprehensive platform for implementing Direct Benefit Transfer (DBT) under the Centrally Sponsored Scheme for effective implementation of PCR Act and PoA Act.',
   keywords: ['DBT', 'PCR Act', 'PoA Act', 'Grievance System', 'Social Welfare', 'India'],
   authors: [{ name: 'NyayaSetu Team' }],
-  viewport: 'width=device-width, initial-scale=1',
   robots: 'index, follow',
+  icons: {
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/favicon.ico', sizes: 'any' },
+    ],
+    apple: '/favicon.svg',
+  },
   openGraph: {
     title: 'NyayaSetu - Integrated DBT and Grievance System',
     description: 'A comprehensive platform for implementing Direct Benefit Transfer (DBT) under the Centrally Sponsored Scheme for effective implementation of PCR Act and PoA Act.',
@@ -33,24 +38,27 @@ export const metadata: Metadata = {
   },
 }
 
-export default function RootLayout({
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+}
+
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const messages = await getMessages()
+  
   return (
     <html lang="en" className="h-full">
       <body className={`${inter.className} h-full antialiased`}>
-        <QueryProvider>
-          <LanguageProvider>
+        <NextIntlClientProvider messages={messages}>
+          <QueryProvider>
             <AuthProvider>
-              <div className="min-h-full flex flex-col">
-                <GovernmentHeader />
-                <main className="flex-1" tabIndex={-1}>
-                  {children}
-                </main>
-                <GovernmentFooter />
-              </div>
+              <main className="min-h-full" tabIndex={-1}>
+                {children}
+              </main>
               <ScreenReader data-screen-reader />
               <ChatbotGlobal />
               <Toaster
@@ -78,8 +86,8 @@ export default function RootLayout({
                 }}
               />
             </AuthProvider>
-          </LanguageProvider>
-        </QueryProvider>
+          </QueryProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   )

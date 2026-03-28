@@ -1,0 +1,186 @@
+{
+  "title": "व्यक्तिगत जानकारी",
+  "saved": "व्यक्तिगत जानकारी सहेजी गई!",
+  "saveFailed": "व्यक्तिगत जानकारी सहेजने में विफल",
+  "fields": {
+    "fullName": {
+      "label": "पूरा नाम",
+      "placeholder": "अपना पूरा नाम दर्ज करें",
+      "error": {
+        "min": "पूरा नाम कम से कम 2 अक्षरों का होना चाहिए"
+      }
+    },
+    "fatherName": {
+      "label": "पिता का नाम",
+      "placeholder": "पिता का पूरा नाम दर्ज करें",
+      "error": {
+        "min": "पिता का नाम कम से कम 2 अक्षरों का होना चाहिए"
+      }
+    },
+    "motherName": {
+      "label": "माता का नाम",
+      "placeholder": "माता का पूरा नाम दर्ज करें",
+      "error": {
+        "min": "माता का नाम कम से कम 2 अक्षरों का होना चाहिए"
+      }
+    },
+    "dateOfBirth": {
+      "label": "जन्म तिथि",
+      "placeholder": "DD/MM/YYYY",
+      "error": {
+        "format": "जन्म तिथि DD/MM/YYYY प्रारूप में होनी चाहिए"
+      }
+    },
+    "age": {
+      "label": "आयु",
+      "error": {
+        "min": "आयु कम से कम 1 होनी चाहिए",
+        "max": "आयु 120 से कम होनी चाहिए"
+      }
+    },
+    "gender": {
+      "label": "लिंग",
+      "placeholder": "लिंग चुनें",
+      "error": {
+        "required": "कृपया लिंग चुनें"
+      },
+      "options": {
+        "MALE": "पुरुष",
+        "FEMALE": "महिला",
+        "OTHER": "अन्य",
+        "PREFER_NOT_TO_SAY": "कहना नहीं चाहते"
+      }
+    },
+    "category": {
+      "label": "श्रेणी",
+      "placeholder": "श्रेणी चुनें",
+      "error": {
+        "required": "कृपया श्रेणी चुनें"
+      },
+      "options": {
+        "SC": "अनुसूचित जाति (SC)",
+        "ST": "अनुसूचित जनजाति (ST)",
+        "OBC": "अन्य पिछड़ा वर्ग (OBC)",
+        "GENERAL": "सामान्य"
+      }
+    },
+    "mobileNumber": {
+      "label": "मोबाइल नंबर",
+      "placeholder": "10 अंकों का मोबाइल नंबर दर्ज करें",
+      "error": {
+        "invalid": "अमान्य मोबाइल नंबर"
+      }
+    },
+    "email": {
+      "label": "ईमेल पता",
+      "placeholder": "अपना ईमेल पता दर्ज करें (वैकल्पिक)",
+      "error": {
+        "invalid": "अमान्य ईमेल पता"
+      }
+    },
+    "address": {
+      "label": "पता",
+      "placeholder": "अपना पूरा पता दर्ज करें",
+      "error": {
+        "min": "पता कम से कम 10 अक्षरों का होना चाहिए"
+      }
+    },
+    "district": {
+      "label": "जिला",
+      "placeholder": "जिला दर्ज करें",
+      "error": {
+        "required": "जिला आवश्यक है"
+      }
+    },
+    "state": {
+      "label": "राज्य/केंद्र शासित प्रदेश",
+      "placeholder": "राज्य/केंद्र शासित प्रदेश चुनें",
+      "error": {
+        "required": "राज्य आवश्यक है"
+      },
+      "options": {
+        "Andhra Pradesh": "आंध्र प्रदेश",
+        "Arunachal Pradesh": "अरुणाचल प्रदेश",
+        "Assam": "असम",
+        "Bihar": "बिहार",
+        "Chhattisgarh": "छत्तीसगढ़",
+        "Goa": "गोवा",
+        "Gujarat": "गुजरात",
+        "Haryana": "हरियाणा",
+        "Himachal Pradesh": "हिमाचल प्रदेश",
+        "Jharkhand": "झारखंड",
+        "Karnataka": "कर्नाटक",
+        "Kerala": "केरल",
+        "Madhya Pradesh": "मध्य प्रदेश",
+        "Maharashtra": "महाराष्ट्र",
+        "Manipur": "मणिपुर",
+        "Meghalaya": "मेघालय",
+        "Mizoram": "मिजोरम",
+        "Nagaland": "नागालैंड",
+        "Odisha": "ओडिशा",
+        "Punjab": "पंजाब",
+        "Rajasthan": "राजस्थान",
+        "Sikkim": "सिक्किम",
+        "Tamil Nadu": "तमिलनाडु",
+        "Telangana": "तेलंगाना",
+        "Tripura": "त्रिपुरा",
+        "Uttar Pradesh": "उत्तर प्रदेश",
+        "Uttarakhand": "उत्तराखंड",
+        "West Bengal": "पश्चिम बंगाल",
+        "Andaman and Nicobar Islands": "अंडमान और निकोबार द्वीप समूह",
+        "Chandigarh": "चंडीगढ़",
+        "Dadra and Nagar Haveli and Daman and Diu": "दादरा और नगर हवेली और दमन और दीव",
+        "Delhi": "दिल्ली",
+        "Jammu and Kashmir": "जम्मू और कश्मीर",
+        "Ladakh": "लद्दाख",
+        "Lakshadweep": "लक्षद्वीप",
+        "Puducherry": "पुदुचेरी"
+      }
+    },
+    "pincode": {
+      "label": "पिनकोड",
+      "placeholder": "6 अंकों का पिनकोड दर्ज करें",
+      "error": {
+        "invalid": "पिनकोड 6 अंकों का होना चाहिए"
+      }
+    }
+  },
+  "buttons": {
+    "previous": "पिछला",
+    "continue": "जारी रखें",
+    "saving": "सहेजा जा रहा है...",
+    "fetchAadhaar": "आधार विवरण प्राप्त करें",
+    "fillManually": "मैन्युअल रूप से भरें"
+  },
+  "choiceTitle": "आप अपनी व्यक्तिगत जानकारी कैसे भरना चाहेंगे?",
+  "fetchingMessage": "डेमो आधार विवरण प्राप्त किया जा रहा है...",
+  "consentModal": {
+    "title": "आधार सहमति",
+    "checkboxText": "मैं NyayaSetu को UIDAI से मेरे आधार विवरण प्राप्त करने की स्वीकृति देता/देती हूं",
+    "demoMessage": "यह डेटा डेमो है और केवल विकास उद्देश्य के लिए है।",
+    "continue": "जारी रखें",
+    "cancel": "रद्द करें"
+  },
+  "toast": {
+    "success": "व्यक्तिगत जानकारी सहेजी गई!",
+    "error": "व्यक्तिगत जानकारी सहेजने में विफल",
+    "aadhaarFetched": "आधार विवरण सफलतापूर्वक प्राप्त हुआ!"
+  },
+  "validation": {
+    "fullName": "पूरा नाम कम से कम 2 अक्षरों का होना चाहिए",
+    "fatherName": "पिता का नाम कम से कम 2 अक्षरों का होना चाहिए",
+    "motherName": "माता का नाम कम से कम 2 अक्षरों का होना चाहिए",
+    "dateOfBirth": "जन्म तिथि DD/MM/YYYY प्रारूप में होनी चाहिए",
+    "ageMin": "आयु कम से कम 1 होनी चाहिए",
+    "ageMax": "आयु 120 से कम होनी चाहिए",
+    "gender": "कृपया लिंग चुनें",
+    "category": "कृपया श्रेणी चुनें",
+    "mobileNumber": "अमान्य मोबाइल नंबर",
+    "email": "अमान्य ईमेल पता",
+    "address": "पता कम से कम 10 अक्षरों का होना चाहिए",
+    "district": "जिला आवश्यक है",
+    "state": "राज्य आवश्यक है",
+    "pincode": "पिनकोड 6 अंकों का होना चाहिए"
+  },
+  "required": "*"
+}

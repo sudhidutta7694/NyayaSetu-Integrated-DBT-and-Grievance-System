@@ -13,14 +13,12 @@ import {
   Minus,
   RotateCcw
 } from 'lucide-react'
-import { useLanguage } from '@/contexts/LanguageContext'
 
 interface ScreenReaderProps {
   className?: string
 }
 
 export const ScreenReader: React.FC<ScreenReaderProps> = ({ className }) => {
-  const { t, currentLanguage } = useLanguage()
   const [isSpeaking, setIsSpeaking] = useState(false)
   const [fontSize, setFontSize] = useState(16)
   const [highContrast, setHighContrast] = useState(false)
@@ -66,20 +64,20 @@ export const ScreenReader: React.FC<ScreenReaderProps> = ({ className }) => {
     const utterance = new SpeechSynthesisUtterance(text)
     
     // Set voice based on language
-    const voices = speechSynthesis.current.getVoices()
-  const preferredVoice = voices.find((voice: SpeechSynthesisVoice) => {
-      const langCode = currentLanguage === 'hi' ? 'hi-IN' : 
-                      currentLanguage === 'bn' ? 'bn-IN' :
-                      currentLanguage === 'mr' ? 'mr-IN' :
-                      currentLanguage === 'ta' ? 'ta-IN' :
-                      currentLanguage === 'te' ? 'te-IN' :
-                      'en-IN'
-      return voice.lang === langCode || voice.lang.startsWith(currentLanguage)
-    })
+  //   const voices = speechSynthesis.current.getVoices()
+  // const preferredVoice = voices.find((voice: SpeechSynthesisVoice) => {
+  //     const langCode = currentLanguage === 'hi' ? 'hi-IN' : 
+  //                     currentLanguage === 'bn' ? 'bn-IN' :
+  //                     currentLanguage === 'mr' ? 'mr-IN' :
+  //                     currentLanguage === 'ta' ? 'ta-IN' :
+  //                     currentLanguage === 'te' ? 'te-IN' :
+  //                     'en-IN'
+  //     return voice.lang === langCode || voice.lang.startsWith(currentLanguage)
+  //   })
 
-    if (preferredVoice) {
-      utterance.voice = preferredVoice
-    }
+    // if (preferredVoice) {
+    //   utterance.voice = preferredVoice
+    // }
 
     utterance.rate = 0.9
     utterance.pitch = 1
@@ -186,14 +184,14 @@ export const ScreenReader: React.FC<ScreenReaderProps> = ({ className }) => {
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg flex items-center gap-2">
                 <Eye className="h-5 w-5 text-orange-600" />
-                {t('accessibility.screenReader', 'Screen Reader')}
+                Screen Reader
               </CardTitle>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setIsExpanded(!isExpanded)}
                 className="p-1"
-                aria-label={t('accessibility.closeScreenReader', 'Close screen reader dialog')}
+                aria-label="Close screen reader dialog"
               >
                 {isExpanded ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </Button>
@@ -207,13 +205,13 @@ export const ScreenReader: React.FC<ScreenReaderProps> = ({ className }) => {
             className="w-full bg-blue-600 hover:bg-blue-700"
             size="sm"
           >
-            {t('header.skipToContent', 'Skip to main content')}
+            Skip to main content
           </Button>
 
           {/* Text to Speech Controls */}
           <div className="space-y-2">
             <h4 className="font-medium text-sm text-gray-700">
-              {t('accessibility.textToSpeech', 'Text to Speech')}
+              Text to Speech
             </h4>
             <div className="flex gap-2">
               <Button
@@ -223,7 +221,7 @@ export const ScreenReader: React.FC<ScreenReaderProps> = ({ className }) => {
                 size="sm"
               >
                 <Volume2 className="h-4 w-4 mr-1" />
-                {t('accessibility.speakPage', 'Speak Page')}
+                Speak Page
               </Button>
               <Button
                 onClick={stopSpeaking}
@@ -239,7 +237,7 @@ export const ScreenReader: React.FC<ScreenReaderProps> = ({ className }) => {
           {/* Font Size Controls */}
           <div className="space-y-2">
             <h4 className="font-medium text-sm text-gray-700">
-              {t('accessibility.fontSize', 'Font Size')}
+              Font Size
             </h4>
             <div className="flex items-center gap-2">
               <Button
@@ -275,7 +273,7 @@ export const ScreenReader: React.FC<ScreenReaderProps> = ({ className }) => {
           {/* High Contrast Toggle */}
           <div className="space-y-2">
             <h4 className="font-medium text-sm text-gray-700">
-              {t('accessibility.contrast', 'Contrast')}
+              Contrast
             </h4>
             <Button
               onClick={toggleHighContrast}
@@ -284,16 +282,13 @@ export const ScreenReader: React.FC<ScreenReaderProps> = ({ className }) => {
               size="sm"
             >
               <Type className="h-4 w-4 mr-2" />
-              {highContrast 
-                ? t('accessibility.normalContrast', 'Normal Contrast')
-                : t('accessibility.highContrast', 'High Contrast')
-              }
+              {highContrast ? 'Normal Contrast' : 'High Contrast'}
             </Button>
           </div>
 
           {/* Language Info */}
           <div className="text-xs text-gray-500 pt-2 border-t">
-            {t('accessibility.currentLanguage', 'Current Language')}: {currentLanguage.toUpperCase()}
+            Current Language: EN
           </div>
         </CardContent>
       </Card>

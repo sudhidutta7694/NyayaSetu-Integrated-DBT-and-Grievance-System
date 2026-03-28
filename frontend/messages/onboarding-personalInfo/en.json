@@ -1,0 +1,186 @@
+{
+  "title": "Personal Information",
+  "saved": "Personal information saved!",
+  "saveFailed": "Failed to save personal information",
+  "fields": {
+    "fullName": {
+      "label": "Full Name",
+      "placeholder": "Enter your full name",
+      "error": {
+        "min": "Full name must be at least 2 characters"
+      }
+    },
+    "fatherName": {
+      "label": "Father's Name",
+      "placeholder": "Enter father's full name",
+      "error": {
+        "min": "Father's name must be at least 2 characters"
+      }
+    },
+    "motherName": {
+      "label": "Mother's Name",
+      "placeholder": "Enter mother's full name",
+      "error": {
+        "min": "Mother's name must be at least 2 characters"
+      }
+    },
+    "dateOfBirth": {
+      "label": "Date of Birth",
+      "placeholder": "DD/MM/YYYY",
+      "error": {
+        "format": "Date of birth must be in DD/MM/YYYY format"
+      }
+    },
+    "age": {
+      "label": "Age",
+      "error": {
+        "min": "Age must be at least 1",
+        "max": "Age must be less than 120"
+      }
+    },
+    "gender": {
+      "label": "Gender",
+      "placeholder": "Select gender",
+      "error": {
+        "required": "Please select a gender"
+      },
+      "options": {
+        "MALE": "Male",
+        "FEMALE": "Female",
+        "OTHER": "Other",
+        "PREFER_NOT_TO_SAY": "Prefer not to say"
+      }
+    },
+    "category": {
+      "label": "Category",
+      "placeholder": "Select category",
+      "error": {
+        "required": "Please select a category"
+      },
+      "options": {
+        "SC": "SC (Scheduled Caste)",
+        "ST": "ST (Scheduled Tribe)",
+        "OBC": "OBC (Other Backward Class)",
+        "GENERAL": "General"
+      }
+    },
+    "mobileNumber": {
+      "label": "Mobile Number",
+      "placeholder": "Enter 10-digit mobile number",
+      "error": {
+        "invalid": "Invalid mobile number"
+      }
+    },
+    "email": {
+      "label": "Email Address",
+      "placeholder": "Enter your email address (optional)",
+      "error": {
+        "invalid": "Invalid email address"
+      }
+    },
+    "address": {
+      "label": "Address",
+      "placeholder": "Enter your complete address",
+      "error": {
+        "min": "Address must be at least 10 characters"
+      }
+    },
+    "district": {
+      "label": "District",
+      "placeholder": "Enter district",
+      "error": {
+        "required": "District is required"
+      }
+    },
+    "state": {
+      "label": "State/UT",
+      "placeholder": "Select state/UT",
+      "error": {
+        "required": "State is required"
+      },
+      "options": {
+        "Andhra Pradesh": "Andhra Pradesh",
+        "Arunachal Pradesh": "Arunachal Pradesh",
+        "Assam": "Assam",
+        "Bihar": "Bihar",
+        "Chhattisgarh": "Chhattisgarh",
+        "Goa": "Goa",
+        "Gujarat": "Gujarat",
+        "Haryana": "Haryana",
+        "Himachal Pradesh": "Himachal Pradesh",
+        "Jharkhand": "Jharkhand",
+        "Karnataka": "Karnataka",
+        "Kerala": "Kerala",
+        "Madhya Pradesh": "Madhya Pradesh",
+        "Maharashtra": "Maharashtra",
+        "Manipur": "Manipur",
+        "Meghalaya": "Meghalaya",
+        "Mizoram": "Mizoram",
+        "Nagaland": "Nagaland",
+        "Odisha": "Odisha",
+        "Punjab": "Punjab",
+        "Rajasthan": "Rajasthan",
+        "Sikkim": "Sikkim",
+        "Tamil Nadu": "Tamil Nadu",
+        "Telangana": "Telangana",
+        "Tripura": "Tripura",
+        "Uttar Pradesh": "Uttar Pradesh",
+        "Uttarakhand": "Uttarakhand",
+        "West Bengal": "West Bengal",
+        "Andaman and Nicobar Islands": "Andaman and Nicobar Islands",
+        "Chandigarh": "Chandigarh",
+        "Dadra and Nagar Haveli and Daman and Diu": "Dadra and Nagar Haveli and Daman and Diu",
+        "Delhi": "Delhi",
+        "Jammu and Kashmir": "Jammu and Kashmir",
+        "Ladakh": "Ladakh",
+        "Lakshadweep": "Lakshadweep",
+        "Puducherry": "Puducherry"
+      }
+    },
+    "pincode": {
+      "label": "Pincode",
+      "placeholder": "Enter 6-digit pincode",
+      "error": {
+        "invalid": "Pincode must be 6 digits"
+      }
+    }
+  },
+  "buttons": {
+    "previous": "Previous",
+    "continue": "Continue",
+    "saving": "Saving...",
+    "fetchAadhaar": "Fetch Aadhaar Details",
+    "fillManually": "Fill Manually"
+  },
+  "choiceTitle": "How would you like to fill your personal information?",
+  "fetchingMessage": "Fetching demo Aadhaar details...",
+  "consentModal": {
+    "title": "Aadhaar Consent",
+    "checkboxText": "I approve NyayaSetu to fetch my Aadhaar details from UIDAI",
+    "demoMessage": "The data is demo and is for development purpose only.",
+    "continue": "Continue",
+    "cancel": "Cancel"
+  },
+  "toast": {
+    "success": "Personal information saved!",
+    "error": "Failed to save personal information",
+    "aadhaarFetched": "Aadhaar details fetched successfully!"
+  },
+  "validation": {
+    "fullName": "Full name must be at least 2 characters",
+    "fatherName": "Father's name must be at least 2 characters",
+    "motherName": "Mother's name must be at least 2 characters",
+    "dateOfBirth": "Date of birth must be in DD/MM/YYYY format",
+    "ageMin": "Age must be at least 1",
+    "ageMax": "Age must be less than 120",
+    "gender": "Please select a gender",
+    "category": "Please select a category",
+    "mobileNumber": "Invalid mobile number",
+    "email": "Invalid email address",
+    "address": "Address must be at least 10 characters",
+    "district": "District is required",
+    "state": "State is required",
+    "pincode": "Pincode must be 6 digits"
+  },
+  "required": "*"
+}

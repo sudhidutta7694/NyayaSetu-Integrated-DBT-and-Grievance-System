@@ -29,12 +29,13 @@ class User(Base):
     __tablename__ = "users"
 
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    email = Column(String, unique=True, nullable=False)
-    phone_number = Column(String, unique=True, nullable=False)
+    email = Column(String, nullable=True) 
+    phone_number = Column(String, nullable=True) 
     full_name = Column(String, nullable=False)
+    password_hash = Column(String)
     father_name = Column(String)
     mother_name = Column(String)
-    aadhaar_number = Column(String, unique=True)
+    aadhaar_number = Column(String, unique=True)  # Only Aadhaar must be unique
     date_of_birth = Column(DateTime)
     age = Column(Integer)
     gender = Column(Enum(Gender))
@@ -56,3 +57,5 @@ class User(Base):
     role_assignments = relationship("UserRoleAssignment", back_populates="user")
     applications = relationship("Application", back_populates="user")
     documents = relationship("Document", back_populates="user")
+    onboarding_steps = relationship("OnboardingStep", back_populates="user")
+    bank_accounts = relationship("BankAccount", back_populates="user")

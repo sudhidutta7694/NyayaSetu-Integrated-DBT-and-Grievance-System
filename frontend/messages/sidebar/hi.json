@@ -1,0 +1,25 @@
+{
+  "nav": {
+    "dashboard": "डैशबोर्ड",
+    "applications": "आवेदन",
+    "documents": "दस्तावेज़",
+    "announcements": "घोषणाएँ",
+    "beneficiaries": "लाभार्थी",
+    "disbursements": "वितरण",
+    "reports": "रिपोर्ट",
+    "grievances": "शिकायतें",
+    "profile": "प्रोफ़ाइल",
+    "logout": "लॉगआउट"
+  },
+    "feedback": "फीडबैक",
+  "help": "सहायता",
+  "logout": "लॉग आउट",
+  "copyright": "© {year} न्यायसेतु",
+  "welcome": "स्वागत है",
+  "aria": {
+    "closeSidebar": "मेनू बंद करें",
+    "expandSidebar": "साइडबार विस्तृत करें",
+    "collapseSidebar": "साइडबार संक्षिप्त करें",
+    "openMenu": "मेनू खोलें"
+  }
+}

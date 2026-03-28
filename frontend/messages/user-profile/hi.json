@@ -1,0 +1,95 @@
+{
+  "title": "प्रोफ़ाइल",
+  "editButton": "प्रोफ़ाइल संपादित करें",
+  "loading": "लोड हो रहा है...",
+  "retry": "पुनः प्रयास करें",
+  "failedToLoad": "प्रोफ़ाइल लोड करने में विफल",
+  "accountDetails": {
+    "title": "खाता विवरण",
+    "uidaiNote": "🔒 चिह्नित फ़ील्ड UIDAI/आधार से सत्यापित हैं और संपादित नहीं किए जा सकते।",
+    "fromUidai": "UIDAI/आधार से",
+    "calculatedFromDob": "जन्म तिथि से गणना की गई",
+    "fields": {
+      "fullName": "पूरा नाम",
+      "email": "ईमेल",
+      "phone": "फ़ोन",
+      "aadhaar": "आधार",
+      "fatherName": "पिता का नाम",
+      "motherName": "माता का नाम",
+      "dateOfBirth": "जन्म तिथि",
+      "age": "आयु",
+      "ageYears": "{age} वर्ष",
+      "gender": "लिंग",
+      "category": "श्रेणी",
+      "address": "पता",
+      "district": "जिला",
+      "state": "राज्य",
+      "pincode": "पिनकोड",
+      "role": "भूमिका",
+      "verification": "सत्यापन"
+    },
+    "genderOptions": {
+      "select": "लिंग चुनें",
+      "male": "पुरुष",
+      "female": "महिला",
+      "other": "अन्य",
+      "preferNotToSay": "नहीं बताना चाहते"
+    },
+    "categoryOptions": {
+      "select": "श्रेणी चुनें",
+      "sc": "अनुसूचित जाति",
+      "st": "अनुसूचित जनजाति",
+      "obc": "अन्य पिछड़ा वर्ग",
+      "general": "सामान्य",
+      "other": "अन्य"
+    },
+    "verificationStatus": {
+      "verified": "सत्यापित",
+      "pending": "लंबित"
+    }
+  },
+  "bankDetails": {
+    "title": "बैंक विवरण",
+    "editButton": "संपादित करें",
+    "addButton": "जोड़ें",
+    "bankDetailsText": "बैंक विवरण",
+    "accountNumber": "{index}",
+    "noBankAccount": "अभी तक कोई बैंक खाता नहीं जोड़ा गया। लाभ हस्तांतरण के लिए अपनी बैंक जानकारी जोड़ने के लिए \"बैंक विवरण जोड़ें\" पर क्लिक करें।",
+    "fields": {
+      "accountHolderName": "खाताधारक का नाम",
+      "accountHolderPlaceholder": "बैंक के अनुसार पूरा नाम",
+      "accountNumber": "खाता संख्या",
+      "accountNumberPlaceholder": "9-18 अंक",
+      "ifscCode": "IFSC कोड",
+      "ifscPlaceholder": "XXXX0XXXXXX",
+      "bankName": "बैंक का नाम",
+      "bankNamePlaceholder": "उदा., भारतीय स्टेट बैंक",
+      "branchName": "शाखा का नाम",
+      "branchPlaceholder": "उदा., मुंबई मुख्य शाखा",
+      "status": "स्थिति"
+    },
+    "verificationStatus": {
+      "verified": "सत्यापित",
+      "pending": "सत्यापन लंबित"
+    }
+  },
+  "buttons": {
+    "saveChanges": "परिवर्तन सहेजें",
+    "saving": "सहेजा जा रहा है...",
+    "cancel": "रद्द करें",
+    "saveBankDetails": "बैंक विवरण सहेजें"
+  },
+  "toasts": {
+    "profileUpdated": "प्रोफ़ाइल सफलतापूर्वक अपडेट किया गया",
+    "profileUpdateFailed": "प्रोफ़ाइल अपडेट करने में विफल",
+    "bankSaved": "बैंक विवरण सफलतापूर्वक सहेजा गया",
+    "bankSaveFailed": "बैंक विवरण सहेजने में विफल",
+    "fillAllFields": "कृपया सभी बैंक विवरण फ़ील्ड भरें",
+    "invalidIfsc": "अमान्य IFSC कोड प्रारूप",
+    "invalidAccountNumber": "खाता संख्या 9-18 अंकों के बीच होनी चाहिए",
+    "loadFailed": "प्रोफ़ाइल लोड करने में विफल"
+  },
+  "notProvided": "प्रदान नहीं किया गया",
+  "maskedAccount": "****{last4}",
+  "maskedAadhaar": "****{last4}"
+}

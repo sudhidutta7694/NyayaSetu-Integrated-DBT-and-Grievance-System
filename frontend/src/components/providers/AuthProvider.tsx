@@ -4,11 +4,13 @@ import { createContext, useContext, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { User } from '@/types/user'
 import { authApi } from '@/lib/api/auth'
+import { tokenStorage } from '@/lib/tokenStorage'
+import { socialWelfareAuthApi } from '@/lib/api/socialWelfareAuth'
 
 interface AuthContextType {
   user: User | null
   loading: boolean
-  login: (phoneNumber: string, otp: string) => Promise<void>
+  login: (user: User, token: string) => void
   logout: () => void
   refreshUser: () => Promise<void>
 }
@@ -25,43 +27,62 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const checkAuth = async () => {
+    if (typeof window === 'undefined') {
+      setLoading(false)
+      return
+    }
+    
     try {
-      const token = localStorage.getItem('access_token')
+      const token = tokenStorage.getToken()
+      console.log('Checking auth, token:', token ? token.substring(0, 30) + '...' : 'NO TOKEN')
+      
       if (token) {
-        const userData = await authApi.getCurrentUser()
-        setUser(userData)
+        if (token.startsWith('mock-token-')) {
+          const storedUser = localStorage.getItem('user');
+          if (storedUser) {
+            setUser(JSON.parse(storedUser));
+          } else {
+             // Fallback if user object isn't in local storage
+             throw new Error("Mock user not found in storage");
+          }
+        } else {
+          // Your existing logic for real API calls
+          try {
+            const userData = await authApi.getCurrentUser()
+            setUser(userData)
+          } catch (e) {
+            const userData = await socialWelfareAuthApi.getCurrentUser()
+            setUser(userData)
+          }
+        }
       }
-    } catch (error) {
-      localStorage.removeItem('access_token')
+    } catch (error: any) {
+      console.error('Auth check failed:', error)
+      tokenStorage.removeToken() // Clear bad token
+      setUser(null)
     } finally {
       setLoading(false)
     }
   }
 
-  const login = async (phoneNumber: string, otp: string) => {
-    try {
-      const response = await authApi.verifyOtp(phoneNumber, otp)
-      localStorage.setItem('access_token', response.access_token)
-      setUser(response.user)
-      router.push('/dashboard')
-    } catch (error) {
-      throw error
-    }
+  // --- NEW LOGIN FUNCTION ---
+  const login = (userData: User, token: string) => {
+    tokenStorage.setToken(token);
+    // Also store the mock user for refresh purposes
+    localStorage.setItem('user', JSON.stringify(userData));
+    setUser(userData);
   }
 
   const logout = () => {
-    localStorage.removeItem('access_token')
-    setUser(null)
-    router.push('/')
+    tokenStorage.removeToken()
+    localStorage.removeItem('user')
+    localStorage.removeItem('authToken')
+    localStorage.removeItem('token')
+    window.location.href = '/'
   }
 
   const refreshUser = async () => {
-    try {
-      const userData = await authApi.getCurrentUser()
-      setUser(userData)
-    } catch (error) {
-      logout()
-    }
+    await checkAuth();
   }
 
   return (
@@ -78,4 +99,3 @@ export function useAuth() {
   }
   return context
 }
-
